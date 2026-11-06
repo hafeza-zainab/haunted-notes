@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
 import EmptyState from './EmptyState';
 import type { Note, Flashcard } from '../types';
+import { isDue } from '../lib/srs';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -63,8 +64,8 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
   const renameNote = useStore((s) => s.renameNote);
   const titleId    = useId();
 
-  const [expanded, setExpanded]   = useState(false);
-  const [editing, setEditing]     = useState(false);
+  const [expanded, setExpanded]     = useState(false);
+  const [editing, setEditing]       = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
 
@@ -73,6 +74,7 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
   const mastered = cards.filter((c) => c.weaknessScore <= MASTERED_THRESHOLD);
   const total    = cards.length;
   const pct      = total > 0 ? Math.round((mastered.length / total) * 100) : 0;
+  const dueCount = cards.filter((c) => isDue(c)).length;
 
   const visibleGhosts = expanded ? haunted : haunted.slice(0, PREVIEW_GHOST_COUNT);
   const hiddenCount   = haunted.length - PREVIEW_GHOST_COUNT;
@@ -135,6 +137,11 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
                 ✓ {mastered.length}
               </span>
             )}
+            {dueCount > 0 && (
+              <span className="badge badge--due" aria-label={`${dueCount} due`}>
+                🔔 {dueCount} due
+              </span>
+            )}
           </div>
         </div>
 
@@ -170,6 +177,7 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
                   weakness={card.weaknessScore}
                   size={80}
                   label={`Ghost: ${card.prompt}`}
+                  className={isDue(card) && card.reps > 0 ? 'ghost--returned' : undefined}
                 />
                 <p className="ghost-prompt">{card.prompt}</p>
               </div>
@@ -228,13 +236,20 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
 const DashboardView: React.FC = () => {
   const notes          = useStore((s) => s.notes);
   const flashcards     = useStore((s) => s.flashcards);
+  const isDemoLoaded   = useStore((s) => s.isDemoLoaded);
   const deleteNote     = useStore((s) => s.deleteNote);
   const setView        = useStore((s) => s.setView);
   const setQuizNoteId  = useStore((s) => s.setQuizNoteId);
+  const setQuizDueOnly = useStore((s) => s.setQuizDueOnly);
+  const clearDemoData  = useStore((s) => s.clearDemoData);
+  const timeTravelDay  = useStore((s) => s.timeTravelDay);
   const resetAll       = useStore((s) => s.resetAll);
 
-  const [sortMode, setSortMode]       = useState<SortMode>('weakest');
+  const [sortMode, setSortMode]         = useState<SortMode>('weakest');
   const [confirmReset, setConfirmReset] = useState(false);
+
+  // Show dev tools only when ?dev=1 is present in the URL
+  const isDevMode = new URLSearchParams(window.location.search).get('dev') === '1';
 
   if (notes.length === 0) return <EmptyState />;
 
@@ -247,6 +262,7 @@ const DashboardView: React.FC = () => {
   // Summary counts (across all notes)
   const totalHaunting = flashcards.filter((c) => c.weaknessScore > MASTERED_THRESHOLD).length;
   const totalBanished = flashcards.filter((c) => c.weaknessScore <= MASTERED_THRESHOLD).length;
+  const dueCount      = flashcards.filter((c) => isDue(c)).length;
 
   // Sort rooms
   const sorted = noteRooms.slice().sort((a, b) => {
@@ -257,11 +273,19 @@ const DashboardView: React.FC = () => {
 
   const startQuizAll = () => {
     setQuizNoteId(null);
+    setQuizDueOnly(false);
     setView('quiz');
   };
 
   const startQuizNote = (noteId: string) => {
     setQuizNoteId(noteId);
+    setQuizDueOnly(false);
+    setView('quiz');
+  };
+
+  const startQuizDue = () => {
+    setQuizNoteId(null);
+    setQuizDueOnly(true);
     setView('quiz');
   };
 
@@ -280,12 +304,47 @@ const DashboardView: React.FC = () => {
           <span className="stat">
             <strong>{notes.length}</strong> room{notes.length !== 1 ? 's' : ''}
           </span>
+          <span className={`stat ${dueCount > 0 ? 'stat--due' : 'stat--no-due'}`} aria-live="polite">
+            {dueCount > 0 ? (
+              <><strong>{dueCount}</strong> ghost{dueCount !== 1 ? 's' : ''} returned</>
+            ) : (
+              'No ghosts due'
+            )}
+          </span>
         </div>
 
         <div className="summary-actions">
+          {dueCount > 0 && (
+            <button
+              className="btn-due"
+              onClick={startQuizDue}
+              aria-label={`Review ${dueCount} due ghost${dueCount !== 1 ? 's' : ''}`}
+            >
+              🔔 Review due ghosts
+            </button>
+          )}
           {totalHaunting > 0 && (
             <button className="btn-primary" onClick={startQuizAll}>
               👻 Start Quiz
+            </button>
+          )}
+          {isDemoLoaded && (
+            <button
+              className="btn-ghost btn-sm"
+              onClick={clearDemoData}
+              aria-label="Remove demo notes and cards"
+            >
+              ✕ Clear demo
+            </button>
+          )}
+          {isDevMode && (
+            <button
+              className="btn-dev"
+              onClick={timeTravelDay}
+              title="Dev tool: shift all dueAt back by 24 h"
+              aria-label="Time travel +1 day: make all scheduled ghosts due now"
+            >
+              ⏩ +1 day
             </button>
           )}
           <button

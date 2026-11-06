@@ -9,7 +9,22 @@ export interface Note {
   title?: string;
 }
 
-export interface Flashcard {
+/**
+ * SM-2 lite spaced-repetition scheduling fields.
+ * Kept as a separate interface so srs.ts can operate on them purely.
+ */
+export interface SrsFields {
+  /** Ease factor; controls interval growth. Default 2.5, min 1.3. */
+  ease: number;
+  /** Days until next review. 0 = due immediately. */
+  intervalDays: number;
+  /** Unix-ms timestamp when the card is next due. */
+  dueAt: number;
+  /** Consecutive correct reviews since last reset. */
+  reps: number;
+}
+
+export interface Flashcard extends SrsFields {
   id: string;
   noteId: string;
   /** Full sentence with the cloze term intact */

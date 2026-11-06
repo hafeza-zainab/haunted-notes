@@ -13,8 +13,10 @@ const TABS: { id: NoteInputMethod; label: string; icon: string }[] = [
 ];
 
 const AddNoteView: React.FC = () => {
-  const addNote = useStore((s) => s.addNote);
-  const setView = useStore((s) => s.setView);
+  const addNote      = useStore((s) => s.addNote);
+  const setView      = useStore((s) => s.setView);
+  const isDemoLoaded = useStore((s) => s.isDemoLoaded);
+  const loadDemoData = useStore((s) => s.loadDemoData);
 
   const [inputMethod, setInputMethod] = useState<NoteInputMethod>('type');
   const [text, setText] = useState('');
@@ -398,6 +400,21 @@ const AddNoteView: React.FC = () => {
           </button>
         </div>
       </form>
+
+      {/* ── Demo shortcut ── */}
+      {!isDemoLoaded && (
+        <aside className="demo-shortcut" aria-label="Try a demo">
+          <p className="demo-shortcut-text">Want to see it in action first?</p>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => { loadDemoData(); setView('dashboard'); }}
+            aria-label="Load demo notes and go to dashboard"
+          >
+            👻 Try demo →
+          </button>
+        </aside>
+      )}
     </section>
   );
 };

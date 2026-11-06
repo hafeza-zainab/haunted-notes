@@ -1,4 +1,5 @@
 import type { Flashcard, Note } from '../types';
+import { defaultSrsFields } from './srs';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -286,6 +287,7 @@ function buildCard(
     streakCorrect: 0,
     streakWrong: 0,
     lastReviewed: null,
+    ...defaultSrsFields(),
   };
 }
 

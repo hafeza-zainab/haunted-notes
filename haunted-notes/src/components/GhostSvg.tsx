@@ -9,6 +9,8 @@ interface GhostSvgProps {
   shaking?: boolean;
   size?: number;
   label: string;
+  /** Extra CSS class(es) appended to the SVG element (e.g. "ghost--returned") */
+  className?: string;
 }
 
 /**
@@ -21,6 +23,7 @@ const GhostSvg: React.FC<GhostSvgProps> = ({
   shaking = false,
   size = 80,
   label,
+  className,
 }) => {
   const opacity = 0.2 + weakness * 0.8;           // 0.2 → 1.0
   const scale = 0.4 + weakness * 0.6;              // 0.4 → 1.0
@@ -29,6 +32,7 @@ const GhostSvg: React.FC<GhostSvgProps> = ({
   let animClass = 'ghost-float';
   if (banishing) animClass = 'ghost-banish';
   if (shaking) animClass = 'ghost-shake';
+  if (className) animClass = `${animClass} ${className}`;
 
   return (
     <svg

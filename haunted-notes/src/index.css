@@ -831,3 +831,149 @@ progress {
   .navbar { padding: 0.6rem 2rem; }
   .main-content { padding: 2.5rem 2rem; }
 }
+
+/* ── SRS & Demo additions ──────────────────────────────────────────── */
+
+/* "Ghost is back" — returned ghost tint on SVG cards */
+.ghost--returned {
+  filter: drop-shadow(0 0 8px rgba(255, 180, 50, 0.75));
+}
+.ghost--returned path,
+.ghost--returned ellipse {
+  --ghost-fill:   rgba(255, 160, 30, 0.22);
+  --ghost-stroke: rgba(255, 160, 30, 0.7);
+}
+
+/* "Ghost returned" banner above quiz card */
+.ghost-returned-banner {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffb432;
+  background: rgba(255, 180, 50, 0.1);
+  border: 1px solid rgba(255, 180, 50, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.85rem;
+  text-align: center;
+}
+
+/* Due badge on room cards */
+.badge--due {
+  background: rgba(255, 180, 50, 0.15);
+  color: #ffb432;
+  border: 1px solid rgba(255, 180, 50, 0.4);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  white-space: nowrap;
+}
+
+/* "N ghosts returned" stat variant */
+.stat--due {
+  color: #ffb432;
+}
+.stat--no-due {
+  color: var(--text-muted);
+}
+
+/* "Review due ghosts" button — warm accent to stand out from purple */
+.btn-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 180, 50, 0.15);
+  color: #ffb432;
+  border: 1px solid rgba(255, 180, 50, 0.5);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.btn-due:hover,
+.btn-due:focus-visible {
+  background: rgba(255, 180, 50, 0.25);
+  box-shadow: 0 0 0 2px rgba(255, 180, 50, 0.45);
+  outline: none;
+}
+
+/* Quiz due-only mode label */
+.quiz-mode-label {
+  font-size: 0.8rem;
+  color: #ffb432;
+  margin-top: 0.15rem;
+}
+
+/* Empty-state action row (Add Note + Try demo) */
+.empty-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* Demo shortcut aside in AddNoteView */
+.demo-shortcut {
+  margin-top: 2rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-elevated);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.demo-shortcut-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ghost--returned {
+    filter: none;
+  }
+}
+
+/* ── Dev-only controls ── */
+.btn-dev {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(80, 250, 123, 0.08);
+  color: var(--success);
+  border: 1px dashed rgba(80, 250, 123, 0.45);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.btn-dev:hover,
+.btn-dev:focus-visible {
+  background: rgba(80, 250, 123, 0.16);
+  box-shadow: 0 0 0 2px rgba(80, 250, 123, 0.35);
+  outline: none;
+}
+
+/* ── Quiz queue progress & completion ── */
+.quiz-progress {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.quiz-final-score {
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.quiz-skipped {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-left: 0.25rem;
+}

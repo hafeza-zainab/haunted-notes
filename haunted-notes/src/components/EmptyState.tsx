@@ -2,7 +2,14 @@ import React from 'react';
 import { useStore } from '../store/useStore';
 
 const EmptyState: React.FC = () => {
-  const setView = useStore((s) => s.setView);
+  const setView      = useStore((s) => s.setView);
+  const isDemoLoaded = useStore((s) => s.isDemoLoaded);
+  const loadDemoData = useStore((s) => s.loadDemoData);
+
+  const handleTryDemo = () => {
+    loadDemoData();
+    setView('dashboard');
+  };
 
   return (
     <div className="empty-state" role="status" aria-label="No notes yet">
@@ -28,13 +35,26 @@ const EmptyState: React.FC = () => {
 
       <h2>No ghosts yet…</h2>
       <p>Add your first note to summon some study ghosts.</p>
-      <button
-        className="btn-primary"
-        onClick={() => setView('add')}
-        autoFocus
-      >
-        ➕ Add Note
-      </button>
+
+      <div className="empty-state-actions">
+        <button
+          className="btn-primary"
+          onClick={() => setView('add')}
+          autoFocus
+        >
+          ➕ Add Note
+        </button>
+
+        {!isDemoLoaded && (
+          <button
+            className="btn-ghost"
+            onClick={handleTryDemo}
+            aria-label="Load demo notes to see how Haunted Notes works"
+          >
+            👻 Try demo
+          </button>
+        )}
+      </div>
     </div>
   );
 };
