@@ -5,6 +5,8 @@ export interface Note {
   rawText: string;
   inputMethod: NoteInputMethod;
   createdAt: number;
+  /** User-editable display title. Falls back to first ~40 chars of rawText. */
+  title?: string;
 }
 
 export interface Flashcard {

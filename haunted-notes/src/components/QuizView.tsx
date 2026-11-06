@@ -7,13 +7,11 @@ const MASTERED_THRESHOLD = 0.05;
 
 type AnswerState = 'idle' | 'correct' | 'wrong';
 
-/** Pick the next weakest unmastered card, excluding the current one */
 function pickNext(cards: Flashcard[], excludeId?: string): Flashcard | null {
   const pool = cards.filter(
     (c) => c.weaknessScore > MASTERED_THRESHOLD && c.id !== excludeId,
   );
   if (pool.length === 0) {
-    // Fallback: allow current card again
     const fallback = cards.filter((c) => c.weaknessScore > MASTERED_THRESHOLD);
     return fallback.length > 0
       ? fallback.reduce((a, b) => (b.weaknessScore > a.weaknessScore ? b : a))
@@ -23,9 +21,22 @@ function pickNext(cards: Flashcard[], excludeId?: string): Flashcard | null {
 }
 
 const QuizView: React.FC = () => {
-  const flashcards = useStore((s) => s.flashcards);
-  const answerCard = useStore((s) => s.answerCard);
-  const setView = useStore((s) => s.setView);
+  const allFlashcards = useStore((s) => s.flashcards);
+  const quizNoteId    = useStore((s) => s.quizNoteId);
+  const notes         = useStore((s) => s.notes);
+  const answerCard    = useStore((s) => s.answerCard);
+  const setView       = useStore((s) => s.setView);
+  const setQuizNoteId = useStore((s) => s.setQuizNoteId);
+
+  // Restrict to a single note when quizNoteId is set
+  const flashcards = quizNoteId
+    ? allFlashcards.filter((c) => c.noteId === quizNoteId)
+    : allFlashcards;
+
+  const quizNote = quizNoteId ? notes.find((n) => n.id === quizNoteId) : null;
+  const quizTitle = quizNote
+    ? (quizNote.title ?? quizNote.rawText.slice(0, 40))
+    : null;
 
   const [current, setCurrent] = useState<Flashcard | null>(() => pickNext(flashcards));
   const [input, setInput] = useState('');
@@ -35,12 +46,14 @@ const QuizView: React.FC = () => {
   const [shaking, setShaking] = useState(false);
   const [score, setScore] = useState({ correct: 0, wrong: 0 });
 
-  // Sync current card if flashcards change externally
   useEffect(() => {
-    if (!current) {
-      setCurrent(pickNext(flashcards));
-    }
+    if (!current) setCurrent(pickNext(flashcards));
   }, [flashcards, current]);
+
+  const exitQuiz = useCallback(() => {
+    setQuizNoteId(null);
+    setView('dashboard');
+  }, [setQuizNoteId, setView]);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -95,10 +108,11 @@ const QuizView: React.FC = () => {
     return (
       <section className="quiz-view quiz-complete" aria-label="Quiz complete">
         <h2>🎉 All Ghosts Banished!</h2>
+        {quizTitle && <p className="quiz-note-label">Room: {quizTitle}</p>}
         <p>
           Score: {score.correct} correct / {score.wrong} wrong
         </p>
-        <button className="btn-primary" onClick={() => setView('dashboard')}>
+        <button className="btn-primary" onClick={exitQuiz}>
           Back to Dashboard
         </button>
       </section>
@@ -108,7 +122,14 @@ const QuizView: React.FC = () => {
   return (
     <section className="quiz-view" aria-label="Quiz mode">
       <header className="quiz-header">
-        <h2>Quiz Mode</h2>
+        <div>
+          <h2>Quiz Mode</h2>
+          {quizTitle && (
+            <p className="quiz-note-label" aria-label={`Quizzing note: ${quizTitle}`}>
+              📜 {quizTitle}
+            </p>
+          )}
+        </div>
         <div className="quiz-score" aria-live="polite">
           <span className="score-correct">✓ {score.correct}</span>
           <span className="score-wrong">✗ {score.wrong}</span>
@@ -141,9 +162,7 @@ const QuizView: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} noValidate>
-          <label htmlFor="quiz-answer" className="sr-only">
-            Your answer
-          </label>
+          <label htmlFor="quiz-answer" className="sr-only">Your answer</label>
           <input
             id="quiz-answer"
             className="quiz-input"
@@ -154,7 +173,6 @@ const QuizView: React.FC = () => {
             autoComplete="off"
             autoFocus
             disabled={answerState !== 'idle'}
-            aria-describedby={feedback ? 'quiz-feedback' : undefined}
           />
           <div className="quiz-actions">
             <button
@@ -175,7 +193,7 @@ const QuizView: React.FC = () => {
             <button
               type="button"
               className="btn-ghost"
-              onClick={() => setView('dashboard')}
+              onClick={exitQuiz}
             >
               Dashboard
             </button>
