@@ -12,7 +12,7 @@ interface HauntedState {
   quizNoteId: string | null;
 
   // Actions
-  addNote: (note: Omit<Note, 'id' | 'createdAt'>) => void;
+  addNote: (note: Omit<Note, 'id' | 'createdAt'>) => number;
   deleteNote: (id: string) => void;
   renameNote: (id: string, title: string) => void;
   answerCard: (cardId: string, correct: boolean) => void;
@@ -42,6 +42,7 @@ export const useStore = create<HauntedState>()(
           notes: [...state.notes, note],
           flashcards: [...state.flashcards, ...newCards],
         }));
+        return newCards.length;
       },
 
       deleteNote: (id) => {

@@ -590,6 +590,11 @@ progress {
   color: var(--success);
   opacity: 0.8;
 }
+.room-no-cards {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
 
 /* Room action buttons */
 .room-actions {

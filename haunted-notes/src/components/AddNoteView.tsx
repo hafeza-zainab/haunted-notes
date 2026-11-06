@@ -144,14 +144,22 @@ const AddNoteView: React.FC = () => {
       setError('Please add some text first.');
       return;
     }
-    addNote({ rawText: text.trim(), inputMethod });
+    const cardCount = addNote({ rawText: text.trim(), inputMethod });
     setSuccess(true);
     setText('');
     resetWhisper();
-    setTimeout(() => {
+    if (cardCount === 0) {
+      setError(
+        'No ghosts could be made from this text. Try adding more detail.',
+      );
       setSuccess(false);
-      setView('dashboard');
-    }, 1200);
+      // Note was still saved — just no flashcards yet
+    } else {
+      setTimeout(() => {
+        setSuccess(false);
+        setView('dashboard');
+      }, 1200);
+    }
   };
 
   const anyBusy = ocrProgress !== null || whisperBusy;

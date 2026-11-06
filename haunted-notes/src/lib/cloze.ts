@@ -2,14 +2,13 @@ import type { Flashcard, Note } from '../types';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-/** Hard cap on flashcards generated from a single note. */
 const MAX_CARDS = 12;
-
-/** Word-count bounds for a viable candidate sentence. */
 const MIN_WORDS = 8;
 const MAX_WORDS = 35;
 
-/** Stop-words — never blanked out. */
+/** If fewer than this many cards are produced, run the relaxed fallback pass. */
+const FALLBACK_THRESHOLD = 5;
+
 const STOP_WORDS = new Set([
   'a','an','the','is','are','was','were','be','been','being',
   'have','has','had','do','does','did','will','would','could','should',
@@ -22,148 +21,150 @@ const STOP_WORDS = new Set([
   'all','any','both','each','few','more','most','other','some','such',
 ]);
 
-// ── Text segmentation ────────────────────────────────────────────────────────
+// ── Utilities ────────────────────────────────────────────────────────────────
 
-/**
- * Regex that matches a leading bullet / question-number prefix to strip
- * before displaying the candidate.
- *
- * Matches:
- *   • bullet        →  "• "
- *   - dash bullet   →  "- "
- *   Q17:            →  "Q17: "
- *   17.             →  "17. "
- *   (b)             →  "(b) "
- */
-const BULLET_PREFIX = /^(?:[•\-\*]\s+|\(?[A-Za-z0-9]{1,3}[.):\s]\s*|Q\d+[.:]\s*)/;
+function wordCount(s: string): number {
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
 
-/**
- * Strip a leading bullet/number prefix from a line and trim.
- */
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+const BULLET_PREFIX =
+  /^(?:[•\-\*]\s+|\(?[A-Za-z0-9]{1,3}[.):\s]\s*|Q\d+[.:]\s*)/;
+
 function stripPrefix(line: string): string {
   return line.replace(BULLET_PREFIX, '').trim();
 }
 
+// ── Over-long candidate splitter ─────────────────────────────────────────────
+
 /**
- * Split raw note text into candidate strings using both structural markers
- * (newlines, bullets, numbered lines) and sentence-ending punctuation.
+ * Split a candidate that exceeds MAX_WORDS into sub-candidates of 10–30 words.
  *
- * Each candidate has its bullet/number prefix removed before being returned.
+ * Split points (in priority order):
+ *   - commas, semicolons
+ *   - coordinating conjunctions used mid-sentence: " but ", " so ", " and then "
+ *   - relative clause marker: " which "
+ *   - a capital letter starting a new word after a space (new sentence onset)
+ *
+ * Pieces are then greedily recombined so each sub-candidate lands in 10–30 words.
  */
+function resplitOverlong(text: string): string[] {
+  // Split on the markers; keep the delimiter text so we don't lose meaning
+  const rawPieces = text
+    .split(/(?<=\w),\s*|(?<=\w);\s*|\s+but\s+|\s+so\s+|\s+which\s+|\s+and\s+then\s+/i)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  // Also split on capital-letter sentence starts within a piece
+  const pieces: string[] = [];
+  for (const piece of rawPieces) {
+    // Look for an interior capital after a lowercase word — rough new-sentence marker
+    const subSplit = piece.split(/(?<=[a-z]{2,}\.?\s)(?=[A-Z])/).map((p) => p.trim()).filter(Boolean);
+    pieces.push(...subSplit);
+  }
+
+  if (pieces.length <= 1) return [text]; // can't split further
+
+  // Greedily recombine pieces into chunks of 10–30 words
+  const results: string[] = [];
+  let current = '';
+
+  for (const piece of pieces) {
+    const candidate = current ? `${current} ${piece}` : piece;
+    const wc = wordCount(candidate);
+
+    if (wc > 30 && current) {
+      // Current chunk is already big enough; emit and start fresh
+      if (wordCount(current) >= 10) results.push(current.trim());
+      current = piece;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current && wordCount(current) >= 10) results.push(current.trim());
+
+  return results.length > 0 ? results : [text];
+}
+
+// ── Text segmentation ────────────────────────────────────────────────────────
+
 function extractCandidates(rawText: string): string[] {
   const candidates: string[] = [];
 
-  // First split on newlines to respect list structure
   const lines = rawText.split(/\r?\n/);
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
     if (!line) continue;
 
-    // If the line already ends with sentence punctuation, treat it as-is after stripping
+    let segments: string[];
+
     if (/[.!?]$/.test(line)) {
-      candidates.push(stripPrefix(line));
-      continue;
+      segments = [stripPrefix(line)];
+    } else if (BULLET_PREFIX.test(line)) {
+      segments = [stripPrefix(line)];
+    } else {
+      segments = line
+        .split(/(?<=[.!?])\s+/)
+        .map((s) => stripPrefix(s.trim()))
+        .filter(Boolean);
     }
 
-    // Lines that are bullet/numbered items but lack a sentence-final period
-    // are themselves candidates; add a synthetic period so downstream scoring
-    // doesn't penalise them.
-    if (BULLET_PREFIX.test(line)) {
-      candidates.push(stripPrefix(line));
-      continue;
-    }
-
-    // For plain paragraph lines, also split on sentence-ending punctuation
-    // to handle multi-sentence prose on a single line.
-    const sentences = line.split(/(?<=[.!?])\s+/);
-    for (const s of sentences) {
-      const stripped = stripPrefix(s.trim());
-      if (stripped) candidates.push(stripped);
+    for (const seg of segments) {
+      const wc = wordCount(seg);
+      if (wc > MAX_WORDS) {
+        // Resplit overlong segments rather than dropping them
+        candidates.push(...resplitOverlong(seg));
+      } else {
+        candidates.push(seg);
+      }
     }
   }
 
   return candidates;
 }
 
-// ── Sentence quality scoring ─────────────────────────────────────────────────
+// ── Sentence scoring ─────────────────────────────────────────────────────────
 
-/**
- * Count whitespace-separated words in a string.
- */
-function wordCount(s: string): number {
-  return s.trim().split(/\s+/).filter(Boolean).length;
-}
-
-/**
- * Score a candidate for flashcard worthiness (higher = better).
- *
- *   +3  definition pattern — "X is/are/means/called/defined as …"
- *   +2  mid-sentence capitalised term (proper noun / key term)
- *   +2  acronym present (2–5 uppercase letters, e.g. SEO, HTTP, PPC)
- *   +1  contains a digit (date, quantity)
- *   −1  word count in the short range (8–10 words)
- */
 function scoreCandidate(s: string): number {
   let score = 0;
-
-  if (/\b(is|are|means|refers\s+to|defined\s+as|known\s+as|called)\b/i.test(s)) {
-    score += 3;
-  }
-
-  // Mid-sentence capitalised word (skip first word)
+  if (/\b(is|are|means|refers\s+to|defined\s+as|known\s+as|called)\b/i.test(s)) score += 3;
   const afterFirst = s.slice(s.indexOf(' ') + 1);
   if (/\b[A-Z][a-z]{2,}\b/.test(afterFirst)) score += 2;
-
-  // Acronym (all-caps, 2–5 letters)
   if (/\b[A-Z]{2,5}\b/.test(s)) score += 2;
-
   if (/\d/.test(s)) score += 1;
-
-  const wc = wordCount(s);
-  if (wc < 11) score -= 1;
-
+  if (wordCount(s) < 11) score -= 1;
   return score;
 }
 
-// ── Cloze-word selection ─────────────────────────────────────────────────────
+// ── Cloze-word selection (strict pass) ───────────────────────────────────────
 
 /**
- * Decide whether a token is a valid cloze target.
+ * A word is a valid strict cloze target if it is:
+ *   1. An all-caps acronym (2–5 letters)
+ *   2. A mid-sentence capitalised term (≥ 4 letters, not the opening word)
+ *   3. The content word immediately after a definitional verb
  *
- * Valid targets:
- *   1. An all-caps acronym (SEO, HTTP, PPC — 2–5 letters)
- *   2. A mid-sentence capitalised word (proper noun / key term, ≥ 4 letters)
- *   3. The word immediately after a definitional verb
- *      (is / are / means / called / defined as)
- *
- * A token is NEVER valid if it is:
- *   - a stop-word
- *   - a pure number / bullet marker
- *   - shorter than 3 characters
+ * Never valid: stop-words, pure numbers, bullet markers, length < 3.
  */
-function isValidClozeTarget(word: string, sentence: string): boolean {
+function isStrictTarget(word: string, sentence: string): boolean {
   if (word.length < 3) return false;
   if (STOP_WORDS.has(word.toLowerCase())) return false;
-  if (/^\d+$/.test(word)) return false;       // pure number
-  if (/^[•\-\*]$/.test(word)) return false;   // bullet marker
+  if (/^\d+$/.test(word)) return false;
+  if (/^[•\-\*]$/.test(word)) return false;
 
-  // Acronym
   if (/^[A-Z]{2,5}$/.test(word)) return true;
 
-  // Mid-sentence capitalised word (≥ 4 letters)
   const firstWord = sentence.split(/\s+/)[0];
-  if (
-    word !== firstWord &&
-    /^[A-Z][a-z]{3,}$/.test(word)
-  ) return true;
+  if (word !== firstWord && /^[A-Z][a-z]{3,}$/.test(word)) return true;
 
-  // Word immediately following a definitional verb
-  const defVerbPattern =
-    /\b(?:is|are|means|called|defined\s+as|known\s+as|refers\s+to)\s+(\S+)/i;
-  const defMatch = sentence.match(defVerbPattern);
+  const defMatch = sentence.match(
+    /\b(?:is|are|means|called|defined\s+as|known\s+as|refers\s+to)\s+(\S+)/i,
+  );
   if (defMatch) {
-    // Strip punctuation from the matched token before comparing
     const defWord = defMatch[1].replace(/[^A-Za-z]/g, '');
     if (
       defWord.toLowerCase() === word.toLowerCase() &&
@@ -175,135 +176,176 @@ function isValidClozeTarget(word: string, sentence: string): boolean {
   return false;
 }
 
-/**
- * Pick the best cloze word from a candidate sentence.
- *
- * Priority:
- *   1. Definitional verb target ("… is Photosynthesis …")
- *   2. All-caps acronym
- *   3. Mid-sentence capitalised term (longest first)
- *   4. Any valid target word (longest first)
- */
-function pickClozeWord(sentence: string): string | null {
+function pickClozeWordStrict(sentence: string): string | null {
   // 1. Definitional target
   const defMatch = sentence.match(
     /\b(?:is|are|means|called|defined\s+as|known\s+as|refers\s+to)\s+([A-Za-z][A-Za-z\-]{2,})/i,
   );
-  if (defMatch) {
-    const w = defMatch[1];
-    if (!STOP_WORDS.has(w.toLowerCase())) return w;
-  }
+  if (defMatch && !STOP_WORDS.has(defMatch[1].toLowerCase())) return defMatch[1];
 
-  // Tokenise (alphabetic runs only)
   const tokens = sentence.match(/\b[A-Za-z\-]{3,}\b/g) ?? [];
-  const valid  = tokens.filter((w) => isValidClozeTarget(w, sentence));
+  const valid  = tokens.filter((w) => isStrictTarget(w, sentence));
   if (valid.length === 0) return null;
 
-  // 2. Acronym
   const acronym = valid.find((w) => /^[A-Z]{2,5}$/.test(w));
   if (acronym) return acronym;
 
-  // 3. Mid-sentence capitalised term, longest first
   const firstWord = sentence.split(/\s+/)[0];
   const capTerms  = valid
     .filter((w) => w !== firstWord && /^[A-Z]/.test(w))
     .sort((a, b) => b.length - a.length);
   if (capTerms.length > 0) return capTerms[0];
 
-  // 4. Any valid target, longest first
   valid.sort((a, b) => b.length - a.length);
   return valid[0];
 }
 
-/** Replace the first occurrence of `word` (whole-word, case-insensitive) with blanks. */
+// ── Cloze-word selection (relaxed fallback) ───────────────────────────────────
+
+/**
+ * Relaxed rules used when the strict pass yields fewer than FALLBACK_THRESHOLD cards.
+ *
+ * In addition to strict targets, also accepts:
+ *   - Any capitalised word (even at sentence start), ≥ 3 letters
+ *   - Any word that contains a digit or a "." (e.g. "H2", "4.0.6", "v3.2")
+ *   - The longest non-stop-word of 6+ letters (lowercase is fine)
+ *
+ * Still never allows: stop-words, pure numbers, bullet markers.
+ */
+function isRelaxedTarget(word: string, _sentence: string): boolean {
+  if (word.length < 3) return false;
+  if (STOP_WORDS.has(word.toLowerCase())) return false;
+  if (/^\d+$/.test(word)) return false;
+  if (/^[•\-\*]$/.test(word)) return false;
+
+  // Capitalised word
+  if (/^[A-Z]/.test(word) && word.length >= 3) return true;
+
+  // Contains a digit or dot (version strings, chemical symbols)
+  if (/[\d.]/.test(word) && /[A-Za-z]/.test(word)) return true;
+
+  // Long lowercase non-stopword
+  if (word.length >= 6) return true;
+
+  return false;
+}
+
+function pickClozeWordRelaxed(sentence: string): string | null {
+  // Still try strict first
+  const strict = pickClozeWordStrict(sentence);
+  if (strict) return strict;
+
+  // Tokenise including alphanumeric (captures "H2", "v3.2")
+  const tokens = sentence.match(/\b[A-Za-z0-9][A-Za-z0-9.\-]*\b/g) ?? [];
+  const valid  = tokens.filter((w) => isRelaxedTarget(w, sentence));
+  if (valid.length === 0) return null;
+
+  // Prefer acronyms, then capitalized, then longest
+  const acronym = valid.find((w) => /^[A-Z]{2,5}$/.test(w));
+  if (acronym) return acronym;
+
+  const capTerms = valid.filter((w) => /^[A-Z]/.test(w)).sort((a, b) => b.length - a.length);
+  if (capTerms.length > 0) return capTerms[0];
+
+  valid.sort((a, b) => b.length - a.length);
+  return valid[0];
+}
+
+// ── Card builder ─────────────────────────────────────────────────────────────
+
 function makeClozePrompt(sentence: string, word: string): string {
   const blank = '_'.repeat(word.length);
   return sentence.replace(new RegExp(`\\b${escapeRegex(word)}\\b`, 'i'), blank);
 }
 
-function escapeRegex(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/**
+ * Safety check: never emit a card whose blank is a stop-word or pure number.
+ * This is a final guard in case either picker slips through.
+ */
+function isSafeBlank(word: string): boolean {
+  if (!word) return false;
+  if (STOP_WORDS.has(word.toLowerCase())) return false;
+  if (/^\d+$/.test(word)) return false;
+  return true;
 }
 
-// ── Public API ───────────────────────────────────────────────────────────────
+function buildCard(
+  sentence: string,
+  noteId: string,
+  pickFn: (s: string) => string | null,
+): Flashcard | null {
+  const word = pickFn(sentence);
+  if (!word || !isSafeBlank(word)) return null;
+  return {
+    id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    noteId,
+    sentence,
+    clozeWord: word,
+    prompt: makeClozePrompt(sentence, word),
+    weaknessScore: 1,
+    streakCorrect: 0,
+    streakWrong: 0,
+    lastReviewed: null,
+  };
+}
 
-/**
- * Generate up to MAX_CARDS flashcards from a note.
- *
- * Pipeline:
- *   1. Extract candidates (newlines, bullets, numbered lines, sentence splits)
- *   2. Strip leading bullet/number prefixes
- *   3. Reject candidates outside the 8–35-word window
- *   4. Score remaining candidates and take the top MAX_CARDS
- *   5. For each, pick a cloze word that passes isValidClozeTarget
- */
+// ── Public API ────────────────────────────────────────────────────────────────
+
 export function generateFlashcards(note: Note): Flashcard[] {
-  const raw = extractCandidates(note.rawText);
-
-  // Filter by word count
-  const inBounds = raw.filter((s) => {
+  // 1. Extract and filter candidates
+  const raw = extractCandidates(note.rawText).filter((s) => {
     const wc = wordCount(s);
     return wc >= MIN_WORDS && wc <= MAX_WORDS;
   });
 
-  // Deduplicate (same text can appear if the note has repeated lines)
-  const seen   = new Set<string>();
-  const unique = inBounds.filter((s) => {
+  // 2. Deduplicate
+  const seen = new Set<string>();
+  const unique = raw.filter((s) => {
     const key = s.toLowerCase().trim();
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 
-  // Score and take the best candidates first
+  // 3. Score and sort
   const scored = unique
     .map((s) => ({ sentence: s, score: scoreCandidate(s) }))
     .sort((a, b) => b.score - a.score);
 
+  // 4. Strict pass
   const cards: Flashcard[] = [];
+  const usedSentences = new Set<string>();
 
   for (const { sentence } of scored) {
     if (cards.length >= MAX_CARDS) break;
+    const card = buildCard(sentence, note.id, pickClozeWordStrict);
+    if (card) {
+      cards.push(card);
+      usedSentences.add(sentence);
+    }
+  }
 
-    const word = pickClozeWord(sentence);
-    if (!word) continue;
-
-    cards.push({
-      id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      noteId: note.id,
-      sentence,
-      clozeWord: word,
-      prompt: makeClozePrompt(sentence, word),
-      weaknessScore: 1,
-      streakCorrect: 0,
-      streakWrong: 0,
-      lastReviewed: null,
-    });
+  // 5. Relaxed fallback pass — runs on sentences not already used
+  if (cards.length < FALLBACK_THRESHOLD) {
+    for (const { sentence } of scored) {
+      if (cards.length >= MAX_CARDS) break;
+      if (usedSentences.has(sentence)) continue;
+      const card = buildCard(sentence, note.id, pickClozeWordRelaxed);
+      if (card) {
+        cards.push(card);
+        usedSentences.add(sentence);
+      }
+    }
   }
 
   return cards;
 }
 
-/**
- * Recalculate weakness score after an answer.
- * Score decays toward 0 on correct answers, climbs toward 1 on wrong ones.
- */
-export function updateWeaknessScore(
-  card: Flashcard,
-  correct: boolean,
-): Flashcard {
+export function updateWeaknessScore(card: Flashcard, correct: boolean): Flashcard {
   const streakCorrect = correct ? card.streakCorrect + 1 : 0;
   const streakWrong   = correct ? 0 : card.streakWrong + 1;
-
-  const weakness = correct
+  const weakness      = correct
     ? Math.max(0, card.weaknessScore * 0.7)
     : Math.min(1, card.weaknessScore + 0.25);
-
-  return {
-    ...card,
-    streakCorrect,
-    streakWrong,
-    weaknessScore: weakness,
-    lastReviewed: Date.now(),
-  };
+  return { ...card, streakCorrect, streakWrong, weaknessScore: weakness, lastReviewed: Date.now() };
 }

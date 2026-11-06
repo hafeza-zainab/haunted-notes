@@ -189,7 +189,11 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
           )}
         </>
       ) : (
-        <p className="room-cleared-msg">🎉 All ghosts banished!</p>
+        <p className="room-cleared-msg">
+          {total === 0
+            ? <span className="room-no-cards">No ghosts yet — text may need more detail.</span>
+            : '🎉 All ghosts banished!'}
+        </p>
       )}
 
       {/* ── Room actions ── */}
