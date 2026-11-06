@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Generate Test for New Component",
+      "trigger": "PostFileCreate",
+      "description": "When a new component file is created, generate a skeleton test for it.",
+      "matcher": "src/components/.*\\\\.tsx$",
+      "action": {
+        "type": "agent",
+        "prompt": "A new React component file was just created in src/components/. Please generate a basic Vitest + React Testing Library test file for it. Place it alongside the component with the suffix `.test.tsx`. The test should: import the component, render it with a minimal store provider if needed, and assert that the main landmark element renders without crashing. Keep it small — one describe block, one or two it() cases."
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Lint on Save",
+      "trigger": "PostFileSave",
+      "description": "Run ESLint on TypeScript/TSX files whenever one is saved in the src/ directory.",
+      "matcher": "src/.*\\\\.tsx?$",
+      "action": {
+        "type": "command",
+        "command": "cd haunted-notes && npm run lint 2>&1 | tail -20",
+        "timeout": 30
+      }
+    }
+  ]
+}
