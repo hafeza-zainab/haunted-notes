@@ -28,7 +28,8 @@ What really happened (keep, it is a good story):
 
 ## 6. Property-based testing
 - <Properties tested on `src/lib/srs.ts` (interval never decreases after correct answers, ease never below 1.3, wrong answer resets reps).>
-- <Did PBT catch a bug unit tests would have missed? If yes, describe it.>
+- Property-based testing. I enabled PBT on the two pure modules, srs.ts and cloze.ts, using vitest and fast-check, with a steering file (testing.md) that makes Kiro write properties for anything under src/lib/. The properties covered review scheduling (interval never decreases after correct answers, ease never below 1.3, a wrong answer resets reps) and card generation (the blank is never a stopword or a number, the prompt never contains the answer). PBT found two bugs my manual testing had missed: a date range like 2020-2024 could become the blank, and only the first occurrence of the answer was blanked, leaving it visible later in the sentence. Both were fixed, and the minimal failing examples are in KIRO_LOG.md.
+
 
 ## 7. Custom agents / Kiro powers
 - <Name, purpose, which Kiro app, effect on the build. Delete this section if unused.>

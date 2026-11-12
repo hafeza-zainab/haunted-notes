@@ -297,3 +297,17 @@ Sample cards (abbreviated):
   - Unchanged: answer normalisation, scoring, skip counting, the wrong-answer "Next" flow, all SRS logic.
   - Lint cleanup, no behavior change: useless regex escapes and unused `isRelaxedTarget` parameter in `cloze.ts`; unused `_total` callback parameter and set-state-in-effect in `AddNoteView.tsx` (now adjusts state during render).
   - `npm run lint` and `npm run build` both pass.
+
+- [x] **Task 15 — Property-based tests (A3)**
+  - Add `vitest@5.1.0` and `fast-check@4.10.2` (exact pins) and an `npm test` script
+  - `src/lib/srs.test.ts`: interval monotonic over correct answers, `dueAt` moves forward, ease >= 1.3, wrong resets reps/interval and sets `dueAt` to now, `isDue` false at reps 0
+  - `isBanished` properties: never true when `isDue`; false when reps is 0; exactly one of `isDue` / `isBanished` for scheduled cards
+  - Add pure `cardStatus(card, now)` to `srs.ts`; property: exactly one of new / haunting / due / banished holds
+  - `src/lib/cloze.test.ts`: blank never a stop-word or number, prompt never contains the answer, no card from fewer than 8 words
+  - Fix bugs found: number-like blanks in the relaxed pass; repeated answer left in the prompt (see `KIRO_LOG.md`)
+
+- [x] **Task 16 — "Next ghost returns in N days" (R16)**
+  - R16: the dashboard summary bar shows "Next ghost returns in N day(s)" whenever at least one ghost is banished. N counts days until the soonest banished `dueAt`, rounded up, minimum 1. Hidden when nothing is banished.
+  - Add pure `nextReturnInMs(cards, now)` and `daysFromMs(ms)` to `src/lib/srs.ts`, with unit and property tests
+  - `DashboardView`: render the stat after the "ghosts returned" stat; add `.stat--next` style
+  - The dev "+1 day" button moves the countdown down by one day

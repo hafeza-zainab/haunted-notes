@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
 import EmptyState from './EmptyState';
 import type { Note, Flashcard } from '../types';
-import { isDue, isBanished } from '../lib/srs';
+import { isDue, isBanished, nextReturnInMs, daysFromMs } from '../lib/srs';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -262,6 +262,8 @@ const DashboardView: React.FC = () => {
   const totalHaunting = flashcards.filter((c) => !isBanished(c)).length;
   const totalBanished = flashcards.filter((c) => isBanished(c)).length;
   const dueCount      = flashcards.filter((c) => isDue(c)).length;
+  const nextMs        = nextReturnInMs(flashcards);
+  const nextDays      = nextMs === null ? 0 : daysFromMs(nextMs);
 
   // Sort rooms
   const sorted = noteRooms.slice().sort((a, b) => {
@@ -310,6 +312,12 @@ const DashboardView: React.FC = () => {
               'No ghosts due'
             )}
           </span>
+          {nextMs !== null && (
+            <span className="stat stat--next">
+              Next ghost returns in{' '}
+              <strong>{nextDays} day{nextDays !== 1 ? 's' : ''}</strong>
+            </span>
+          )}
         </div>
 
         <div className="summary-actions">

@@ -10,7 +10,7 @@ const MAX_WORDS = 35;
 /** If fewer than this many cards are produced, run the relaxed fallback pass. */
 const FALLBACK_THRESHOLD = 5;
 
-const STOP_WORDS = new Set([
+export const STOP_WORDS = new Set([
   'a','an','the','is','are','was','were','be','been','being',
   'have','has','had','do','does','did','will','would','could','should',
   'may','might','must','shall','can','need','dare','ought','used',
@@ -215,6 +215,8 @@ function pickClozeWordStrict(sentence: string): string | null {
  */
 function isRelaxedTarget(word: string): boolean {
   if (word.length < 3) return false;
+  // Number-like tokens (e.g. "2020-2024", "123.456") have no letters: never a blank
+  if (!/[A-Za-z]/.test(word)) return false;
   if (STOP_WORDS.has(word.toLowerCase())) return false;
   if (/^\d+$/.test(word)) return false;
   if (/^[•\-*]$/.test(word)) return false;
@@ -256,7 +258,8 @@ function pickClozeWordRelaxed(sentence: string): string | null {
 
 function makeClozePrompt(sentence: string, word: string): string {
   const blank = '_'.repeat(word.length);
-  return sentence.replace(new RegExp(`\\b${escapeRegex(word)}\\b`, 'i'), blank);
+  // Global: every occurrence is blanked, otherwise a repeated word leaks the answer
+  return sentence.replace(new RegExp(`\\b${escapeRegex(word)}\\b`, 'gi'), blank);
 }
 
 /**
@@ -267,6 +270,7 @@ function isSafeBlank(word: string): boolean {
   if (!word) return false;
   if (STOP_WORDS.has(word.toLowerCase())) return false;
   if (/^\d+$/.test(word)) return false;
+  if (!/[A-Za-z]/.test(word)) return false;
   return true;
 }
 

@@ -977,3 +977,8 @@ progress {
   color: var(--text-muted);
   margin-left: 0.25rem;
 }
+
+/* "Next ghost returns in N days" stat */
+.stat--next {
+  color: var(--text-muted);
+}

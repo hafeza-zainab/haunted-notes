@@ -95,6 +95,42 @@ export function isBanished(card: SrsFields, now = Date.now()): boolean {
 }
 
 /**
+ * Milliseconds until the soonest banished ghost returns, or null when no
+ * ghost is banished. Always > 0 when a value is returned.
+ */
+export function nextReturnInMs(cards: SrsFields[], now = Date.now()): number | null {
+  let soonest: number | null = null;
+  for (const c of cards) {
+    if (isBanished(c, now) && (soonest === null || c.dueAt < soonest)) {
+      soonest = c.dueAt;
+    }
+  }
+  return soonest === null ? null : soonest - now;
+}
+
+/** Whole days to show for a wait in ms, rounded up (so never "0 days"). */
+export function daysFromMs(ms: number): number {
+  return Math.max(1, Math.ceil(ms / MS_PER_DAY));
+}
+
+export type CardStatus = 'new' | 'haunting' | 'due' | 'banished';
+
+/**
+ * Classifies a card into exactly one status:
+ *   new       never answered (reps 0, never reviewed)
+ *   haunting  answered wrong, still haunting (reps 0, has been reviewed)
+ *   due       returned: reps > 0 and dueAt has passed
+ *   banished  reps > 0 and dueAt is in the future
+ */
+export function cardStatus(
+  card: SrsFields & { lastReviewed: number | null },
+  now = Date.now(),
+): CardStatus {
+  if (card.reps === 0) return card.lastReviewed === null ? 'new' : 'haunting';
+  return isBanished(card, now) ? 'banished' : 'due';
+}
+
+/**
  * Returns true when a card was previously scheduled (reps > 0) and has
  * since come back due — i.e. "the ghost is back".
  * Alias of isDue; kept as a named concept for readability at call sites.
