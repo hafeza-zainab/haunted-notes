@@ -1,4 +1,4 @@
-import React, { useState, useId } from 'react';
+import React, { useState, useId, useRef, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
 import EmptyState from './EmptyState';
@@ -34,21 +34,70 @@ interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
-const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ message, onConfirm, onCancel }) => (
-  <div className="confirm-overlay" role="dialog" aria-modal="true" aria-label="Confirm action">
-    <div className="confirm-box">
-      <p className="confirm-message">{message}</p>
-      <div className="confirm-actions">
-        <button className="btn-danger-outline" onClick={onConfirm} autoFocus>
-          Yes, delete
-        </button>
-        <button className="btn-ghost" onClick={onCancel}>
-          Cancel
-        </button>
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+const ConfirmDialog: React.FC<ConfirmDialogProps> = ({ message, onConfirm, onCancel }) => {
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  // Remember what opened the dialog (read before autoFocus moves focus into it)
+  const [opener] = useState<HTMLElement | null>(
+    () => document.activeElement as HTMLElement | null,
+  );
+
+  // Restore focus to the opener once the dialog closes. The deferred check skips
+  // React StrictMode's simulated unmount in dev (the dialog is still in the DOM then).
+  useEffect(() => {
+    const box = boxRef;
+    return () => {
+      setTimeout(() => {
+        if (!box.current?.isConnected) opener?.focus();
+      }, 0);
+    };
+  }, [opener]);
+
+  // Escape closes; Tab and Shift+Tab wrap inside the dialog
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      onCancel();
+      return;
+    }
+    if (e.key !== 'Tab' || !boxRef.current) return;
+    const items = boxRef.current.querySelectorAll<HTMLElement>(FOCUSABLE);
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
+  return (
+    <div
+      className="confirm-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Confirm action"
+      onKeyDown={handleKeyDown}
+    >
+      <div className="confirm-box" ref={boxRef}>
+        <p className="confirm-message">{message}</p>
+        <div className="confirm-actions">
+          <button className="btn-danger-outline" onClick={onConfirm} autoFocus>
+            Yes, delete
+          </button>
+          <button className="btn-ghost" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ── HauntedRoom ───────────────────────────────────────────────────────────────
 
@@ -127,18 +176,21 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
 
           <div className="room-badges">
             {haunted.length > 0 && (
-              <span className="badge badge--haunting" aria-label={`${haunted.length} haunting`}>
-                👻 {haunted.length}
+              <span className="badge badge--haunting">
+                <span aria-hidden="true">👻 {haunted.length}</span>
+                <span className="sr-only">{haunted.length} haunting</span>
               </span>
             )}
             {mastered.length > 0 && (
-              <span className="badge badge--mastered" aria-label={`${mastered.length} banished`}>
-                ✓ {mastered.length}
+              <span className="badge badge--mastered">
+                <span aria-hidden="true">✓ {mastered.length}</span>
+                <span className="sr-only">{mastered.length} banished</span>
               </span>
             )}
             {dueCount > 0 && (
-              <span className="badge badge--due" aria-label={`${dueCount} due`}>
-                🔔 {dueCount} due
+              <span className="badge badge--due">
+                <span aria-hidden="true">🔔 {dueCount} due</span>
+                <span className="sr-only">{dueCount} due</span>
               </span>
             )}
           </div>
@@ -174,7 +226,7 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
                 key={card.id}
                 className="ghost-card"
                 role="listitem"
-                title={card.sentence}
+                title={card.prompt}
               >
                 <GhostSvg
                   weakness={card.weaknessScore}
@@ -329,7 +381,7 @@ const DashboardView: React.FC = () => {
             <button
               className="btn-due"
               onClick={startQuizDue}
-              aria-label={`Review ${dueCount} due ghost${dueCount !== 1 ? 's' : ''}`}
+              aria-label={`Review due ghosts (${dueCount})`}
             >
               🔔 Review due ghosts
             </button>
@@ -343,7 +395,7 @@ const DashboardView: React.FC = () => {
             <button
               className="btn-ghost btn-sm"
               onClick={clearDemoData}
-              aria-label="Remove demo notes and cards"
+              aria-label="Clear demo notes"
             >
               ✕ Clear demo
             </button>

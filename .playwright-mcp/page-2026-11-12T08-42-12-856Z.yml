@@ -1,0 +1,133 @@
+- generic [ref=f5e3]:
+  - navigation "Main navigation" [ref=f5e4]:
+    - link "Skip to main content" [ref=f5e5] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic "Haunted Notes" [ref=f5e6]:
+      - generic [aria-hidden] [ref=f5e7]: 👻
+      - generic [ref=f5e9]:
+        - text: "8"
+        - generic [ref=f5e10]: 8 ghosts haunting
+    - list [ref=f5e11]:
+      - listitem [ref=f5e12]:
+        - button "Dashboard" [ref=f5e13] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f5e14]: 🏚
+      - listitem [ref=f5e16]:
+        - button "Add Note" [ref=f5e17] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f5e18]: ➕
+      - listitem [ref=f5e20]:
+        - button "Quiz" [ref=f5e21] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f5e22]: 👻
+    - button "Disable sound" [ref=f5e24] [cursor=pointer]: 🔊
+  - main [ref=f5e25]:
+    - region "Ghost dashboard" [ref=f5e26]:
+      - generic [ref=f5e27]:
+        - generic [ref=f5e28]:
+          - generic [ref=f5e29]:
+            - strong [ref=f5e30]: "8"
+            - text: haunting
+          - generic [ref=f5e31]:
+            - strong [ref=f5e32]: "1"
+            - text: banished
+          - generic [ref=f5e33]:
+            - strong [ref=f5e34]: "3"
+            - text: rooms
+          - generic [ref=f5e35]:
+            - strong [ref=f5e36]: "2"
+            - text: ghosts returned
+          - generic [ref=f5e37]:
+            - text: Next ghost returns in
+            - strong [ref=f5e38]: 1 day
+        - generic [ref=f5e39]:
+          - button "Review due ghosts (2)" [ref=f5e40] [cursor=pointer]: 🔔 Review due ghosts
+          - button "👻 Start Quiz" [ref=f5e41] [cursor=pointer]
+          - button "Clear demo notes" [ref=f5e42] [cursor=pointer]: ✕ Clear demo
+          - 'button "Time travel +1 day: make all scheduled ghosts due now" [ref=f5e43] [cursor=pointer]': ⏩ +1 day
+          - button "Reset all data" [ref=f5e44] [cursor=pointer]: 🗑 Reset all
+      - group "Sort rooms by" [ref=f5e45]:
+        - generic [ref=f5e46]: "Sort:"
+        - button "⚡ Weakest first" [pressed] [ref=f5e47] [cursor=pointer]
+        - button "🕐 Newest first" [ref=f5e48] [cursor=pointer]
+      - list [ref=f5e49]:
+        - listitem [ref=f5e50]:
+          - 'article "Haunted room: Biology" [ref=f5e51]':
+            - generic [ref=f5e52]:
+              - generic [ref=f5e53]:
+                - 'button "Rename room: Biology" [ref=f5e54] [cursor=pointer]':
+                  - generic [ref=f5e55]: Biology
+                  - generic [aria-hidden] [ref=f5e56]: ✎
+                - generic [ref=f5e58]:
+                  - generic [aria-hidden] [ref=f5e59]: 👻 3
+                  - generic [ref=f5e60]: 3 haunting
+              - progressbar "Banished ghosts" [ref=f5e61]
+              - paragraph [aria-hidden] [ref=f5e62]: 0 of 3 banished
+            - list "Ghosts in this room" [ref=f5e63]:
+              - listitem "______________ is the process by which plants convert sunlight into glucose." [ref=f5e64]:
+                - 'img "Ghost: ______________ is the process by which plants convert sunlight into glucose." [ref=f5e65]'
+                - paragraph [ref=f5e70]: ______________ is the process by which plants convert sunlight into glucose.
+              - listitem "___ stands for deoxyribonucleic acid and carries genetic information." [ref=f5e71]:
+                - 'img "Ghost: ___ stands for deoxyribonucleic acid and carries genetic information." [ref=f5e72]'
+                - paragraph [ref=f5e77]: ___ stands for deoxyribonucleic acid and carries genetic information.
+              - listitem "_______ is the process of cell division that produces two identical daughter cells." [ref=f5e78]:
+                - 'img "Ghost: _______ is the process of cell division that produces two identical daughter cells." [ref=f5e79]'
+                - paragraph [ref=f5e84]: _______ is the process of cell division that produces two identical daughter cells.
+            - generic [ref=f5e85]:
+              - button "👻 Quiz this room" [ref=f5e86] [cursor=pointer]
+              - 'button "Delete note: Biology" [ref=f5e87] [cursor=pointer]': 🗑 Delete
+        - listitem [ref=f5e88]:
+          - 'article "Haunted room: Java Basics" [ref=f5e89]':
+            - generic [ref=f5e90]:
+              - generic [ref=f5e91]:
+                - 'button "Rename room: Java Basics" [ref=f5e92] [cursor=pointer]':
+                  - generic [ref=f5e93]: Java Basics
+                  - generic [aria-hidden] [ref=f5e94]: ✎
+                - generic [ref=f5e95]:
+                  - generic [ref=f5e96]:
+                    - generic [aria-hidden] [ref=f5e97]: 👻 3
+                    - generic [ref=f5e98]: 3 haunting
+                  - generic [ref=f5e99]:
+                    - generic [aria-hidden] [ref=f5e100]: 🔔 1 due
+                    - generic [ref=f5e101]: 1 due
+              - progressbar "Banished ghosts" [ref=f5e102]
+              - paragraph [aria-hidden] [ref=f5e103]: 0 of 3 banished
+            - list "Ghosts in this room" [ref=f5e104]:
+              - listitem "Java is a __________ typed, object-oriented programming language." [ref=f5e105]:
+                - 'img "Ghost: Java is a __________ typed, object-oriented programming language." [ref=f5e106]'
+                - paragraph [ref=f5e111]: Java is a __________ typed, object-oriented programming language.
+              - listitem "A Java class is a _________ for creating objects." [ref=f5e112]:
+                - 'img "Ghost: A Java class is a _________ for creating objects." [ref=f5e113]'
+                - paragraph [ref=f5e118]: A Java class is a _________ for creating objects.
+              - listitem "The ___ (Java Virtual Machine) interprets bytecode." [ref=f5e119]:
+                - 'img "Ghost: The ___ (Java Virtual Machine) interprets bytecode." [ref=f5e120]'
+                - paragraph [ref=f5e125]: The ___ (Java Virtual Machine) interprets bytecode.
+            - generic [ref=f5e126]:
+              - button "👻 Quiz this room" [ref=f5e127] [cursor=pointer]
+              - 'button "Delete note: Java Basics" [ref=f5e128] [cursor=pointer]': 🗑 Delete
+        - listitem [ref=f5e129]:
+          - 'article "Haunted room: Digital Marketing" [ref=f5e130]':
+            - generic [ref=f5e131]:
+              - generic [ref=f5e132]:
+                - 'button "Rename room: Digital Marketing" [ref=f5e133] [cursor=pointer]':
+                  - generic [ref=f5e134]: Digital Marketing
+                  - generic [aria-hidden] [ref=f5e135]: ✎
+                - generic [ref=f5e136]:
+                  - generic [ref=f5e137]:
+                    - generic [aria-hidden] [ref=f5e138]: 👻 2
+                    - generic [ref=f5e139]: 2 haunting
+                  - generic [ref=f5e140]:
+                    - generic [aria-hidden] [ref=f5e141]: ✓ 1
+                    - generic [ref=f5e142]: 1 banished
+                  - generic [ref=f5e143]:
+                    - generic [aria-hidden] [ref=f5e144]: 🔔 1 due
+                    - generic [ref=f5e145]: 1 due
+              - progressbar "Banished ghosts" [ref=f5e146]
+              - paragraph [aria-hidden] [ref=f5e148]: 1 of 3 banished
+            - list "Ghosts in this room" [ref=f5e149]:
+              - listitem "A __________ rate measures the percentage of visitors who complete a goal." [ref=f5e150]:
+                - 'img "Ghost: A __________ rate measures the percentage of visitors who complete a goal." [ref=f5e151]'
+                - paragraph [ref=f5e156]: A __________ rate measures the percentage of visitors who complete a goal.
+              - listitem "_______ marketing focuses on creating valuable content to attract audiences." [ref=f5e157]:
+                - 'img "Ghost: _______ marketing focuses on creating valuable content to attract audiences." [ref=f5e158]'
+                - paragraph [ref=f5e163]: _______ marketing focuses on creating valuable content to attract audiences.
+            - generic [ref=f5e164]:
+              - button "👻 Quiz this room" [ref=f5e165] [cursor=pointer]
+              - 'button "Delete note: Digital Marketing" [ref=f5e166] [cursor=pointer]': 🗑 Delete

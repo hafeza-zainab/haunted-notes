@@ -26,8 +26,9 @@ const NavBar: React.FC = () => {
         <span aria-hidden="true">👻</span>
         <span className="brand-name">Haunted Notes</span>
         {hauntedCount > 0 && (
-          <span className="ghost-badge" aria-label={`${hauntedCount} ghosts haunting`}>
-            {hauntedCount}
+          <span className="ghost-badge">
+            <span aria-hidden="true">{hauntedCount}</span>
+            <span className="sr-only">{hauntedCount} ghosts haunting</span>
           </span>
         )}
       </div>
@@ -51,7 +52,7 @@ const NavBar: React.FC = () => {
         className="sound-toggle"
         onClick={toggleSound}
         aria-label={soundEnabled ? 'Disable sound' : 'Enable sound'}
-        title={soundEnabled ? 'Sound on' : 'Sound off'}
+        title={soundEnabled ? 'Disable sound' : 'Enable sound'}
       >
         {soundEnabled ? '🔊' : '🔇'}
       </button>

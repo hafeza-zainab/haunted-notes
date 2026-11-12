@@ -165,3 +165,47 @@ Not verified: that the hooks appear in the Agent Hooks panel and fire. Kiro load
   - FAIL: white-on-accent text at 3.99:1 (`.btn-primary`, `.ghost-badge`, `.skip-link`), active nav and sort labels at about 2.9 to 3.1:1, focus ring removed on `.btn-due`, `.btn-dev` and text inputs, label-in-name on "Review due ghosts", "Clear demo" and "Try demo".
   - Not acted on: no app code was changed. These findings are for a later fix.
 - **Caveat:** the agent could not click because `browser_click` is not on its allowed list. It used Tab and Enter instead. Findings from the static-only first run (modal focus trap, input disabled after a correct answer, aria-label on spans) were not re-measured in the browser run, so treat them as unverified. One of them does hold up: my earlier Playwright snapshot showed the quiz ghost label as "Ghost haunting: A Java class is a blueprint for creating objects.", which contains the answer and is read aloud by screen readers.
+
+---
+
+## Fixes from the ghost-ui-reviewer report
+
+Order followed: answer leak, contrast, focus, label-in-name, ConfirmDialog, readOnly, sr-only, tokens.
+
+- **Answer leak:** the quiz ghost `aria-label` and the dashboard card `title` now use the cloze `prompt`. Checked in the browser: the full sentence and the answer are not in the DOM, any attribute, or any `title` before answering.
+- **Contrast:** new tokens `--accent-strong` (#7a35e6), `--border-strong` (#7c6aa8), `--due`, `--due-glow`. Active nav, sort and tab labels use `--text`. `.badge--haunting` uses `--ghost-eyes`.
+- **Focus:** removed `outline: none` from `.btn-due`, `.btn-dev`, `.quiz-input`, `.note-textarea`, `.room-title-input`. The global 2px accent `:focus-visible` outline now applies.
+- **Label-in-name:** "Review due ghosts (N)", "Clear demo notes", "Try demo: load sample notes" (empty state), plus the same fix on two `AddNoteView` buttons ("Try demo…", "Reset: …") and the sound toggle `title`.
+- **ConfirmDialog:** focus trap, Escape to close, focus restored to the opener. Verified in the browser (Tab wraps, Escape closes, focus returns to "Reset all data"). First attempt restored focus to the wrong element because `autoFocus` runs first, and then React StrictMode's simulated unmount stole focus in dev. Fixed by capturing the opener during render and skipping the restore while the dialog is still in the DOM.
+- **Quiz input:** `readOnly` instead of `disabled` after a correct answer. Focus stays on the input.
+- **sr-only:** badges, nav badge, quiz progress and quiz prompt use visually hidden text instead of `aria-label` on spans and paragraphs. The prompt keeps its visible text.
+- **Tokens:** `#ffb432` and `rgba(255,180,50,…)` replaced by `--due`, `--due-glow` and `color-mix(in srgb, var(--due) N%, transparent)`. `.btn-sm` no longer needs `!important`.
+
+### Contrast, before and after (390px, measured in the browser unless noted)
+
+| Item | Before | After | Need |
+|---|---|---|---|
+| White on `.btn-primary`, `.ghost-badge`, `.skip-link` | 3.99 | 6.04 | 4.5 |
+| Active nav label | 2.89 | 9.44 | 4.5 |
+| Active sort label | 3.10 | 10.13 | 4.5 |
+| `.badge--haunting` text | 3.63 | 7.09 | 4.5 |
+| `.quiz-input` border | about 1.4 | 4.20 | 3 |
+| `.tab-btn` border (inactive) | about 1.4 | 4.13 | 3 |
+| `.sort-btn` border (inactive) | 1.33 | 4.13 | 3 |
+| `.btn-ghost` border | 1.37 | 3.57 | 3 |
+| Quiz input placeholder | about 3.9 | 5.34 | 4.5 |
+| `.btn-due` border | about 3.4 (hand calc) | about 7.3 (hand calc; the browser reports `color-mix` as `color(srgb …)`) | 3 |
+
+Not in the original list, added after the reviewer's re-run flagged them: `.btn-ghost`, `.btn-secondary` and `.sort-btn` borders, the input placeholder colour, the `.btn-due` border, and the sound-toggle `title`.
+
+### Checks
+- `npm run lint`, `npm test` (28 passed) and `npm run build` pass. ESLint on every saved file is clean.
+- Reduced-motion check on `index.css` after each save: all covered (the final `prefers-reduced-motion` block sets `animation` and `transition` to `none` on every element).
+- 390px: no horizontal scroll, 0 controls under 44px.
+- Reviewer re-run: the first run after the fixes had one FAIL class (borders on ghost, sort and secondary buttons, placeholder). The second had two FAILs, `.btn-due` border and the sound-toggle title, both fixed afterwards. Not re-run a third time. The `.btn-due` result rests on my hand calculation.
+
+### Left open on purpose
+- **Blank length:** the number of underscores equals the answer length (for example `___` for DNA), so it hints at the answer. Fixing it means changing cloze generation and the saved card prompts (needs a store migration), so I did not do it here.
+- `.btn-secondary` border (only on the Add Note view) and the shake and banish animations under reduced motion were not measured at runtime.
+- `.quiz-input[readonly]` uses 0.5 opacity. I calculated about 4.6:1, only just above 4.5.
+- Screenshots: `docs/screens/dashboard-390-a11y-after.png`, `docs/screens/quiz-390-a11y-after.png`.

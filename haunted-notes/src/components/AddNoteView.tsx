@@ -349,7 +349,7 @@ const AddNoteView: React.FC = () => {
                   type="button"
                   className="btn-ghost"
                   onClick={handleResetAudio}
-                  aria-label="Clear transcript and start over"
+                  aria-label="Reset: clear transcript and start over"
                 >
                   ↺ Reset
                 </button>
@@ -412,7 +412,7 @@ const AddNoteView: React.FC = () => {
             type="button"
             className="btn-ghost"
             onClick={() => { loadDemoData(); setView('dashboard'); }}
-            aria-label="Load demo notes and go to dashboard"
+            aria-label="Try demo: load sample notes and open the dashboard"
           >
             👻 Try demo →
           </button>

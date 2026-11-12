@@ -208,19 +208,20 @@ const QuizView: React.FC = () => {
         <div>
           <h2>Quiz Mode</h2>
           {quizDueOnly && (
-            <p className="quiz-mode-label" aria-label="Reviewing due cards only">
+            <p className="quiz-mode-label">
               🔔 Due cards only
             </p>
           )}
           {quizTitle && (
-            <p className="quiz-note-label" aria-label={`Quizzing note: ${quizTitle}`}>
+            <p className="quiz-note-label">
               📜 {quizTitle}
             </p>
           )}
         </div>
         <div className="quiz-score" aria-live="polite">
-          <span className="quiz-progress" aria-label={`Card ${queuePos} of ${queueTotal}`}>
-            {queuePos} / {queueTotal}
+          <span className="quiz-progress">
+            <span aria-hidden="true">{queuePos} / {queueTotal}</span>
+            <span className="sr-only">Card {queuePos} of {queueTotal}</span>
           </span>
           <span className="score-correct">✓ {score.correct}</span>
           <span className="score-wrong">✗ {score.asked - score.correct}</span>
@@ -239,13 +240,14 @@ const QuizView: React.FC = () => {
           banishing={banishing}
           shaking={shaking}
           size={120}
-          label={`Ghost haunting: ${currentCard.sentence}`}
+          label={`Ghost haunting: ${currentCard.prompt}`}
           className={ghostReturned ? 'ghost--returned' : undefined}
         />
       </div>
 
       <div className="quiz-card">
-        <p className="quiz-prompt" aria-label="Fill in the blank">
+        <p className="quiz-prompt">
+          <span className="sr-only">Fill in the blank: </span>
           {currentCard.prompt}
         </p>
 
@@ -271,8 +273,9 @@ const QuizView: React.FC = () => {
             placeholder="Fill in the blank…"
             autoComplete="off"
             autoFocus
-            // Keep editable while showing wrong feedback so user can read; disable only on correct
-            disabled={answerState === 'correct'}
+            // Keep editable while showing wrong feedback so user can read.
+            // readOnly (not disabled) after a correct answer so focus is not lost.
+            readOnly={answerState === 'correct'}
           />
           <div className="quiz-actions">
             <button

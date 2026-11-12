@@ -49,7 +49,7 @@ const EmptyState: React.FC = () => {
           <button
             className="btn-ghost"
             onClick={handleTryDemo}
-            aria-label="Load demo notes to see how Haunted Notes works"
+            aria-label="Try demo: load sample notes"
           >
             👻 Try demo
           </button>
