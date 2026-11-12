@@ -86,6 +86,15 @@ export function isDue(card: SrsFields, now = Date.now()): boolean {
 }
 
 /**
+ * Returns true when a ghost is banished: it has been answered correctly at
+ * least once (reps > 0) and its next review is still in the future.
+ * Everything else (new, wrong, or returned) is haunting.
+ */
+export function isBanished(card: SrsFields, now = Date.now()): boolean {
+  return card.reps > 0 && card.dueAt > now;
+}
+
+/**
  * Returns true when a card was previously scheduled (reps > 0) and has
  * since come back due — i.e. "the ghost is back".
  * Alias of isDue; kept as a named concept for readability at call sites.

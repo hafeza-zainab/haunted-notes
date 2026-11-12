@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
 import type { View } from '../types';
+import { isBanished } from '../lib/srs';
 
 const NavBar: React.FC = () => {
   const currentView = useStore((s) => s.currentView);
@@ -9,7 +10,7 @@ const NavBar: React.FC = () => {
   const toggleSound = useStore((s) => s.toggleSound);
   const flashcards = useStore((s) => s.flashcards);
 
-  const hauntedCount = flashcards.filter((c) => c.weaknessScore > 0.05).length;
+  const hauntedCount = flashcards.filter((c) => !isBanished(c)).length;
 
   const navItems: { view: View; label: string; icon: string }[] = [
     { view: 'dashboard', label: 'Dashboard', icon: '🏚' },

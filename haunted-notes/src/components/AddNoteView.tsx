@@ -100,7 +100,7 @@ const AddNoteView: React.FC = () => {
         return;
       }
 
-      await transcribe(file, (chunkText, chunkIndex, _total) => {
+      await transcribe(file, (chunkText, chunkIndex) => {
         // Append each chunk's text as it arrives so the user sees progress
         setText((t) => {
           const separator = t ? (chunkIndex === 0 ? '\n' : ' ') : '';
@@ -118,11 +118,14 @@ const AddNoteView: React.FC = () => {
   };
 
   // Surface whisper errors to the shared error field
-  React.useEffect(() => {
-    if (whisper.status === 'error' && whisper.error) {
-      setError(whisper.error);
-    }
-  }, [whisper.status, whisper.error]);
+  // (Adjusting state during render instead of in an effect: same behavior,
+  // fires once each time a new whisper error appears.)
+  const whisperError = whisper.status === 'error' ? whisper.error : null;
+  const [seenWhisperError, setSeenWhisperError] = useState<string | null>(null);
+  if (whisperError !== seenWhisperError) {
+    setSeenWhisperError(whisperError);
+    if (whisperError) setError(whisperError);
+  }
 
   // ── Cancel / Reset audio ───────────────────────────────────────────────
   const handleCancelAudio = () => {

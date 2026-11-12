@@ -91,6 +91,14 @@ A `isDemoLoaded: boolean` flag tracks whether demo data has been loaded, so:
 **R14 — "Clear demo" action**
 A "Clear demo" button appears in the summary bar when `isDemoLoaded === true`. It removes all notes and flashcards whose `id` is prefixed with `"demo-"` and sets `isDemoLoaded = false`.
 
+**R15 — Banished means banished**
+A card is *banished* when `reps > 0` AND `dueAt > now`. Every other card (new, answered wrong, or returned) is *haunting*. This replaces the old weakness-score threshold (`weaknessScore <= 0.05`) for all dashboard purposes:
+- Summary "haunting" / "banished" counts and the NavBar ghost badge use `isBanished`.
+- A room's ghost grid shows only haunting cards; banished cards leave the grid and return when `dueAt` passes.
+- A room's progress bar is `banished / total`.
+- A room with zero haunting cards shows the cleared state.
+- The quiz queue logic is unchanged by this requirement.
+
 ---
 
 ## Design
@@ -124,7 +132,8 @@ export function isReturned(card: SrsFields, now?: number): boolean
 `scheduleCorrect` implements the three-stage ramp described in R2.  
 `scheduleWrong` resets as in R3.  
 `isDue` returns `card.reps > 0 && (now ?? Date.now()) >= card.dueAt` — new cards (`reps === 0`) are never due.  
-`isReturned` is an alias of `isDue` (same condition, kept as a named concept for readability at call sites).
+`isReturned` is an alias of `isDue` (same condition, kept as a named concept for readability at call sites).  
+`isBanished` returns `card.reps > 0 && card.dueAt > (now ?? Date.now())` (R15). `isBanished` and `isDue` are mutually exclusive, and a card with `reps === 0` is neither.
 
 No imports from React or Zustand — pure TypeScript.
 
@@ -274,3 +283,17 @@ Sample cards (abbreviated):
   - Skip: advance index, no `answerCard` call, not counted in score
   - Progress indicator "N / Total" in the header score area
   - Completion screen: "N correct out of N asked (M skipped)"
+
+- [x] **Task 13 — Banished means banished (A4)**
+  - Add `isBanished(card, now?)` to `src/lib/srs.ts`: `reps > 0 && dueAt > now`
+  - `DashboardView`: haunting/banished summary counts, room ghost grid, room progress bar, room sort weight and cleared state all use `isBanished`; remove the unused `MASTERED_THRESHOLD`
+  - `NavBar`: ghost count badge uses `!isBanished`
+  - Quiz queue logic intentionally unchanged
+
+- [x] **Task 14 — QuizView state refactor and lint cleanup**
+  - `QuizView`: replace queue/index refs and the `tick` counter with `useState`. The queue is a snapshot of card ids from a lazy initialiser (`buildQueue`); the index is state. Answer and Skip both just increment the index; reaching the end shows the completion screen.
+  - Queue excludes banished cards (`!isBanished`), then applies the existing `quizNoteId` and `quizDueOnly` filters.
+  - Empty queue shows "No ghosts to review right now" with a Back to Dashboard button.
+  - Unchanged: answer normalisation, scoring, skip counting, the wrong-answer "Next" flow, all SRS logic.
+  - Lint cleanup, no behavior change: useless regex escapes and unused `isRelaxedTarget` parameter in `cloze.ts`; unused `_total` callback parameter and set-state-in-effect in `AddNoteView.tsx` (now adjusts state during render).
+  - `npm run lint` and `npm run build` both pass.

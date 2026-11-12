@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
 import type { Flashcard } from '../types';
-import { isDue, isReturned } from '../lib/srs';
+import { isDue, isReturned, isBanished } from '../lib/srs';
 
 // ── Answer normalisation ──────────────────────────────────────────────────────
 
@@ -12,6 +12,27 @@ import { isDue, isReturned } from '../lib/srs';
  */
 function normalise(s: string): string {
   return s.trim().replace(/^[^\w]+|[^\w]+$/g, '').toLowerCase();
+}
+
+// ── Queue building ────────────────────────────────────────────────────────────
+
+/**
+ * Snapshot of card ids for one round, shuffled.
+ * Banished cards (reps > 0 and dueAt in the future) are never included.
+ * Optional filters: a single note, and due (returned) cards only.
+ */
+function buildQueue(
+  cards: Flashcard[],
+  noteId: string | null,
+  dueOnly: boolean,
+): string[] {
+  let eligible = cards.filter((c) => !isBanished(c));
+  if (noteId) eligible = eligible.filter((c) => c.noteId === noteId);
+  if (dueOnly) eligible = eligible.filter((c) => isDue(c));
+  return eligible
+    .slice()
+    .sort(() => Math.random() - 0.5)
+    .map((c) => c.id);
 }
 
 // ── QuizView ──────────────────────────────────────────────────────────────────
@@ -28,34 +49,12 @@ const QuizView: React.FC = () => {
   const setQuizNoteId  = useStore((s) => s.setQuizNoteId);
   const setQuizDueOnly = useStore((s) => s.setQuizDueOnly);
 
-  // ── Build the queue once at mount ─────────────────────────────────────────
-  //
-  // We snapshot the eligible card IDs into a ref so that store updates
-  // (weaknessScore, SRS fields) never mutate the round's ordering or length.
-  // The queue is a simple ordered list; we walk it front-to-back.
-
-  const queueRef = useRef<string[]>([]);
-  const indexRef = useRef<number>(0);
-
-  // Initialise the queue exactly once.  We use a ref+flag instead of useMemo
-  // so that the queue is truly frozen even if the parent re-renders.
-  const initialised = useRef(false);
-  if (!initialised.current) {
-    initialised.current = true;
-
-    let eligible = quizNoteId
-      ? allFlashcards.filter((c) => c.noteId === quizNoteId)
-      : allFlashcards;
-
-    if (quizDueOnly) {
-      eligible = eligible.filter((c) => isDue(c));
-    }
-
-    // Shuffle for variety within the round
-    const shuffled = eligible.slice().sort(() => Math.random() - 0.5);
-    queueRef.current = shuffled.map((c) => c.id);
-    indexRef.current = 0;
-  }
+  // ── Queue: snapshot of card ids, built once by the lazy initialiser ───────
+  // Store updates (weakness, SRS fields) never change this round's order or length.
+  const [queue] = useState<string[]>(() =>
+    buildQueue(allFlashcards, quizNoteId, quizDueOnly),
+  );
+  const [index, setIndex] = useState(0);
 
   // Build a lookup map from the live store so we always display up-to-date
   // card data (weakness, etc.) but never change the queue.
@@ -71,16 +70,9 @@ const QuizView: React.FC = () => {
   const [banishing, setBanishing]         = useState(false);
   const [shaking, setShaking]             = useState(false);
   const [score, setScore]                 = useState({ correct: 0, asked: 0 });
-  // Incremented by advance() to guarantee a re-render even when all other
-  // state values are already at their reset values (e.g. Skip on the last card).
-  const [tick, setTick]                   = useState(0);
 
-  // Resolve the current card from the queue.
-  // Reading `tick` here means every setTick() call in advance() causes this
-  // line to re-evaluate, picking up the updated indexRef.current — even when
-  // all the other state resets in advance() are already at their default values
-  // (the case that caused Skip to do nothing on the last card).
-  const currentId   = tick >= 0 ? (queueRef.current[indexRef.current] ?? null) : null;
+  // Resolve the current card from the queue (null once the end is reached).
+  const currentId   = queue[index] ?? null;
   const currentCard = currentId ? (cardById.get(currentId) ?? null) : null;
 
   // Re-focus the input whenever we advance to a new card
@@ -94,13 +86,12 @@ const QuizView: React.FC = () => {
   // ── Navigation ────────────────────────────────────────────────────────────
 
   const advance = useCallback(() => {
-    indexRef.current += 1;
+    setIndex((i) => i + 1);
     setInput('');
     setFeedback('');
     setAnswerState('idle');
     setBanishing(false);
     setShaking(false);
-    setTick((t) => t + 1); // always triggers a re-render to pick up the new index
   }, []);
 
   const exitQuiz = useCallback(() => {
@@ -165,8 +156,19 @@ const QuizView: React.FC = () => {
 
   // ── Completion screen ─────────────────────────────────────────────────────
 
+  if (queue.length === 0) {
+    return (
+      <section className="quiz-view quiz-complete" aria-label="Nothing to review">
+        <h2>No ghosts to review right now</h2>
+        <button className="btn-primary" onClick={exitQuiz}>
+          Back to Dashboard
+        </button>
+      </section>
+    );
+  }
+
   if (!currentCard) {
-    const total = queueRef.current.length;
+    const total = queue.length;
     const completionMsg = quizDueOnly
       ? '👻 All returned ghosts reviewed!'
       : '🎉 Round complete!';
@@ -192,8 +194,8 @@ const QuizView: React.FC = () => {
   // ── Active card ───────────────────────────────────────────────────────────
 
   const ghostReturned = isReturned(currentCard);
-  const queueTotal    = queueRef.current.length;
-  const queuePos      = indexRef.current + 1; // 1-based for display
+  const queueTotal    = queue.length;
+  const queuePos      = index + 1; // 1-based for display
 
   // Button label switches after a wrong answer
   const submitLabel = answerState === 'wrong' ? 'Next →' : 'Submit';

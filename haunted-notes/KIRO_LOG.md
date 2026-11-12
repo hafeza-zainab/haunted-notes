@@ -74,3 +74,16 @@ Record of each time a spec, hook, or steering file changed the outcome.
 - `tech.md` (always): stack, network limits, lazy-loading rule for Whisper and Tesseract, pure-logic-in-`src/lib` rule.
 - `testing.md` (fileMatch `src/lib/**`): vitest unit tests plus fast-check property tests required for every pure function. The runner itself is installed in prompt A3.
 - App code untouched.
+
+---
+
+## A4: Banished means banished
+
+- Added `isBanished` (`reps > 0 && dueAt > now`) to `src/lib/srs.ts`. Dashboard counts, room ghost grid, room progress bar and the NavBar badge now use it instead of the old weakness threshold. Spec: R15, Task 13.
+
+## QuizView refactor and lint cleanup
+
+- Replaced the queue/index refs and the `tick` re-render hack in `QuizView.tsx` with `useState` (lazy-initialised queue snapshot plus index state). This removed 15 `react-hooks/refs` lint errors and the root cause of the earlier "Skip does nothing on the last card" bug, since the index is now real state.
+- Queue now excludes banished cards. An empty queue shows "No ghosts to review right now".
+- Fixed the remaining lint errors with no behavior change: regex escapes and an unused parameter in `cloze.ts`, an unused callback parameter and a set-state-in-effect in `AddNoteView.tsx`.
+- `npm run lint` and `npm run build` both pass. Spec: Task 14.

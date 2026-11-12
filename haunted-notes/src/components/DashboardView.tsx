@@ -3,11 +3,10 @@ import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
 import EmptyState from './EmptyState';
 import type { Note, Flashcard } from '../types';
-import { isDue } from '../lib/srs';
+import { isDue, isBanished } from '../lib/srs';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const MASTERED_THRESHOLD  = 0.05;
 const PREVIEW_GHOST_COUNT = 3;
 const TITLE_MAX_LEN       = 40;
 
@@ -22,7 +21,7 @@ function noteTitle(note: Note): string {
 }
 
 function roomSortWeight(cards: Flashcard[]): number {
-  const haunted = cards.filter((c) => c.weaknessScore > MASTERED_THRESHOLD);
+  const haunted = cards.filter((c) => !isBanished(c));
   if (haunted.length === 0) return 0;
   return haunted.reduce((s, c) => s + c.weaknessScore, 0) / haunted.length;
 }
@@ -69,9 +68,9 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
   const [titleDraft, setTitleDraft] = useState('');
   const [confirmDel, setConfirmDel] = useState(false);
 
-  const haunted  = cards.filter((c) => c.weaknessScore > MASTERED_THRESHOLD)
+  const haunted  = cards.filter((c) => !isBanished(c))
                         .sort((a, b) => b.weaknessScore - a.weaknessScore);
-  const mastered = cards.filter((c) => c.weaknessScore <= MASTERED_THRESHOLD);
+  const mastered = cards.filter((c) => isBanished(c));
   const total    = cards.length;
   const pct      = total > 0 ? Math.round((mastered.length / total) * 100) : 0;
   const dueCount = cards.filter((c) => isDue(c)).length;
@@ -260,8 +259,8 @@ const DashboardView: React.FC = () => {
   }));
 
   // Summary counts (across all notes)
-  const totalHaunting = flashcards.filter((c) => c.weaknessScore > MASTERED_THRESHOLD).length;
-  const totalBanished = flashcards.filter((c) => c.weaknessScore <= MASTERED_THRESHOLD).length;
+  const totalHaunting = flashcards.filter((c) => !isBanished(c)).length;
+  const totalBanished = flashcards.filter((c) => isBanished(c)).length;
   const dueCount      = flashcards.filter((c) => isDue(c)).length;
 
   // Sort rooms

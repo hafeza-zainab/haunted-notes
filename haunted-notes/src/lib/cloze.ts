@@ -33,7 +33,7 @@ function escapeRegex(s: string): string {
 }
 
 const BULLET_PREFIX =
-  /^(?:[•\-\*]\s+|\(?[A-Za-z0-9]{1,3}[.):\s]\s*|Q\d+[.:]\s*)/;
+  /^(?:[•\-*]\s+|\(?[A-Za-z0-9]{1,3}[.):\s]\s*|Q\d+[.:]\s*)/;
 
 function stripPrefix(line: string): string {
   return line.replace(BULLET_PREFIX, '').trim();
@@ -155,7 +155,7 @@ function isStrictTarget(word: string, sentence: string): boolean {
   if (word.length < 3) return false;
   if (STOP_WORDS.has(word.toLowerCase())) return false;
   if (/^\d+$/.test(word)) return false;
-  if (/^[•\-\*]$/.test(word)) return false;
+  if (/^[•\-*]$/.test(word)) return false;
 
   if (/^[A-Z]{2,5}$/.test(word)) return true;
 
@@ -180,11 +180,11 @@ function isStrictTarget(word: string, sentence: string): boolean {
 function pickClozeWordStrict(sentence: string): string | null {
   // 1. Definitional target
   const defMatch = sentence.match(
-    /\b(?:is|are|means|called|defined\s+as|known\s+as|refers\s+to)\s+([A-Za-z][A-Za-z\-]{2,})/i,
+    /\b(?:is|are|means|called|defined\s+as|known\s+as|refers\s+to)\s+([A-Za-z][A-Za-z-]{2,})/i,
   );
   if (defMatch && !STOP_WORDS.has(defMatch[1].toLowerCase())) return defMatch[1];
 
-  const tokens = sentence.match(/\b[A-Za-z\-]{3,}\b/g) ?? [];
+  const tokens = sentence.match(/\b[A-Za-z-]{3,}\b/g) ?? [];
   const valid  = tokens.filter((w) => isStrictTarget(w, sentence));
   if (valid.length === 0) return null;
 
@@ -213,11 +213,11 @@ function pickClozeWordStrict(sentence: string): string | null {
  *
  * Still never allows: stop-words, pure numbers, bullet markers.
  */
-function isRelaxedTarget(word: string, _sentence: string): boolean {
+function isRelaxedTarget(word: string): boolean {
   if (word.length < 3) return false;
   if (STOP_WORDS.has(word.toLowerCase())) return false;
   if (/^\d+$/.test(word)) return false;
-  if (/^[•\-\*]$/.test(word)) return false;
+  if (/^[•\-*]$/.test(word)) return false;
 
   // Capitalised word
   if (/^[A-Z]/.test(word) && word.length >= 3) return true;
@@ -237,8 +237,8 @@ function pickClozeWordRelaxed(sentence: string): string | null {
   if (strict) return strict;
 
   // Tokenise including alphanumeric (captures "H2", "v3.2")
-  const tokens = sentence.match(/\b[A-Za-z0-9][A-Za-z0-9.\-]*\b/g) ?? [];
-  const valid  = tokens.filter((w) => isRelaxedTarget(w, sentence));
+  const tokens = sentence.match(/\b[A-Za-z0-9][A-Za-z0-9.-]*\b/g) ?? [];
+  const valid  = tokens.filter((w) => isRelaxedTarget(w));
   if (valid.length === 0) return null;
 
   // Prefer acronyms, then capitalized, then longest
