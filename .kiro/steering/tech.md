@@ -24,6 +24,9 @@ tab is used, and show a small skeleton or progress state while loading.
 - State and actions live only in `src/store/useStore.ts`. Types live in `src/types.ts`.
 - Persisted state changes need a migration in the store's `onRehydrateStorage`.
 
+## Specs location
+- Create all specs only in `C:\dev\kiro\.kiro\specs\` (the workspace root), never in `haunted-notes/.kiro/`.
+
 ## Conventions
 - Small, single-purpose components in `src/components/`.
 - TypeScript strict; no `any`. Run `npm run build` (runs `tsc -b`) and `npm run lint`
