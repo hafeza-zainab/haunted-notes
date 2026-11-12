@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@playwright/mcp@0.0.85",
+        "--headless",
+        "--isolated",
+        "--browser",
+        "chromium",
+        "--executable-path",
+        "C:/Users/admin/AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe"
+      ],
+      "disabled": false
+    }
+  }
+}

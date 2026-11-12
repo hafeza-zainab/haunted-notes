@@ -141,3 +141,13 @@ Not verified: that the hooks appear in the Agent Hooks panel and fire. Kiro load
 - The `reduced-motion-check-on-css-save` hook reported motion without a `prefers-reduced-motion` override: about 15 `transition` rules (nav and action buttons, room and ghost cards, quiz input, progress bar width) and `scroll-behavior: smooth` on `html`. The existing override only listed the ghost classes and `.btn-secondary.listening`.
 - Fix: one consolidated `@media (prefers-reduced-motion: reduce)` block at the end of `index.css` (universal selector sets `animation: none`, `transition: none`, `scroll-behavior: auto`; `html` set to `auto`). The two earlier reduced-motion blocks are left as they were.
 - Re-check: a script confirms the override block is present and covers every rule with motion. Not verified in a real browser with reduced motion switched on; that is part of the B7 pass.
+
+---
+
+## Playwright MCP setup
+
+- Added a workspace MCP config at `.kiro/settings/mcp.json` (server `playwright`), so the agent can drive a real browser against the running app instead of using a separate script.
+- Package is pinned: `@playwright/mcp@0.0.85` (run through `cmd /c npx -y` on Windows).
+- Runs `--headless` and `--isolated` (fresh profile per session, nothing persisted) with `--browser chromium`.
+- Uses the already cached Chromium via `--executable-path` (`ms-playwright/chromium-1248/chrome-win64/chrome.exe`), so no browser download at run time.
+- Used for the B7 browser pass: demo quiz flow, `?dev=1` "+1 day", screenshots at 1280px and 390px, and a reduced-motion run.

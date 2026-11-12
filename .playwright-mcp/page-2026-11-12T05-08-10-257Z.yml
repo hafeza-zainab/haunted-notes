@@ -1,0 +1,118 @@
+- generic [ref=f1e3]:
+  - navigation "Main navigation" [ref=f1e4]:
+    - link "Skip to main content" [ref=f1e5] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic "Haunted Notes" [ref=f1e6]:
+      - generic [aria-hidden] [ref=f1e7]: 👻
+      - generic "9 ghosts haunting" [ref=f1e174]: "9"
+    - list [ref=f1e10]:
+      - listitem [ref=f1e11]:
+        - button "Dashboard" [active] [ref=f1e12] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e13]: 🏚
+      - listitem [ref=f1e15]:
+        - button "Add Note" [ref=f1e16] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e17]: ➕
+      - listitem [ref=f1e19]:
+        - button "Quiz" [ref=f1e20] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e21]: 👻
+    - button "Disable sound" [ref=f1e23] [cursor=pointer]: 🔊
+  - main [ref=f1e24]:
+    - region "Ghost dashboard" [ref=f1e210]:
+      - generic [ref=f1e211]:
+        - generic [ref=f1e212]:
+          - generic [ref=f1e213]:
+            - strong [ref=f1e214]: "9"
+            - text: haunting
+          - generic [ref=f1e215]:
+            - strong [ref=f1e216]: "0"
+            - text: banished
+          - generic [ref=f1e217]:
+            - strong [ref=f1e218]: "3"
+            - text: rooms
+          - generic [ref=f1e219]:
+            - strong [ref=f1e220]: "3"
+            - text: ghosts returned
+        - generic [ref=f1e221]:
+          - button "Review 3 due ghosts" [ref=f1e222] [cursor=pointer]: 🔔 Review due ghosts
+          - button "👻 Start Quiz" [ref=f1e223] [cursor=pointer]
+          - button "Remove demo notes and cards" [ref=f1e224] [cursor=pointer]: ✕ Clear demo
+          - 'button "Time travel +1 day: make all scheduled ghosts due now" [ref=f1e225] [cursor=pointer]': ⏩ +1 day
+          - button "Reset all data" [ref=f1e226] [cursor=pointer]: 🗑 Reset all
+      - group "Sort rooms by" [ref=f1e227]:
+        - generic [ref=f1e228]: "Sort:"
+        - button "⚡ Weakest first" [pressed] [ref=f1e229] [cursor=pointer]
+        - button "🕐 Newest first" [ref=f1e230] [cursor=pointer]
+      - list [ref=f1e231]:
+        - listitem [ref=f1e232]:
+          - 'article "Haunted room: Biology" [ref=f1e233]':
+            - generic [ref=f1e234]:
+              - generic [ref=f1e235]:
+                - 'button "Rename room: Biology" [ref=f1e236] [cursor=pointer]':
+                  - generic [ref=f1e237]: Biology
+                  - generic [aria-hidden] [ref=f1e238]: ✎
+                - generic "3 haunting" [ref=f1e240]: 👻 3
+              - generic "0% banished" [ref=f1e241]:
+                - progressbar
+            - list "Ghosts in this room" [ref=f1e242]:
+              - listitem "Photosynthesis is the process by which plants convert sunlight into glucose." [ref=f1e243]:
+                - 'img "Ghost: ______________ is the process by which plants convert sunlight into glucose." [ref=f1e244]'
+                - paragraph [ref=f1e249]: ______________ is the process by which plants convert sunlight into glucose.
+              - listitem "DNA stands for deoxyribonucleic acid and carries genetic information." [ref=f1e250]:
+                - 'img "Ghost: ___ stands for deoxyribonucleic acid and carries genetic information." [ref=f1e251]'
+                - paragraph [ref=f1e256]: ___ stands for deoxyribonucleic acid and carries genetic information.
+              - listitem "Mitosis is the process of cell division that produces two identical daughter cells." [ref=f1e257]:
+                - 'img "Ghost: _______ is the process of cell division that produces two identical daughter cells." [ref=f1e258]'
+                - paragraph [ref=f1e263]: _______ is the process of cell division that produces two identical daughter cells.
+            - generic [ref=f1e264]:
+              - button "👻 Quiz this room" [ref=f1e265] [cursor=pointer]
+              - 'button "Delete note: Biology" [ref=f1e266] [cursor=pointer]': 🗑 Delete
+        - listitem [ref=f1e267]:
+          - 'article "Haunted room: Digital Marketing" [ref=f1e268]':
+            - generic [ref=f1e269]:
+              - generic [ref=f1e270]:
+                - 'button "Rename room: Digital Marketing" [ref=f1e271] [cursor=pointer]':
+                  - generic [ref=f1e272]: Digital Marketing
+                  - generic [aria-hidden] [ref=f1e273]: ✎
+                - generic [ref=f1e274]:
+                  - generic "3 haunting" [ref=f1e275]: 👻 3
+                  - generic "1 due" [ref=f1e276]: 🔔 1 due
+              - generic "0% banished" [ref=f1e277]:
+                - progressbar
+            - list "Ghosts in this room" [ref=f1e278]:
+              - listitem "SEO stands for Search Engine Optimization." [ref=f1e279]:
+                - 'img "Ghost: ___ stands for Search Engine Optimization." [ref=f1e280]'
+                - paragraph [ref=f1e285]: ___ stands for Search Engine Optimization.
+              - listitem "A conversion rate measures the percentage of visitors who complete a goal." [ref=f1e286]:
+                - 'img "Ghost: A __________ rate measures the percentage of visitors who complete a goal." [ref=f1e287]'
+                - paragraph [ref=f1e292]: A __________ rate measures the percentage of visitors who complete a goal.
+              - listitem "Content marketing focuses on creating valuable content to attract audiences." [ref=f1e293]:
+                - 'img "Ghost: _______ marketing focuses on creating valuable content to attract audiences." [ref=f1e294]'
+                - paragraph [ref=f1e299]: _______ marketing focuses on creating valuable content to attract audiences.
+            - generic [ref=f1e300]:
+              - button "👻 Quiz this room" [ref=f1e301] [cursor=pointer]
+              - 'button "Delete note: Digital Marketing" [ref=f1e302] [cursor=pointer]': 🗑 Delete
+        - listitem [ref=f1e303]:
+          - 'article "Haunted room: Java Basics" [ref=f1e304]':
+            - generic [ref=f1e305]:
+              - generic [ref=f1e306]:
+                - 'button "Rename room: Java Basics" [ref=f1e307] [cursor=pointer]':
+                  - generic [ref=f1e308]: Java Basics
+                  - generic [aria-hidden] [ref=f1e309]: ✎
+                - generic [ref=f1e310]:
+                  - generic "3 haunting" [ref=f1e311]: 👻 3
+                  - generic "2 due" [ref=f1e312]: 🔔 2 due
+              - generic "0% banished" [ref=f1e313]:
+                - progressbar
+            - list "Ghosts in this room" [ref=f1e314]:
+              - listitem "Java is a statically typed, object-oriented programming language." [ref=f1e315]:
+                - 'img "Ghost: Java is a __________ typed, object-oriented programming language." [ref=f1e316]'
+                - paragraph [ref=f1e321]: Java is a __________ typed, object-oriented programming language.
+              - listitem "A Java class is a blueprint for creating objects." [ref=f1e322]:
+                - 'img "Ghost: A Java class is a _________ for creating objects." [ref=f1e323]'
+                - paragraph [ref=f1e328]: A Java class is a _________ for creating objects.
+              - listitem "The JVM (Java Virtual Machine) interprets bytecode." [ref=f1e329]:
+                - 'img "Ghost: The ___ (Java Virtual Machine) interprets bytecode." [ref=f1e330]'
+                - paragraph [ref=f1e335]: The ___ (Java Virtual Machine) interprets bytecode.
+            - generic [ref=f1e336]:
+              - button "👻 Quiz this room" [ref=f1e337] [cursor=pointer]
+              - 'button "Delete note: Java Basics" [ref=f1e338] [cursor=pointer]': 🗑 Delete

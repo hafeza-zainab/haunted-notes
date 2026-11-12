@@ -1,0 +1,39 @@
+- generic [ref=f1e3]:
+  - navigation "Main navigation" [ref=f1e4]:
+    - link "Skip to main content" [ref=f1e5] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic "Haunted Notes" [ref=f1e6]:
+      - generic [aria-hidden] [ref=f1e7]: 👻
+      - generic "8 ghosts haunting" [ref=f1e362]: "8"
+    - list [ref=f1e10]:
+      - listitem [ref=f1e11]:
+        - button "Dashboard" [ref=f1e12] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e13]: 🏚
+      - listitem [ref=f1e15]:
+        - button "Add Note" [ref=f1e16] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e17]: ➕
+      - listitem [ref=f1e19]:
+        - button "Quiz" [ref=f1e20] [cursor=pointer]:
+          - generic [aria-hidden] [ref=f1e21]: 👻
+    - button "Disable sound" [ref=f1e23] [cursor=pointer]: 🔊
+  - main [ref=f1e24]:
+    - region "Quiz mode" [ref=f1e339]:
+      - generic [ref=f1e340]:
+        - heading "Quiz Mode" [level=2] [ref=f1e342]
+        - generic [ref=f1e343]:
+          - generic "Card 2 of 9" [ref=f1e364]: 2 / 9
+          - generic [ref=f1e345]: ✓ 1
+          - generic [ref=f1e346]: ✗ 1
+      - 'img "Ghost haunting: Content marketing focuses on creating valuable content to attract audiences." [ref=f1e365]'
+      - generic [ref=f1e353]:
+        - paragraph [ref=f1e354]: _______ marketing focuses on creating valuable content to attract audiences.
+        - alert [ref=f1e366]: ✗ The answer was "Content".
+        - generic [ref=f1e355]:
+          - generic [ref=f1e356]: Your answer
+          - textbox "Your answer" [active] [ref=f1e357]:
+            - /placeholder: Fill in the blank…
+            - text: zzz
+          - generic [ref=f1e358]:
+            - button "Next →" [ref=f1e367] [cursor=pointer]
+            - button "Skip" [disabled] [ref=f1e360]
+            - button "Dashboard" [ref=f1e361] [cursor=pointer]
