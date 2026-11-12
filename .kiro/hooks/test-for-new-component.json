@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Render test for new component",
+      "trigger": "PostFileCreate",
+      "description": "When a new component is created in src/components, generate a basic vitest render test for it.",
+      "matcher": "haunted-notes[\\\\/]src[\\\\/]components[\\\\/][^\\\\/]+(?<!\\.test)\\.tsx$",
+      "action": {
+        "type": "agent",
+        "prompt": "A component was just created. Add <Name>.test.tsx next to it using only vitest and react-dom/server (renderToString); jsdom and Testing Library are not installed, so add no dependencies. One test: it renders non-empty HTML without throwing. Run `npm test` in haunted-notes and fix only your new test if it fails."
+      }
+    }
+  ]
+}

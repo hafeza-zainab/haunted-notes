@@ -111,3 +111,33 @@ No bugs were found in `srs.ts`. Note that `scheduleCorrect` can return an interv
 ## Next ghost returns in N days
 
 - Dashboard summary bar now shows "Next ghost returns in N days" (soonest banished ghost, rounded up, minimum 1 day, hidden when nothing is banished). Logic is two pure functions in `srs.ts` (`nextReturnInMs`, `daysFromMs`) with property tests. Spec: R16, Task 16.
+
+---
+
+## A2: Hooks that really run
+
+Replaced the two original hooks with four, created through Kiro's hook tool so they are valid v1 hook files in `.kiro/hooks/`:
+
+| Hook | Trigger | Does |
+|---|---|---|
+| `test-on-lib-save` | save `src/lib/**/*.ts` | runs `npm test`, reports failures briefly |
+| `lint-fix-on-tsx-save` | save `src/**/*.tsx` | runs `eslint --fix` on the saved file, reports what remains |
+| `test-for-new-component` | create `src/components/*.tsx` (not `*.test.tsx`) | writes a render test using vitest and `react-dom/server` |
+| `reduced-motion-check-on-css-save` | save `src/**/*.css` | lists animations/transitions with no reduced-motion override, report only |
+
+Why the old ones were replaced:
+- Their matchers were over-escaped in JSON (`\\\\.`), so the regex asked for a literal backslash and would not match real paths.
+- `lint-on-save` piped to `tail`, which does not exist in PowerShell.
+- `new-component-test` asked for React Testing Library, which is not installed (vitest and fast-check only).
+
+New matchers accept both `/` and `\`, and I checked them against sample Windows and POSIX paths (match and non-match cases, including `*.test.tsx`). Prompts are one or two sentences each. Spec: Task 17.
+
+Not verified: that the hooks appear in the Agent Hooks panel and fire. Kiro loads hooks at session start, so that needs a restart or new session and a manual save to confirm.
+
+---
+
+## Hook finding fixed: reduced motion
+
+- The `reduced-motion-check-on-css-save` hook reported motion without a `prefers-reduced-motion` override: about 15 `transition` rules (nav and action buttons, room and ghost cards, quiz input, progress bar width) and `scroll-behavior: smooth` on `html`. The existing override only listed the ghost classes and `.btn-secondary.listening`.
+- Fix: one consolidated `@media (prefers-reduced-motion: reduce)` block at the end of `index.css` (universal selector sets `animation: none`, `transition: none`, `scroll-behavior: auto`; `html` set to `auto`). The two earlier reduced-motion blocks are left as they were.
+- Re-check: a script confirms the override block is present and covers every rule with motion. Not verified in a real browser with reduced motion switched on; that is part of the B7 pass.

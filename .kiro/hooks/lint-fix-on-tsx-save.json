@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "ESLint fix on TSX save",
+      "trigger": "PostFileSave",
+      "description": "When a src .tsx file is saved, run eslint --fix on that file and report remaining errors.",
+      "matcher": "haunted-notes[\\\\/]src[\\\\/].*\\.tsx$",
+      "action": {
+        "type": "agent",
+        "prompt": "Run `npx eslint --fix <the saved file>` from the haunted-notes folder. Reply with one line if clean. Otherwise list only the remaining errors as file:line rule. Do not edit files by hand."
+      }
+    }
+  ]
+}

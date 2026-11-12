@@ -311,3 +311,11 @@ Sample cards (abbreviated):
   - Add pure `nextReturnInMs(cards, now)` and `daysFromMs(ms)` to `src/lib/srs.ts`, with unit and property tests
   - `DashboardView`: render the stat after the "ghosts returned" stat; add `.stat--next` style
   - The dev "+1 day" button moves the countdown down by one day
+
+- [x] **Task 17 — Agent hooks (A2)**
+  - Replace the two old hooks (`lint-on-save.json`, `new-component-test.json`) with four hooks in `.kiro/hooks/`, created with Kiro's hook tool. Matchers accept `/` and `\` path separators because hooks run from the workspace root.
+  - `test-on-lib-save` (PostFileSave, `src/lib/**/*.ts`): run `npm test`, report failures briefly
+  - `lint-fix-on-tsx-save` (PostFileSave, `src/**/*.tsx`): run `eslint --fix` on the saved file, report remaining errors
+  - `test-for-new-component` (PostFileCreate, `src/components/*.tsx`, not `*.test.tsx`): generate a render test with vitest and `react-dom/server` only, no new dependencies
+  - `reduced-motion-check-on-css-save` (PostFileSave, `src/**/*.css`): list animations and transitions without a `prefers-reduced-motion` override; report only
+  - Each prompt is one or two sentences to keep credit use low

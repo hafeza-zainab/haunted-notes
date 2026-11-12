@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Reduced-motion check on CSS save",
+      "trigger": "PostFileSave",
+      "description": "When a src CSS file is saved, list animations and transitions that lack a prefers-reduced-motion override. Report only.",
+      "matcher": "haunted-notes[\\\\/]src[\\\\/].*\\.css$",
+      "action": {
+        "type": "agent",
+        "prompt": "In the saved CSS file, find every selector using `animation` or `transition`. List those with no override inside `@media (prefers-reduced-motion: reduce)`, one per line. Reply \"all covered\" if none. Report only; do not edit any file."
+      }
+    }
+  ]
+}

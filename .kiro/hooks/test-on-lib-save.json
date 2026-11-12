@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Run tests on lib save",
+      "trigger": "PostFileSave",
+      "description": "When a src/lib TypeScript file is saved, run npm test and report failures briefly.",
+      "matcher": "haunted-notes[\\\\/]src[\\\\/]lib[\\\\/].*\\.ts$",
+      "action": {
+        "type": "agent",
+        "prompt": "Run `npm test` in the haunted-notes folder. If all pass, reply with one line. If any fail, list each failing test with its one-line reason and counterexample. Do not edit files."
+      }
+    }
+  ]
+}

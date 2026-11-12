@@ -982,3 +982,20 @@ progress {
 .stat--next {
   color: var(--text-muted);
 }
+
+/* ── Reduced motion: consolidated override (keep last) ──
+   Covers every animation and transition (nav buttons, buttons, room and ghost
+   cards, quiz input, progress bar, ghost SVGs) plus smooth scrolling.
+   State changes (colors, borders, bar width, feedback text) still happen, just instantly. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
