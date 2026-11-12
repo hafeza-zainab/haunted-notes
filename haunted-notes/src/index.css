@@ -193,7 +193,8 @@ body {
 .btn-primary:active { transform: scale(0.97); }
 .btn-primary:disabled,
 .btn-secondary:disabled,
-.btn-ghost:disabled {
+.btn-ghost:disabled,
+.btn-ghost[aria-disabled="true"] {
   /* Readable (AA) but clearly inactive: flat, dashed, no glow */
   background: var(--bg-surface);
   color: var(--text-disabled);
@@ -1019,6 +1020,56 @@ progress {
 .stat--next {
   color: var(--text-muted);
 }
+
+/* ── Better quiz: streak, hint, missed list ── */
+.score-streak {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.score-streak strong { color: var(--text); }
+
+.quiz-hint { margin: 0; }
+.quiz-hint.on {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.quiz-best-streak { color: var(--text-muted); }
+.quiz-best-streak strong { color: var(--text); }
+
+.quiz-missed {
+  width: 100%;
+  max-width: 560px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.quiz-missed h3 { color: var(--text); font-size: 1rem; }
+.quiz-missed ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.quiz-missed li {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.missed-prompt { color: var(--text); }
+.missed-answer { color: var(--text-muted); font-size: 0.9rem; }
+.missed-answer strong { color: var(--text); }
 
 /* ── Haunting atmosphere ────────────────────────────────────────────────
    One fixed, non-interactive layer behind the app. Only transform and opacity

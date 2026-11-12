@@ -20,7 +20,8 @@ Use the tokens. Do not hardcode new colors in components.
 | `--text` / `--text-muted` | `#e8e8f0` / `#8888a8` | body / secondary text |
 | `--danger` / `--success` | `#ff5555` / `#50fa7b` | wrong / correct feedback |
 | `--ghost-fill`, `--ghost-stroke`, `--ghost-eyes` | accent-derived | ghost SVG parts |
-| `--border` | accent at 25% | card and input borders |
+| `--border` | accent at 25% | card and decorative borders |
+| `--border-strong` | `#7c6aa8` | borders that must reach 3:1 (inputs, tabs, ghost buttons, hint and missed-list boxes) |
 
 One accent glow color only. The single sanctioned secondary hue is the warm orange
 used for "returned" ghosts and due UI (`.ghost--returned`, `.badge--due`, `.btn-due`).

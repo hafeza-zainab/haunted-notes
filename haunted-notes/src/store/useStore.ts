@@ -21,7 +21,8 @@ interface HauntedState {
   addNote: (note: Omit<Note, 'id' | 'createdAt'>) => number;
   deleteNote: (id: string) => void;
   renameNote: (id: string, title: string) => void;
-  answerCard: (cardId: string, correct: boolean) => void;
+  /** `hinted`: a correct answer that used a hint returns sooner than an unhinted one. */
+  answerCard: (cardId: string, correct: boolean, hinted?: boolean) => void;
   setView: (view: View) => void;
   setQuizNoteId: (id: string | null) => void;
   setQuizDueOnly: (dueOnly: boolean) => void;
@@ -74,14 +75,14 @@ export const useStore = create<HauntedState>()(
         }));
       },
 
-      answerCard: (cardId, correct) => {
+      answerCard: (cardId, correct, hinted = false) => {
         set((state) => ({
           flashcards: state.flashcards.map((c) => {
             if (c.id !== cardId) return c;
             // Apply both the legacy weakness-score system and SM-2 scheduling
             const withWeakness = updateWeaknessScore(c, correct);
             const srsUpdate = correct
-              ? scheduleCorrect(c)
+              ? scheduleCorrect(c, Date.now(), hinted)
               : scheduleWrong(c);
             return { ...withWeakness, ...srsUpdate };
           }),

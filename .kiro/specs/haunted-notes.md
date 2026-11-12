@@ -27,7 +27,7 @@
 
 6. **Accessibility** — WCAG AA contrast, keyboard-navigable, `aria-*` labels on ghosts, `prefers-reduced-motion` respected
 
-7. **No backend** — purely client-side; no network calls except loading static assets
+7. **No backend** — purely client-side. Notes stay in localStorage; uploaded audio files are transcribed on-device (Whisper in a Web Worker) and photos are processed on-device by Tesseract.js. Network calls are limited to the one-time Whisper model download, the Tesseract.js assets (worker, WASM core, English language data) fetched from a CDN on first use, and the browser's own speech service for Live mic (Web Speech API; in some browsers audio goes to the browser vendor)
 
 ## Design
 

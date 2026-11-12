@@ -13,6 +13,8 @@ const DEFAULT_EASE = 2.5;
 const MIN_EASE     = 1.3;
 const EASE_PENALTY = 0.2;
 const MS_PER_DAY   = 86_400_000;
+/** A hinted correct answer gets this share of the normal next interval. */
+const HINT_INTERVAL_FACTOR = 0.5;
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -39,7 +41,11 @@ export function defaultSrsFields(now = Date.now()): SrsFields {
  *
  * ease is unchanged on correct answers.
  */
-export function scheduleCorrect(card: SrsFields, now = Date.now()): SrsFields {
+export function scheduleCorrect(
+  card: SrsFields,
+  now = Date.now(),
+  hinted = false,
+): SrsFields {
   let newInterval: number;
 
   if (card.reps === 0) {
@@ -49,6 +55,9 @@ export function scheduleCorrect(card: SrsFields, now = Date.now()): SrsFields {
   } else {
     newInterval = Math.round(card.intervalDays * card.ease);
   }
+
+  // A hinted correct answer still banishes the ghost, but it returns sooner
+  if (hinted) newInterval = newInterval * HINT_INTERVAL_FACTOR;
 
   return {
     ease: card.ease,

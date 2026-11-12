@@ -1,20 +1,12 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
 import BanishParticles from './BanishParticles';
 import type { Flashcard } from '../types';
 import { isDue, isReturned, isBanished } from '../lib/srs';
 import { normalizeBlanks } from '../lib/blank';
-
-// ── Answer normalisation ──────────────────────────────────────────────────────
-
-/**
- * Strip leading/trailing whitespace and punctuation, then lowercase.
- * Allows "JVM." or " photosynthesis! " to match the stored cloze word.
- */
-function normalise(s: string): string {
-  return s.trim().replace(/^[^\w]+|[^\w]+$/g, '').toLowerCase();
-}
+import { judgeAnswer, hintFor, type HintLevel } from '../lib/answer';
+import { nextStreak, addMissed } from '../lib/quizRound';
 
 // ── Queue building ────────────────────────────────────────────────────────────
 
@@ -37,9 +29,16 @@ function buildQueue(
     .map((c) => c.id);
 }
 
+/** Callback ref (stable identity): move focus to the results heading when it appears. */
+function focusOnMount(el: HTMLElement | null) {
+  el?.focus();
+}
+
 // ── QuizView ──────────────────────────────────────────────────────────────────
 
 type AnswerState = 'idle' | 'correct' | 'wrong';
+
+const MAX_HINT_LEVEL = 2;
 
 const QuizView: React.FC = () => {
   const allFlashcards  = useStore((s) => s.flashcards);
@@ -53,7 +52,8 @@ const QuizView: React.FC = () => {
 
   // ── Queue: snapshot of card ids, built once by the lazy initialiser ───────
   // Store updates (weakness, SRS fields) never change this round's order or length.
-  const [queue] = useState<string[]>(() =>
+  // "Review missed" replaces it with another frozen snapshot (the missed ids).
+  const [queue, setQueue] = useState<string[]>(() =>
     buildQueue(allFlashcards, quizNoteId, quizDueOnly),
   );
   const [index, setIndex] = useState(0);
@@ -72,6 +72,11 @@ const QuizView: React.FC = () => {
   const [banishing, setBanishing]         = useState(false);
   const [shaking, setShaking]             = useState(false);
   const [score, setScore]                 = useState({ correct: 0, asked: 0 });
+  const [hintLevel, setHintLevel]         = useState<HintLevel>(0);
+  const [streak, setStreak]               = useState(0);
+  const [bestStreak, setBestStreak]       = useState(0);
+  const [missed, setMissed]               = useState<string[]>([]);
+  const [reviewing, setReviewing]         = useState(false);
 
   // Resolve the current card from the queue (null once the end is reached).
   const currentId   = queue[index] ?? null;
@@ -79,6 +84,8 @@ const QuizView: React.FC = () => {
 
   // Re-focus the input whenever we advance to a new card
   const inputRef = useRef<HTMLInputElement>(null);
+  // The Submit / Next button: Reveal moves focus here so focus is never lost
+  const nextRef  = useRef<HTMLButtonElement>(null);
 
   const quizNote  = quizNoteId ? notes.find((n) => n.id === quizNoteId) : null;
   const quizTitle = quizNote
@@ -87,67 +94,113 @@ const QuizView: React.FC = () => {
 
   // ── Navigation ────────────────────────────────────────────────────────────
 
-  const advance = useCallback(() => {
-    setIndex((i) => i + 1);
+  // (Plain functions: the React Compiler memoizes these itself.)
+
+  const resetCard = () => {
     setInput('');
     setFeedback('');
     setAnswerState('idle');
     setBanishing(false);
     setShaking(false);
-  }, []);
+    setHintLevel(0);
+  };
 
-  const exitQuiz = useCallback(() => {
+  const advance = () => {
+    setIndex((i) => i + 1);
+    resetCard();
+  };
+
+  const exitQuiz = () => {
     setQuizNoteId(null);
     setQuizDueOnly(false);
     setView('dashboard');
-  }, [setQuizNoteId, setQuizDueOnly, setView]);
+  };
+
+  /** Start a new round with only the cards missed in this one. */
+  const reviewMissed = () => {
+    setQueue(missed);
+    setIndex(0);
+    resetCard();
+    setScore({ correct: 0, asked: 0 });
+    setStreak(0);
+    setBestStreak(0);
+    setMissed([]);
+    setReviewing(true);
+  };
 
   // ── Answer submission ─────────────────────────────────────────────────────
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!currentCard) return;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentCard) return;
 
-      // While showing feedback after wrong, the "Submit" button becomes "Next"
-      if (answerState === 'wrong') {
-        advance();
-        return;
-      }
+    // While showing feedback after wrong, the "Submit" button becomes "Next"
+    if (answerState === 'wrong') {
+      advance();
+      return;
+    }
 
-      if (answerState !== 'idle') return;
+    if (answerState !== 'idle') return;
 
-      const correct = normalise(input) === normalise(currentCard.clozeWord);
+    // Typos of one letter are accepted for answers of 6+ letters
+    const verdict = judgeAnswer(input, currentCard.clozeWord);
+    const correct = verdict !== 'wrong';
+    const hinted  = correct && hintLevel > 0;
 
-      answerCard(currentCard.id, correct);
-      setScore((s) => ({
-        correct: s.correct + (correct ? 1 : 0),
-        asked: s.asked + 1,
-      }));
+    answerCard(currentCard.id, correct, hinted);
+    setScore((s) => ({
+      correct: s.correct + (correct ? 1 : 0),
+      asked: s.asked + 1,
+    }));
+    const newStreak = nextStreak(streak, correct);
+    setStreak(newStreak);
+    setBestStreak((b) => Math.max(b, newStreak));
 
-      if (correct) {
-        setBanishing(true);
-        setAnswerState('correct');
-        setFeedback(`👻 Banished! The answer was "${currentCard.clozeWord}".`);
-        // Keep the message visible ~900 ms (also under reduced motion), then advance
-        setTimeout(advance, 900);
-      } else {
-        setShaking(true);
-        setAnswerState('wrong');
-        setFeedback(`✗ The answer was "${currentCard.clozeWord}".`);
-        // Do NOT auto-advance — user must press Next to acknowledge
-        setTimeout(() => setShaking(false), 400);
-      }
-    },
-    [currentCard, answerState, input, answerCard, advance],
-  );
+    if (correct) {
+      const lead = verdict === 'close' ? 'Close enough! ' : '';
+      const tail = hinted ? ' A hint was used, so it returns sooner.' : '';
+      setBanishing(true);
+      setAnswerState('correct');
+      setFeedback(`${lead}👻 Banished! The answer was "${currentCard.clozeWord}".${tail}`);
+      // Keep the message visible ~900 ms (also under reduced motion), then advance
+      setTimeout(advance, 900);
+    } else {
+      setMissed((m) => addMissed(m, currentCard.id));
+      setShaking(true);
+      setAnswerState('wrong');
+      setFeedback(`✗ The answer was "${currentCard.clozeWord}".`);
+      // Do NOT auto-advance — user must press Next to acknowledge
+      setTimeout(() => setShaking(false), 400);
+    }
+  };
 
   // ── Skip ──────────────────────────────────────────────────────────────────
 
-  const handleSkip = useCallback(() => {
+  const handleSkip = () => {
     if (answerState !== 'idle') return;
     advance();
-  }, [answerState, advance]);
+  };
+
+  // ── Hint: first letter, then the length ───────────────────────────────────
+
+  const handleHint = () => {
+    if (answerState !== 'idle' || hintLevel >= MAX_HINT_LEVEL) return;
+    setHintLevel((l) => (l + 1) as HintLevel);
+  };
+
+  // ── Reveal: show the answer, counts as wrong ──────────────────────────────
+
+  const handleReveal = () => {
+    if (!currentCard || answerState !== 'idle') return;
+    answerCard(currentCard.id, false);
+    setScore((s) => ({ ...s, asked: s.asked + 1 }));
+    setStreak(nextStreak(streak, false));
+    setMissed((m) => addMissed(m, currentCard.id));
+    setAnswerState('wrong');
+    setFeedback(`👁 Revealed: the answer was "${currentCard.clozeWord}".`);
+    // The Reveal button is about to be disabled: move focus to Next
+    requestAnimationFrame(() => nextRef.current?.focus());
+  };
 
   // Focus the input after advancing
   useEffect(() => {
@@ -171,13 +224,19 @@ const QuizView: React.FC = () => {
 
   if (!currentCard) {
     const total = queue.length;
-    const completionMsg = quizDueOnly
-      ? '👻 All returned ghosts reviewed!'
-      : '🎉 Round complete!';
+    const completionMsg = reviewing
+      ? '🔁 Review complete!'
+      : quizDueOnly
+        ? '👻 All returned ghosts reviewed!'
+        : '🎉 Round complete!';
+    const missedCards = missed
+      .map((id) => cardById.get(id))
+      .filter((c): c is Flashcard => c !== undefined);
 
     return (
       <section className="quiz-view quiz-complete" aria-label="Quiz complete">
-        <h2>{completionMsg}</h2>
+        {/* Focus lands here so keyboard and screen-reader users are not left on <body> */}
+        <h2 ref={focusOnMount} tabIndex={-1}>{completionMsg}</h2>
         {quizTitle && <p className="quiz-note-label">Room: {quizTitle}</p>}
         <p className="quiz-final-score">
           <strong>{score.correct}</strong> correct out of{' '}
@@ -186,7 +245,33 @@ const QuizView: React.FC = () => {
             <span className="quiz-skipped"> ({total - score.asked} skipped)</span>
           )}
         </p>
-        <button className="btn-primary" onClick={exitQuiz}>
+        <p className="quiz-best-streak">
+          Best streak: <strong>{bestStreak}</strong>
+        </p>
+
+        {missedCards.length > 0 && (
+          <div className="quiz-missed">
+            <h3>Missed ({missedCards.length})</h3>
+            <ul aria-label="Missed cards">
+              {missedCards.map((c) => (
+                <li key={c.id}>
+                  <span className="missed-prompt">{normalizeBlanks(c.prompt)}</span>
+                  <span className="missed-answer">
+                    Answer: <strong>{c.clozeWord}</strong>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <button className="btn-primary" onClick={reviewMissed}>
+              Review missed
+            </button>
+          </div>
+        )}
+
+        <button
+          className={missedCards.length > 0 ? 'btn-ghost' : 'btn-primary'}
+          onClick={exitQuiz}
+        >
           Back to Dashboard
         </button>
       </section>
@@ -198,6 +283,10 @@ const QuizView: React.FC = () => {
   const ghostReturned = isReturned(currentCard);
   const queueTotal    = queue.length;
   const queuePos      = index + 1; // 1-based for display
+
+  // Only the first letter / the length is ever put in the DOM, never the answer
+  const hintText = hintFor(currentCard.clozeWord, hintLevel);
+  const hintMaxed = hintLevel >= MAX_HINT_LEVEL;
 
   // Button label switches after a wrong answer
   const submitLabel = answerState === 'wrong' ? 'Next →' : 'Submit';
@@ -214,6 +303,11 @@ const QuizView: React.FC = () => {
               🔔 Due cards only
             </p>
           )}
+          {reviewing && (
+            <p className="quiz-mode-label">
+              🔁 Reviewing missed cards
+            </p>
+          )}
           {quizTitle && (
             <p className="quiz-note-label">
               📜 {quizTitle}
@@ -227,6 +321,7 @@ const QuizView: React.FC = () => {
           </span>
           <span className="score-correct">✓ {score.correct}</span>
           <span className="score-wrong">✗ {score.asked - score.correct}</span>
+          <span className="score-streak">Streak <strong>{streak}</strong></span>
         </div>
       </header>
 
@@ -252,6 +347,20 @@ const QuizView: React.FC = () => {
         <p className="quiz-prompt">
           <span className="sr-only">Fill in the blank: </span>
           {normalizeBlanks(currentCard.prompt)}
+        </p>
+
+        {/* Hint: always rendered so screen readers announce changes */}
+        <p
+          className={`quiz-hint ${hintText ? 'on' : ''}`}
+          role="status"
+          aria-live="polite"
+        >
+          {hintText && (
+            <>
+              <span aria-hidden="true">💡 </span>
+              {hintText}
+            </>
+          )}
         </p>
 
         {feedback && (
@@ -282,6 +391,7 @@ const QuizView: React.FC = () => {
           />
           <div className="quiz-actions">
             <button
+              ref={nextRef}
               type="submit"
               className="btn-primary"
               disabled={submitDisabled}
@@ -291,10 +401,28 @@ const QuizView: React.FC = () => {
             <button
               type="button"
               className="btn-ghost"
+              onClick={handleHint}
+              disabled={answerState !== 'idle'}
+              // aria-disabled (not disabled) at the maximum, so focus stays on the button
+              aria-disabled={hintMaxed ? true : undefined}
+            >
+              Hint
+            </button>
+            <button
+              type="button"
+              className="btn-ghost"
               onClick={handleSkip}
               disabled={answerState !== 'idle'}
             >
               Skip
+            </button>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={handleReveal}
+              disabled={answerState !== 'idle'}
+            >
+              Reveal
             </button>
             <button
               type="button"

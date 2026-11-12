@@ -300,3 +300,35 @@ Spec written first (R1 to R6, design, tasks), then built against it.
 - Reviewer was not re-run after these last two small fixes; I verified them directly (answer scan on all nine quiz cards, shake-in duration 0.4 s).
 
 Screenshots in `docs/screens/`: `haunt-before-{dashboard,quiz}-{1280,390}.png`, `haunt-after-{dashboard,quiz}-{1280,390}.png`, `haunt-after-five-types-1280.png`, `haunt-after-banish-390.png`, `haunt-after-banish-reduced-390.png`.
+
+---
+
+## B2: Better quiz (`.kiro/specs/better-quiz.md`)
+
+Spec written first, then built against it.
+
+- **Hint:** first press shows the first letter, second adds the length, further presses do nothing (the button is `aria-disabled`, not `disabled`, so focus stays on it). A hinted correct answer still banishes, but the next interval is half as long: measured 12 h hinted versus 24 h unhinted on a new card. `scheduleCorrect(card, now, hinted)` in `srs.ts`; the store's `answerCard` takes `hinted` (no persisted-shape change, no migration).
+- **Reveal:** shows the answer and counts as wrong (missed list, streak reset). Focus moves to Next, because the Reveal button is disabled right after.
+- **Typo tolerance:** `src/lib/answer.ts` (pure): `judgeAnswer` returns exact, close or wrong. Answers of 6+ letters accept edit distance 1 and show "Close enough!"; shorter answers must match exactly after normalising. `hintFor` never contains the whole answer; if the wording happens to equal the answer it falls back to a symbolic form.
+- **Streak:** "Streak N" in the quiz header (inside the existing `aria-live` score region). Wrong and reveal reset it, skip leaves it. `nextStreak` and `addMissed` live in `src/lib/quizRound.ts`.
+- **Results screen:** missed cards with their answers, best streak, "Review missed" (a new round with only the missed ids, as another frozen queue snapshot) and "Back to Dashboard". Review mode has its own heading and a "Reviewing missed cards" label.
+- **Lint note:** my first version used `useCallback` and the React Compiler lint rule rejected it, so the handlers are plain functions now.
+
+### Tests
+`answer.test.ts` (normalise, symmetric edit check, single edit accepted at 6+ letters, rejected under 6, two edits never accepted, hint never contains the answer), `quizRound.test.ts`, and three new hinted-scheduling properties in `srs.test.ts` (hinted returns sooner, still banished with reps + 1, unhinted unchanged). **76 tests pass over repeated runs.** One test bug along the way: a property returned an assertion value instead of nothing (fixed in the test only).
+
+### Playwright MCP (390px and 1280px)
+- Hint 1: "Starts with “s”"; hint 2: "Starts with “s”, 10 letters"; a third press changes nothing and focus stays on Hint. The answer was not in the DOM after two hints, and the blank stayed `_____`.
+- Hinted correct: "Banished! … A hint was used, so it returns sooner." Card due in 12 h, intervalDays 0.5. Typo answer ("Photosynthesix"): "Close enough! Banished!", due in 24 h, streak 2.
+- Reveal: counted as wrong (✗ 1, streak 0), focus on "Next →". Wrong answer ("zzz") goes to the missed list.
+- Results: "2 correct out of 4 asked (5 skipped)", best streak 2, two missed cards with answers. Review missed: "1 / 2" with the "Reviewing missed cards" label. Finishing the review round shows "Review complete", no missed list, only "Back to Dashboard".
+- 390px: 0 targets under 44px, no horizontal scroll on quiz or results. 1280px: no overflow. Screenshots: `docs/screens/quiz2-{hint,typo,reveal,results,review}-390.png`, `quiz2-{hint,typo,reveal,results,review-done}-1280.png`.
+
+### ghost-ui-reviewer: FAILs and fixes
+- **Results focus:** after the last card focus dropped to `<body>`. The results heading now takes focus (`tabIndex={-1}` plus a stable callback ref); one Tab reaches "Review missed". Verified.
+- **Spacing:** `.quiz-missed li` padding 0.6rem 0.8rem changed to 0.5rem 0.75rem (on the 0.25rem scale).
+- **Docs:** `--border-strong` added to `.kiro/steering/design.md`.
+- **Not changed:** `.quiz-feedback.wrong` measures 4.74:1, which passes AA (the reviewer called it marginal and said no change was needed). The score block is re-announced as a whole on each change (verbose, not a failure). `--accent-strong`, `--due`, `--due-glow`, `--text-disabled` and `--track` are also missing from the design.md palette table; I left them alone because only `--border-strong` was flagged.
+- The reviewer was not re-run after these three small fixes; I checked each directly (focus on the heading, computed padding 8px 12px).
+
+Lint, tests and build pass; main bundle 84.80 kB gzip.

@@ -283,3 +283,38 @@ describe('daysFromMs', () => {
     );
   });
 });
+
+// ── Hinted correct answers ────────────────────────────────────────────────────
+
+describe('scheduleCorrect with a hint', () => {
+  it('returns sooner than an unhinted correct answer from the same state', () => {
+    fc.assert(
+      fc.property(reachableArb, ({ card, now }) => {
+        const plain = scheduleCorrect(card, now, false);
+        const hinted = scheduleCorrect(card, now, true);
+        expect(hinted.intervalDays).toBeLessThan(plain.intervalDays);
+        expect(hinted.dueAt).toBeLessThan(plain.dueAt);
+      }),
+    );
+  });
+
+  it('still banishes the ghost: reps up by one, due in the future, ease unchanged', () => {
+    fc.assert(
+      fc.property(reachableArb, ({ card, now }) => {
+        const hinted = scheduleCorrect(card, now, true);
+        expect(hinted.reps).toBe(card.reps + 1);
+        expect(hinted.dueAt).toBeGreaterThan(now);
+        expect(hinted.ease).toBe(card.ease);
+        expect(isBanished(hinted, now)).toBe(true);
+      }),
+    );
+  });
+
+  it('an unhinted call is unchanged by the new parameter', () => {
+    fc.assert(
+      fc.property(reachableArb, ({ card, now }) => {
+        expect(scheduleCorrect(card, now, false)).toEqual(scheduleCorrect(card, now));
+      }),
+    );
+  });
+});
