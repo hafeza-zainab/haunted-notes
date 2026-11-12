@@ -64,3 +64,13 @@ Record of each time a spec, hook, or steering file changed the outcome.
 ### Architecture decision
 - The worker is lazy-created (first `transcribe()` call) and kept alive across uses so the model stays resident in memory — subsequent transcriptions skip the download/load step entirely.
 - `v8.3.6` of `@huggingface/transformers` doesn't expose per-chunk callbacks during `.call()`; transcription progress bar is intentionally indeterminate.
+
+---
+
+## Prompt pack A1: More steering files
+
+**Files:** `.kiro/steering/design.md`, `.kiro/steering/tech.md`, `.kiro/steering/testing.md`
+- `design.md` (fileMatch `src/**/*.tsx`, `src/**/*.css`): palette tokens taken from `:root` in `index.css`, spacing scale, ghost animation rules, mandatory `prefers-reduced-motion` override per animation, AA contrast, one accent glow color.
+- `tech.md` (always): stack, network limits, lazy-loading rule for Whisper and Tesseract, pure-logic-in-`src/lib` rule.
+- `testing.md` (fileMatch `src/lib/**`): vitest unit tests plus fast-check property tests required for every pure function. The runner itself is installed in prompt A3.
+- App code untouched.
