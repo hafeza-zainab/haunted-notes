@@ -145,16 +145,20 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
         </div>
 
         {/* Progress bar */}
-        <div className="room-progress" aria-label={`${pct}% banished`}>
-          <div
-            className="room-progress-fill"
-            style={{ width: `${pct}%` }}
-            role="progressbar"
-            aria-valuenow={pct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          />
+        <div
+          className="room-progress"
+          role="progressbar"
+          aria-label="Banished ghosts"
+          aria-valuenow={mastered.length}
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuetext={`${mastered.length} of ${total} banished`}
+        >
+          <div className="room-progress-fill" style={{ width: `${pct}%` }} />
         </div>
+        <p className="room-progress-label" aria-hidden="true">
+          {mastered.length} of {total} banished
+        </p>
       </div>
 
       {/* ── Ghost preview grid ── */}

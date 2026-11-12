@@ -12,6 +12,8 @@
   --accent-glow:  rgba(155, 89, 255, 0.35);
   --text:         #e8e8f0;
   --text-muted:   #8888a8;
+  --text-disabled: #a3a3bf;   /* 6.8:1 on --bg-elevated; disabled look comes from dashed border */
+  --track:        #2a2a44;    /* progress bar track */
   --danger:       #ff5555;
   --success:      #50fa7b;
   --ghost-fill:   rgba(155, 89, 255, 0.18);
@@ -69,6 +71,7 @@ body {
   z-index: 1000;
 }
 .skip-link:focus { top: 0.5rem; }
+.skip-link { min-height: 44px; display: inline-flex; align-items: center; }
 
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -182,7 +185,17 @@ body {
 }
 .btn-primary:hover { box-shadow: 0 0 20px var(--accent-glow); }
 .btn-primary:active { transform: scale(0.97); }
-.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-ghost:disabled {
+  /* Readable (AA) but clearly inactive: flat, dashed, no glow */
+  background: var(--bg-surface);
+  color: var(--text-disabled);
+  border: 1px dashed var(--text-muted);
+  box-shadow: none;
+  opacity: 1;
+  cursor: not-allowed;
+}
 
 .btn-secondary {
   background: var(--bg-elevated);
@@ -200,7 +213,6 @@ body {
   color: var(--danger);
   animation: pulse-border 1.2s ease-in-out infinite;
 }
-.btn-secondary:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .btn-ghost {
   background: transparent;
@@ -213,7 +225,6 @@ body {
   transition: color 0.2s, border-color 0.2s;
 }
 .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
-.btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Danger outline — cancel / destructive secondary action */
 .btn-danger-outline {
@@ -503,7 +514,7 @@ progress {
   flex-shrink: 0;
 }
 .badge {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   border-radius: 999px;
   padding: 2px 8px;
@@ -522,16 +533,23 @@ progress {
 
 /* Room progress bar */
 .room-progress {
-  height: 5px;
-  background: var(--bg-elevated);
-  border-radius: 3px;
+  height: 8px;
+  background: var(--track);
+  border-radius: 4px;
   overflow: hidden;
+  /* 1px outline keeps the track visible (3:1) against the card */
+  box-shadow: 0 0 0 1px var(--text-muted);
 }
 .room-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--success));
-  border-radius: 3px;
+  background: var(--success);
+  border-radius: 4px;
   transition: width 0.4s ease;
+}
+.room-progress-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.2;
 }
 
 /* Ghost grid inside a room */
@@ -560,7 +578,7 @@ progress {
 }
 
 .ghost-prompt {
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   color: var(--text-muted);
   line-height: 1.4;
   word-break: break-word;
@@ -741,7 +759,12 @@ progress {
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-sm);
 }
-.quiz-feedback.correct { color: var(--success); background: rgba(80, 250, 123, 0.1); }
+.quiz-feedback.correct {
+  color: var(--success);
+  background: rgba(80, 250, 123, 0.1);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
 .quiz-feedback.wrong   { color: var(--danger);  background: rgba(255, 85, 85, 0.1); }
 
 .quiz-input {
@@ -862,7 +885,7 @@ progress {
   color: #ffb432;
   border: 1px solid rgba(255, 180, 50, 0.4);
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 0.15rem 0.55rem;
   white-space: nowrap;
@@ -981,6 +1004,36 @@ progress {
 /* "Next ghost returns in N days" stat */
 .stat--next {
   color: var(--text-muted);
+}
+
+/* ── Tap targets: at least 44x44px on mobile / touch ── */
+@media (max-width: 639px), (pointer: coarse) {
+  .nav-btn { padding: 0.4rem 0.6rem; }
+  .nav-btn,
+  .sound-toggle,
+  .btn-primary,
+  .btn-secondary,
+  .btn-ghost,
+  .btn-danger-outline,
+  .btn-due,
+  .btn-dev,
+  .sort-btn,
+  .tab-btn,
+  .room-title-btn,
+  .room-expand-btn,
+  .btn-sm {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .sound-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .room-title-input,
+  .quiz-input { min-height: 44px; }
+  /* Rename: whole title row is the 44px hit area, icon stays small */
+  .room-title-btn { padding: 0.5rem 0.3rem; }
 }
 
 /* ── Reduced motion: consolidated override (keep last) ──

@@ -126,8 +126,8 @@ const QuizView: React.FC = () => {
       if (correct) {
         setBanishing(true);
         setAnswerState('correct');
-        setFeedback(`✓ Correct! The answer was "${currentCard.clozeWord}".`);
-        // Auto-advance after the banish animation
+        setFeedback(`👻 Banished! The answer was "${currentCard.clozeWord}".`);
+        // Keep the message visible ~900 ms (also under reduced motion), then advance
         setTimeout(advance, 900);
       } else {
         setShaking(true);
@@ -252,8 +252,8 @@ const QuizView: React.FC = () => {
         {feedback && (
           <p
             className={`quiz-feedback ${answerState}`}
-            role="alert"
-            aria-live="assertive"
+            role={answerState === 'wrong' ? 'alert' : 'status'}
+            aria-live={answerState === 'wrong' ? 'assertive' : 'polite'}
           >
             {feedback}
           </p>
