@@ -1,4 +1,17 @@
-import Tesseract from 'tesseract.js';
+// tesseract.js is heavy: it is loaded with a dynamic import() the first time the
+// Photo tab is used, never in the initial bundle.
+let tesseractModule: Promise<typeof import('tesseract.js')> | null = null;
+
+/** Start (or reuse) the dynamic import of the OCR engine. Safe to call repeatedly. */
+export function loadOcrEngine(): Promise<typeof import('tesseract.js')> {
+  if (!tesseractModule) {
+    tesseractModule = import('tesseract.js').catch((err) => {
+      tesseractModule = null; // allow a retry after a failed fetch
+      throw err;
+    });
+  }
+  return tesseractModule;
+}
 
 const MAX_WIDTH = 2500;
 const SCALE   = 2;
@@ -81,6 +94,9 @@ export async function extractTextFromImage(
     input = imageFile;
   }
 
+  // CommonJS interop: the module may arrive as the namespace itself or under `default`
+  const mod = await loadOcrEngine();
+  const Tesseract = (mod as { default?: typeof mod }).default ?? mod;
   const result = await Tesseract.recognize(input, 'eng', {
     logger: (m) => {
       if (m.status === 'recognizing text' && onProgress) {

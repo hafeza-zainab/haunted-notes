@@ -9,8 +9,11 @@ React + Vite + TypeScript, Zustand (persisted to localStorage). No backend. No p
 services. Keep dependencies minimal and pin exact versions when adding any.
 
 ## Network
-Only the one-time Whisper model download is allowed (see `product.md`). Nothing else
-leaves the browser. Demo mode, SRS and quizzes must work fully offline.
+Allowed network calls (see `product.md`): the one-time Whisper model download, the
+one-time Tesseract.js assets (worker, WASM core, English language data from a CDN),
+and the browser's speech service for Live mic only (Web Speech API). Nothing else
+leaves the browser. Audio files and photos are processed on-device. Demo mode, SRS
+and quizzes must work fully offline.
 
 ## Heavy libraries are lazy-loaded
 `@huggingface/transformers` (Whisper) and `tesseract.js` (OCR) must never be in the

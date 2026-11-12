@@ -238,3 +238,40 @@ Screenshot: `docs/screens/quiz-390-readonly-after.png`.
 
 ### Final ghost-ui-reviewer run
 No FAILs. It noted `.btn-due` border at about 1.2:1, but the button is filled and its text is 6.89:1. The sound-toggle emoji contrast is not measurable by script. It did not read the console, and it did not trigger banish or shake live (I did, above).
+
+---
+
+## A7: Kiro power (skipped)
+
+No power was installed or installable from here. The agent's Powers tool lists "No powers installed", and I cannot open the Powers panel or install one from this session, so no power was used. Nothing was reviewed or changed under A7. Inventing a power's findings would add nothing, so this step is skipped. To do it later, install a free React, testing or accessibility power from the Powers panel in the Kiro IDE and re-run the A7 prompt.
+
+---
+
+## B5: Lazy loading
+
+- **Finding:** `@huggingface/transformers` was already out of the main bundle, because it is imported only in `whisper.worker.ts`, and the worker is created on the first transcription. The only static heavy import was `tesseract.js` in `src/lib/ocr.ts`.
+- **Change:** `ocr.ts` now exports `loadOcrEngine()` (cached dynamic `import('tesseract.js')`, retry allowed after a failed fetch) and `extractTextFromImage` awaits it. `AddNoteView` starts the import the first time the Photo tab is selected and shows a "Loading OCR engine…" progress state with "Choose image" disabled until it is ready. No new CSS (reuses `.task-progress`).
+- **Not done:** Photo and Audio are inline panels in `AddNoteView`, not separate components, so there was nothing to split with `React.lazy`. Splitting them would be a refactor, which was out of scope.
+
+### Bundle sizes (`npm run build`, vite gzip)
+
+| File | Before | After |
+|---|---|---|
+| Main `index-*.js` | 279.52 kB raw / 89.26 kB gzip | 262.63 kB raw / 82.37 kB gzip |
+| `src-*.js` (tesseract.js, new chunk) | in main | 18.97 kB raw / 7.84 kB gzip |
+| `whisper.worker-*.js` | 886.85 kB (not in main) | unchanged |
+| `ort-wasm-*.wasm` | 21.6 MB (not in main) | unchanged |
+| CSS | 16.59 kB / 3.78 kB gzip | unchanged |
+
+The main bundle was already well under the 250 kB gzip target (89 kB before, 82 kB after).
+
+### Runtime check (Playwright MCP, `vite preview` production build, 390px)
+- First load requests only `/`, `index-*.js` and `index-*.css`. No tesseract, transformers, whisper or wasm.
+- Try demo, a full quiz round (1 correct, 1 wrong, 7 skipped including the last card) and "Round complete!" all work. Console errors: none. No horizontal scroll.
+- Opening Add Note requests nothing heavy. Selecting Photo fetches only `src-*.js`. The Audio tab requests nothing, because Whisper still loads on the first transcription.
+- Skeleton: with that one request delayed by 1.5 s, "Loading OCR engine…" appears as a status region, "Choose image" is disabled, and it becomes enabled after the load. Screenshot: `docs/screens/addnote-photo-loading-390.png`.
+- `npm run lint`, `npm test` (35 passed) and `npm run build` pass.
+
+### Noticed, not changed
+- `tesseract.js` fetches its worker, WASM core and `eng` language data from a CDN at run time by default. That is an outbound network call beyond the one-time Whisper download that `product.md` and `tech.md` allow. Fixing it means bundling or self-hosting those files, which is a separate task.
+- Actual OCR and Whisper transcription were not run end to end.

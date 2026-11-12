@@ -2,7 +2,7 @@
 
 > Your unfinished study notes come back to haunt you, until you banish them.
 
-Built for **Kiroween 2026** (category: Frankenstein). Haunted Notes stitches together voice transcription, handwriting/photo OCR, rule-based flashcard generation and spaced repetition into one spooky study app. Everything runs in the browser: no backend, no accounts, no paid services, and your notes and audio never leave your device.
+Built for **Kiroween 2026** (category: Frankenstein). Haunted Notes stitches together voice transcription, handwriting/photo OCR, rule-based flashcard generation and spaced repetition into one spooky study app. Everything runs in the browser: no backend, no accounts, no paid services, and your notes stay in your browser. Uploaded audio is transcribed on-device and photos are processed on-device; the only network calls are listed under "Run locally" below.
 
 - **Live app:** <ADD NETLIFY URL>
 - **Demo video:** <ADD YOUTUBE URL>
@@ -34,7 +34,11 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. The first audio transcription downloads the Whisper model (about 40 MB) once; it is then cached by the browser. This is the only network call the app makes.
+Open http://localhost:5173. Network calls the app makes:
+
+- The first audio transcription downloads the Whisper model (about 40 MB) once; it is then cached by the browser. The audio itself is transcribed on-device.
+- The first photo OCR downloads Tesseract.js assets (worker, WASM core, English language data) from a CDN. The photo itself is processed on-device.
+- Live mic uses the browser's Web Speech API, which in some browsers sends audio to the browser vendor's speech service.
 
 ## How Kiro was used
 

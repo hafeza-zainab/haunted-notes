@@ -20,7 +20,15 @@ Haunted Notes turns audio, live speech, and photos into notes, then creates flas
 | Review scheduling | SM-2 lite in a pure module (`src/lib/srs.ts`) |
 | UI | React, Vite, TypeScript, Zustand, hand-built SVG ghosts |
 
-No backend, no accounts, no paid services. Notes and audio never leave the device. The only network call is the one-time Whisper model download (about 40 MB), which the browser then caches.
+No backend, no accounts, no paid services. Notes are stored only in your browser (localStorage).
+
+Privacy, by input method:
+
+- **Audio files:** transcribed fully on-device (Whisper in a Web Worker).
+- **Photos:** processed on-device by Tesseract.js, but its worker, WASM core and English language data are downloaded from a CDN on first use.
+- **Live mic:** uses the browser's Web Speech API, which in some browsers sends audio to the browser vendor's speech service.
+
+Network calls: the one-time Whisper model download (about 40 MB, then cached by the browser), the one-time Tesseract.js assets, and the browser's speech service for Live mic only. Nothing else leaves the browser.
 
 ## Third-party software
 

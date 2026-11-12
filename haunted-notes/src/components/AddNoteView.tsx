@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import { startSpeechRecognition } from '../lib/speech';
-import { extractTextFromImage } from '../lib/ocr';
+import { extractTextFromImage, loadOcrEngine } from '../lib/ocr';
 import { useWhisper, ACCEPTED_AUDIO } from '../lib/useWhisper';
 import type { NoteInputMethod } from '../types';
 
@@ -22,6 +22,7 @@ const AddNoteView: React.FC = () => {
   const [text, setText] = useState('');
   const [listening, setListening] = useState(false);
   const [ocrProgress, setOcrProgress] = useState<number | null>(null);
+  const [ocrReady, setOcrReady] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
@@ -40,6 +41,14 @@ const AddNoteView: React.FC = () => {
   const switchTab = (m: NoteInputMethod) => {
     setInputMethod(m);
     setError('');
+    // First use of the Photo tab: fetch the OCR engine now (dynamic import)
+    if (m === 'photo' && !ocrReady) {
+      loadOcrEngine()
+        .then(() => setOcrReady(true))
+        .catch((e) =>
+          setError(`Could not load the OCR engine: ${e instanceof Error ? e.message : String(e)}`),
+        );
+    }
     if (m !== 'mic' && listening) {
       stopSpeechRef.current?.();
       setListening(false);
@@ -233,6 +242,11 @@ const AddNoteView: React.FC = () => {
             )}
           </div>
         )}
+        {inputMethod === 'mic' && (
+          <p className="input-hint">
+            Live mic uses your browser's speech recognition, which in some browsers sends audio to the browser vendor's speech service.
+          </p>
+        )}
 
         {/* ── Photo controls ── */}
         {inputMethod === 'photo' && (
@@ -241,10 +255,16 @@ const AddNoteView: React.FC = () => {
               type="button"
               className="btn-secondary"
               onClick={() => photoInputRef.current?.click()}
-              disabled={ocrProgress !== null}
+              disabled={ocrProgress !== null || !ocrReady}
             >
               📂 Choose image
             </button>
+            {!ocrReady && !error && (
+              <div className="task-progress" role="status" aria-live="polite">
+                <span className="progress-label">Loading OCR engine…</span>
+                <progress aria-label="Loading OCR engine" />
+              </div>
+            )}
             <input
               ref={photoInputRef}
               type="file"
