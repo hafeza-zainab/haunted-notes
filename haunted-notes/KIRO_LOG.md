@@ -151,3 +151,17 @@ Not verified: that the hooks appear in the Agent Hooks panel and fire. Kiro load
 - Runs `--headless` and `--isolated` (fresh profile per session, nothing persisted) with `--browser chromium`.
 - Uses the already cached Chromium via `--executable-path` (`ms-playwright/chromium-1248/chrome-win64/chrome.exe`), so no browser download at run time.
 - Used for the B7 browser pass: demo quiz flow, `?dev=1` "+1 day", screenshots at 1280px and 390px, and a reduced-motion run.
+
+---
+
+## Custom agent: ghost-ui-reviewer
+
+- **File:** `.kiro/agents/ghost-ui-reviewer.md` (workspace custom agent). Report only: it never edits files.
+- **Checks:** reads `.kiro/steering/design.md` first, then checks AA contrast, 44px tap targets at 390px, keyboard access and focus ring, aria labels (label-in-name), reduced motion, and layout and overflow at 390px.
+- **Tools:** read-only file tools plus the Playwright MCP server (`"tools": ["read", "@playwright"]`, `includeMcpJson: false`). No write or shell tools. The prompt forbids `browser_run_code_unsafe`, but `@playwright` grants the whole server, so that ban is enforced by the prompt only.
+- **Invoke:** in chat, ask Kiro to "run the ghost-ui-reviewer agent on the dashboard and quiz" (optionally name views or components). Start `npm run dev` first or it can only do a static review.
+- **First run (dashboard and quiz at 390px):** the first run hit `ERR_CONNECTION_REFUSED` because the dev server was stopped, so it reported a static review. The second run, with the server up, measured in the browser.
+  - PASS: tap targets (none under 44px), reduced motion, layout (no horizontal scroll), most aria labels.
+  - FAIL: white-on-accent text at 3.99:1 (`.btn-primary`, `.ghost-badge`, `.skip-link`), active nav and sort labels at about 2.9 to 3.1:1, focus ring removed on `.btn-due`, `.btn-dev` and text inputs, label-in-name on "Review due ghosts", "Clear demo" and "Try demo".
+  - Not acted on: no app code was changed. These findings are for a later fix.
+- **Caveat:** the agent could not click because `browser_click` is not on its allowed list. It used Tab and Enter instead. Findings from the static-only first run (modal focus trap, input disabled after a correct answer, aria-label on spans) were not re-measured in the browser run, so treat them as unverified. One of them does hold up: my earlier Playwright snapshot showed the quiz ghost label as "Ghost haunting: A Java class is a blueprint for creating objects.", which contains the answer and is read aloud by screen readers.
