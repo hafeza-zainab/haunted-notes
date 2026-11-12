@@ -4,6 +4,7 @@ import GhostSvg from './GhostSvg';
 import EmptyState from './EmptyState';
 import type { Note, Flashcard } from '../types';
 import { isDue, isBanished, nextReturnInMs, daysFromMs } from '../lib/srs';
+import { normalizeBlanks } from '../lib/blank';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -226,15 +227,15 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
                 key={card.id}
                 className="ghost-card"
                 role="listitem"
-                title={card.prompt}
+                title={normalizeBlanks(card.prompt)}
               >
                 <GhostSvg
                   weakness={card.weaknessScore}
                   size={80}
-                  label={`Ghost: ${card.prompt}`}
+                  label={`Ghost: ${normalizeBlanks(card.prompt)}`}
                   className={isDue(card) && card.reps > 0 ? 'ghost--returned' : undefined}
                 />
-                <p className="ghost-prompt">{card.prompt}</p>
+                <p className="ghost-prompt">{normalizeBlanks(card.prompt)}</p>
               </div>
             ))}
           </div>

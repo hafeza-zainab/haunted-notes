@@ -209,3 +209,32 @@ Not in the original list, added after the reviewer's re-run flagged them: `.btn-
 - `.btn-secondary` border (only on the Add Note view) and the shake and banish animations under reduced motion were not measured at runtime.
 - `.quiz-input[readonly]` uses 0.5 opacity. I calculated about 4.6:1, only just above 4.5.
 - Screenshots: `docs/screens/dashboard-390-a11y-after.png`, `docs/screens/quiz-390-a11y-after.png`.
+
+---
+
+## Fixed-length blanks
+
+- **Why:** the blank had one underscore per answer letter, so `___` told you the answer was 3 letters (for example DNA).
+- **New:** `src/lib/blank.ts` exports `BLANK` (`_____`) and `normalizeBlanks()`, which replaces any run of 2 or more underscores with `BLANK`. It is a pure function.
+- **Used for display:** the dashboard ghost card text, `title` and `aria-label`, and the quiz prompt and ghost `aria-label`. Cards already saved with length-matched blanks are normalised at display time, so there is no store migration.
+- **Used for new cards:** `cloze.ts` now writes `BLANK` into every new prompt. The demo data still stores old-style blanks and relies on display normalisation.
+- **Bug found by the new property test:** for "…is Node20…" the definition regex picked "Node", but `\bNode\b` does not match inside "Node20". That produced a card with no blank at all (the whole sentence shown as the question). `buildCard` now returns no card when the prompt equals the sentence.
+- **Tests:** `cloze.test.ts` gained two properties (every underscore run in a prompt is exactly `BLANK`; prompts built from answers of different lengths are identical) and the existing "prompt never contains the answer" stays. New `blank.test.ts` has 5 tests (output independent of run length, every output run is `BLANK`, idempotent, single underscore untouched, old blanks converted). 35 tests pass over 4 fresh-seed runs. Lint and build pass.
+- **One test bug fixed along the way:** my first frame sentence contained "is", which made the generator blank "common" instead of the acronym.
+
+### Runtime checks (Playwright MCP, 390px)
+
+| Check | Result |
+|---|---|
+| Add Note `.tab-btn` border vs page | 4.13 inactive, 4.86 active (need 3) |
+| Add Note `.btn-secondary` border (Start listening, Choose image, Choose audio file) | 4.13 (need 3); text 13.73; height 44 |
+| Reduced motion: banish after a correct answer | class `ghost-banish` applied, `animation-name: none`, 0 running animations |
+| Reduced motion: shake after a wrong answer | class `ghost-shake` applied, `animation-name: none`, 0 running animations |
+| "Banished!" message under reduced motion | shown, then advances |
+| Read-only quiz input after a correct answer | focus kept; effective text (130,130,143) on (24,24,38) = 4.62:1 (need 4.5; thin margin) |
+| Blank on screen / in ghost aria-label | `_____` in both, for an answer 10 letters long |
+
+Screenshot: `docs/screens/quiz-390-readonly-after.png`.
+
+### Final ghost-ui-reviewer run
+No FAILs. It noted `.btn-due` border at about 1.2:1, but the button is filled and its text is 6.89:1. The sound-toggle emoji contrast is not measurable by script. It did not read the console, and it did not trigger banish or shake live (I did, above).

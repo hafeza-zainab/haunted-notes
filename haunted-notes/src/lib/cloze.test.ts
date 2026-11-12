@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { generateFlashcards, STOP_WORDS } from './cloze';
+import { BLANK } from './blank';
 import type { Note } from '../types';
 
 // ── Generators ────────────────────────────────────────────────────────────────
@@ -90,6 +91,34 @@ describe('generateFlashcards', () => {
         for (const card of generateFlashcards(noteFor(text))) {
           expect(containsWholeWord(card.prompt, card.clozeWord)).toBe(false);
         }
+      }),
+    );
+  });
+
+  it('every blank in a prompt is the fixed blank, whatever the answer length', () => {
+    fc.assert(
+      fc.property(noteTextArb, (text) => {
+        for (const card of generateFlashcards(noteFor(text))) {
+          const runs = card.prompt.match(/_+/g) ?? [];
+          expect(runs.length).toBeGreaterThan(0);
+          for (const run of runs) expect(run).toBe(BLANK);
+        }
+      }),
+    );
+  });
+
+  it('the blank length does not depend on the answer length', () => {
+    // Same sentence frame, answers of different lengths (2 to 5 letters)
+    const answerArb = fc.constantFrom('DNA', 'JVM', 'SEO', 'HTML', 'API');
+    fc.assert(
+      fc.property(answerArb, answerArb, (a, b) => {
+        const frame = (w: string) =>
+          `Engineers often store research data in ${w} format for many different applications.`;
+        const cardA = generateFlashcards(noteFor(frame(a)))[0];
+        const cardB = generateFlashcards(noteFor(frame(b)))[0];
+        expect(cardA).toBeDefined();
+        expect(cardB).toBeDefined();
+        expect(cardA.prompt).toBe(cardB.prompt);
       }),
     );
   });

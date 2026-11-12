@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
 import type { Flashcard } from '../types';
 import { isDue, isReturned, isBanished } from '../lib/srs';
+import { normalizeBlanks } from '../lib/blank';
 
 // ── Answer normalisation ──────────────────────────────────────────────────────
 
@@ -240,7 +241,7 @@ const QuizView: React.FC = () => {
           banishing={banishing}
           shaking={shaking}
           size={120}
-          label={`Ghost haunting: ${currentCard.prompt}`}
+          label={`Ghost haunting: ${normalizeBlanks(currentCard.prompt)}`}
           className={ghostReturned ? 'ghost--returned' : undefined}
         />
       </div>
@@ -248,7 +249,7 @@ const QuizView: React.FC = () => {
       <div className="quiz-card">
         <p className="quiz-prompt">
           <span className="sr-only">Fill in the blank: </span>
-          {currentCard.prompt}
+          {normalizeBlanks(currentCard.prompt)}
         </p>
 
         {feedback && (

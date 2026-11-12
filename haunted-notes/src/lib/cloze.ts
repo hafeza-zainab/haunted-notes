@@ -1,5 +1,6 @@
 import type { Flashcard, Note } from '../types';
 import { defaultSrsFields } from './srs';
+import { BLANK } from './blank';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -257,9 +258,9 @@ function pickClozeWordRelaxed(sentence: string): string | null {
 // ── Card builder ─────────────────────────────────────────────────────────────
 
 function makeClozePrompt(sentence: string, word: string): string {
-  const blank = '_'.repeat(word.length);
-  // Global: every occurrence is blanked, otherwise a repeated word leaks the answer
-  return sentence.replace(new RegExp(`\\b${escapeRegex(word)}\\b`, 'gi'), blank);
+  // Global: every occurrence is blanked, otherwise a repeated word leaks the answer.
+  // Fixed-length blank: its size must not depend on the answer length.
+  return sentence.replace(new RegExp(`\\b${escapeRegex(word)}\\b`, 'gi'), BLANK);
 }
 
 /**
@@ -281,12 +282,15 @@ function buildCard(
 ): Flashcard | null {
   const word = pickFn(sentence);
   if (!word || !isSafeBlank(word)) return null;
+  // The picked word must actually be blanked (e.g. "Node" does not match inside "Node20")
+  const prompt = makeClozePrompt(sentence, word);
+  if (prompt === sentence) return null;
   return {
     id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     noteId,
     sentence,
     clozeWord: word,
-    prompt: makeClozePrompt(sentence, word),
+    prompt,
     weaknessScore: 1,
     streakCorrect: 0,
     streakWrong: 0,
