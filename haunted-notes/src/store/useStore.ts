@@ -39,7 +39,7 @@ export const useStore = create<HauntedState>()(
       notes: [],
       flashcards: [],
       currentView: 'dashboard',
-      soundEnabled: true,
+      soundEnabled: false, // sound is opt-in
       quizNoteId: null,
       quizDueOnly: false,
       isDemoLoaded: false,
@@ -168,7 +168,12 @@ function getAudioCtx(): AudioContext {
   return audioCtx;
 }
 
-function playTone(freq: number, duration: number, type: OscillatorType = 'sine') {
+function playTone(
+  freq: number,
+  duration: number,
+  type: OscillatorType = 'sine',
+  volume = 0.3,
+) {
   try {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
@@ -177,7 +182,7 @@ function playTone(freq: number, duration: number, type: OscillatorType = 'sine')
     gain.connect(ctx.destination);
     osc.type = type;
     osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.setValueAtTime(volume, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + duration);
@@ -188,9 +193,10 @@ function playTone(freq: number, duration: number, type: OscillatorType = 'sine')
 
 function playAnswerSound(correct: boolean) {
   if (correct) {
-    playTone(523, 0.15, 'triangle');
-    setTimeout(() => playTone(659, 0.15, 'triangle'), 100);
-    setTimeout(() => playTone(784, 0.25, 'triangle'), 200);
+    // Soft banish shimmer: three quiet, rising sine tones
+    playTone(392, 0.35, 'sine', 0.08);
+    setTimeout(() => playTone(523, 0.35, 'sine', 0.07), 120);
+    setTimeout(() => playTone(784, 0.55, 'sine', 0.06), 240);
   } else {
     playTone(110, 0.4, 'sawtooth');
     setTimeout(() => playTone(103, 0.4, 'sawtooth'), 60);

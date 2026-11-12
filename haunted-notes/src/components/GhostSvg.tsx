@@ -1,4 +1,6 @@
 import React from 'react';
+import { ghostTypeFor } from '../lib/haunt';
+import { GHOST_SHAPES } from './ghostShapes';
 
 interface GhostSvgProps {
   /** 0 = mastered (fully transparent/small), 1 = totally unknown (full size) */
@@ -14,7 +16,8 @@ interface GhostSvgProps {
 }
 
 /**
- * Inline SVG ghost whose size and opacity encode weakness score.
+ * Inline SVG ghost. The weakness score picks the ghost type (wisp, ghoul,
+ * banshee, phantom, poltergeist) and still encodes size and opacity.
  * All animations respect prefers-reduced-motion.
  */
 const GhostSvg: React.FC<GhostSvgProps> = ({
@@ -29,9 +32,13 @@ const GhostSvg: React.FC<GhostSvgProps> = ({
   const scale = 0.4 + weakness * 0.6;              // 0.4 → 1.0
   const displaySize = size * scale;
 
+  const type = ghostTypeFor(weakness);
+  const Shape = GHOST_SHAPES[type];
+
   let animClass = 'ghost-float';
   if (banishing) animClass = 'ghost-banish';
   if (shaking) animClass = 'ghost-shake';
+  animClass = `${animClass} ghost-type--${type}`;
   if (className) animClass = `${animClass} ${className}`;
 
   return (
@@ -44,18 +51,8 @@ const GhostSvg: React.FC<GhostSvgProps> = ({
       className={animClass}
       style={{ opacity, transition: 'opacity 0.4s, transform 0.4s' }}
     >
-      {/* Body */}
-      <path
-        d="M50 10 C20 10 10 35 10 60 L10 110 L22 98 L34 110 L46 98 L58 110 L70 98 L82 110 L90 60 C90 35 80 10 50 10 Z"
-        fill="var(--ghost-fill)"
-        stroke="var(--ghost-stroke)"
-        strokeWidth="2"
-      />
-      {/* Left eye */}
-      <ellipse cx="37" cy="55" rx="8" ry="9" fill="var(--ghost-eyes)" />
-      {/* Right eye */}
-      <ellipse cx="63" cy="55" rx="8" ry="9" fill="var(--ghost-eyes)" />
-      {/* Glow */}
+      <Shape />
+      {/* Glow ring */}
       <ellipse
         cx="50"
         cy="60"

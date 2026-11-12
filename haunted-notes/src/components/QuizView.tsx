@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
+import BanishParticles from './BanishParticles';
 import type { Flashcard } from '../types';
 import { isDue, isReturned, isBanished } from '../lib/srs';
 import { normalizeBlanks } from '../lib/blank';
@@ -236,6 +237,7 @@ const QuizView: React.FC = () => {
       )}
 
       <div className="quiz-ghost-area">
+        {banishing && <BanishParticles />}
         <GhostSvg
           weakness={currentCard.weaknessScore}
           banishing={banishing}

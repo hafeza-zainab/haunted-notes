@@ -13,7 +13,8 @@ import { defaultSrsFields } from './srs';
 
 function makePrompt(sentence: string, word: string): string {
   const blank = '_'.repeat(word.length);
-  return sentence.replace(new RegExp(`\\b${word}\\b`, 'i'), blank);
+  // Global: every occurrence is blanked, otherwise a repeated word leaks the answer
+  return sentence.replace(new RegExp(`\\b${word}\\b`, 'gi'), blank);
 }
 
 function card(

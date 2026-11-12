@@ -2,6 +2,7 @@ import React from 'react';
 import { useStore } from '../store/useStore';
 import type { View } from '../types';
 import { isBanished } from '../lib/srs';
+import HauntMeter from './HauntMeter';
 
 const NavBar: React.FC = () => {
   const currentView = useStore((s) => s.currentView);
@@ -32,6 +33,8 @@ const NavBar: React.FC = () => {
           </span>
         )}
       </div>
+
+      <HauntMeter />
 
       <ul className="nav-links" role="list">
         {navItems.map(({ view, label, icon }) => (

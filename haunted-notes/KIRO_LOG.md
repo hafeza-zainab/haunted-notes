@@ -275,3 +275,28 @@ The main bundle was already well under the 250 kB gzip target (89 kB before, 82 
 ### Noticed, not changed
 - `tesseract.js` fetches its worker, WASM core and `eng` language data from a CDN at run time by default. That is an outbound network call beyond the one-time Whisper download that `product.md` and `tech.md` allow. Fixing it means bundling or self-hosting those files, which is a separate task.
 - Actual OCR and Whisper transcription were not run end to end.
+
+---
+
+## Spec: Haunting atmosphere (`.kiro/specs/haunting-atmosphere.md`)
+
+Spec written first (R1 to R6, design, tasks), then built against it.
+
+- **Five ghost types (R1):** `ghostTypeFor(weakness)` in the new pure module `src/lib/haunt.ts` splits 0 to 1 into five equal bands: wisp, ghoul, banshee, phantom, poltergeist. Shapes live in `src/components/ghostShapes.tsx` (teardrop, hunched with hollow eyes, long hair with a wailing mouth, hooded cloak, spiky with angry face). Rendered ghost SVG in the browser: poltergeist 1193 bytes, phantom 880 bytes; a test keeps every type under 2048. Glow strength and float speed differ per type, using the accent colour only.
+- **Atmosphere (R2):** one fixed, `aria-hidden`, `pointer-events: none` layer (`Atmosphere.tsx`) with three slow fog layers, a faint flicker and six specks. Only `transform` and `opacity` animate. No layout shift (header meter has a fixed minimum width).
+- **Banish (R3):** the ghost thins out and lifts (600 ms) while 7 fixed particles drift away (900 ms). Soft three-tone sine shimmer, only when sound is on. **Sound now defaults to off** for new visitors (it was on). Verified: with sound off no `AudioContext` is created; after enabling it, one is.
+- **Returned ghosts (R4):** keep the orange aura and now shake in once (400 ms) before floating. New ghosts do not.
+- **Haunted level (R5):** `hauntedLevel()` sums the weakness of unbanished ghosts into 5 tiers (Calm, Uneasy, Restless, Crowded, Overrun). The header meter (`role="meter"`, labelled by its visible text) and `data-level` on the app shell drive the vignette, fog layers and specks. Demo data reads "Crowded, 9 weak ghosts".
+- **Reduced motion (R6):** no fog movement, no flicker, no particles, 0 running animations; the banished ghost is dimmed in place (opacity 0.2); the shake has no transform; the meter and "Banished!" text stay. Verified at runtime.
+- **Tests:** `haunt.test.ts` (type bands, monotonic type, level properties), `ghostShapes.test.tsx` (size, distinct shapes), render tests for the three new components, `demoData.test.ts`. 55 tests pass over repeated runs. Lint and build pass; main bundle 83.88 kB gzip.
+
+### Checks (Playwright MCP and ghost-ui-reviewer)
+- Contrast of text over the fog at the maximum level, measured from rendered pixels: 5.54 (muted text), 5.58, 4.8 (accent heading). Meter label 5.34, level name 14.99, lit segment 4.58.
+- 390px: no horizontal scroll, 0 targets under 44px, meter box 120x24 and does not overlap the nav. 1280px: no overflow.
+- Reviewer FAILs and fixes:
+  1. **Real answer leak:** the demo "Content" card still showed "content" in its prompt, aria-label and text. `demoData.ts` had its own non-global replace (the same bug fixed earlier in `cloze.ts`). Fixed with a global replace plus a test. After the fix none of the nine quiz cards contains its answer anywhere in the page HTML. **Demo cards already saved in a browser keep the old prompt until you click "Clear demo", then "Try demo".**
+  2. Design nits: shake-in 550 ms changed to 400 ms; meter gap 0.2rem changed to 0.25rem.
+- Not changed: the existing `pulse-border` animation (`.btn-secondary.listening`) animates `box-shadow`, not only `transform` and `opacity`. It is pre-existing and covered by the reduced-motion block.
+- Reviewer was not re-run after these last two small fixes; I verified them directly (answer scan on all nine quiz cards, shake-in duration 0.4 s).
+
+Screenshots in `docs/screens/`: `haunt-before-{dashboard,quiz}-{1280,390}.png`, `haunt-after-{dashboard,quiz}-{1280,390}.png`, `haunt-after-five-types-1280.png`, `haunt-after-banish-390.png`, `haunt-after-banish-reduced-390.png`.

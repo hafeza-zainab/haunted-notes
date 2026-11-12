@@ -87,6 +87,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
+  position: relative;
+  isolation: isolate; /* keeps the fixed atmosphere layer behind the content */
 }
 
 /* ── Navbar ── */
@@ -736,6 +738,7 @@ progress {
   display: flex;
   justify-content: center;
   min-height: 130px;
+  position: relative; /* anchors the banish particles */
 }
 
 .quiz-card {
@@ -820,8 +823,10 @@ progress {
 }
 
 @keyframes ghost-banish {
+  /* Dissolve: the ghost thins out and lifts while the particles drift away */
   0%   { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-60px) scale(0.3); }
+  60%  { opacity: 0.45; transform: translateY(-22px) scale(0.92); }
+  100% { opacity: 0; transform: translateY(-48px) scale(0.6); }
 }
 
 @keyframes ghost-shake {
@@ -837,7 +842,14 @@ progress {
   50%     { box-shadow: 0 0 0 4px rgba(255,85,85,0.35); }
 }
 
-.ghost-float { animation: ghost-float 3s ease-in-out infinite; }
+.ghost-float { animation: ghost-float var(--float-dur, 3s) ease-in-out infinite; }
+
+/* ── Ghost types: glow strength and float speed differ per type (accent only) ── */
+.ghost-type--wisp        { --float-dur: 4.6s; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 35%, transparent)); }
+.ghost-type--ghoul       { --float-dur: 3.4s; filter: drop-shadow(0 0 4px  color-mix(in srgb, var(--accent) 50%, transparent)); }
+.ghost-type--banshee     { --float-dur: 3.8s; filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 45%, transparent)); }
+.ghost-type--phantom     { --float-dur: 5.2s; filter: drop-shadow(0 0 6px  color-mix(in srgb, var(--accent) 30%, transparent)); }
+.ghost-type--poltergeist { --float-dur: 2.2s; filter: drop-shadow(0 0 8px  color-mix(in srgb, var(--accent) 70%, transparent)); }
 .ghost-banish { animation: ghost-banish 0.6s ease-out forwards; }
 .ghost-shake  { animation: ghost-shake 0.4s ease-in-out; }
 
@@ -1006,6 +1018,168 @@ progress {
 /* "Next ghost returns in N days" stat */
 .stat--next {
   color: var(--text-muted);
+}
+
+/* ── Haunting atmosphere ────────────────────────────────────────────────
+   One fixed, non-interactive layer behind the app. Only transform and opacity
+   animate. The app shell's data-level (0 to 4) sets how dark and crowded it is. */
+.app-shell {
+  --vignette: 0;
+  --fog-a: 0.35;
+  --fog-b: 0;
+  --fog-c: 0;
+  --specks: 0;
+}
+.app-shell[data-level="1"] { --vignette: 0.12; --fog-a: 0.45; --specks: 1; }
+.app-shell[data-level="2"] { --vignette: 0.25; --fog-a: 0.5;  --fog-b: 0.4; --specks: 2; }
+.app-shell[data-level="3"] { --vignette: 0.4;  --fog-a: 0.6;  --fog-b: 0.5; --fog-c: 0.4;  --specks: 4; }
+.app-shell[data-level="4"] { --vignette: 0.55; --fog-a: 0.7;  --fog-b: 0.6; --fog-c: 0.55; --specks: 6; }
+
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+/* Vignette: darker edges as the room gets more haunted */
+.atmosphere::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, transparent 35%, rgba(0, 0, 0, var(--vignette)) 100%);
+}
+/* Faint flicker */
+.atmosphere::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%);
+  animation: atmo-flicker 7s steps(1, end) infinite;
+}
+@keyframes atmo-flicker {
+  0%, 100% { opacity: 1; }
+  8%  { opacity: 0.55; }
+  9%  { opacity: 1; }
+  41% { opacity: 0.8; }
+  42% { opacity: 0.5; }
+  44% { opacity: 1; }
+  73% { opacity: 0.7; }
+  75% { opacity: 1; }
+}
+
+/* Slow fog (accent at most 10% at the centre, so text contrast is unaffected) */
+.fog {
+  position: absolute;
+  left: -30%;
+  width: 160%;
+  height: 55%;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 65%);
+  will-change: transform;
+}
+.fog--a { top: 2%;  opacity: var(--fog-a); animation: fog-drift 70s ease-in-out infinite alternate; }
+.fog--b { top: 38%; opacity: var(--fog-b); animation: fog-drift 95s ease-in-out infinite alternate-reverse; }
+.fog--c { top: 68%; opacity: var(--fog-c); animation: fog-drift 120s ease-in-out infinite alternate; }
+@keyframes fog-drift {
+  0%   { transform: translateX(-8%); }
+  100% { transform: translateX(8%); }
+}
+
+/* Specks: more of them appear as the level rises */
+.speck {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--ghost-eyes);
+  animation: speck-drift 24s ease-in-out infinite alternate;
+}
+.speck--1 { left: 12%; top: 30%; opacity: clamp(0, calc(var(--specks) - 0), 0.5); animation-duration: 26s; }
+.speck--2 { left: 78%; top: 18%; opacity: clamp(0, calc(var(--specks) - 1), 0.5); animation-duration: 31s; }
+.speck--3 { left: 34%; top: 72%; opacity: clamp(0, calc(var(--specks) - 2), 0.5); animation-duration: 22s; }
+.speck--4 { left: 88%; top: 64%; opacity: clamp(0, calc(var(--specks) - 3), 0.5); animation-duration: 28s; }
+.speck--5 { left: 56%; top: 44%; opacity: clamp(0, calc(var(--specks) - 4), 0.5); animation-duration: 34s; }
+.speck--6 { left: 6%;  top: 84%; opacity: clamp(0, calc(var(--specks) - 5), 0.5); animation-duration: 25s; }
+@keyframes speck-drift {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(28px, -44px); }
+}
+
+/* Haunted level meter (header) */
+.haunt-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 7.5rem;          /* fixed width: the label changing never shifts the header */
+  flex-shrink: 0;
+}
+.haunt-meter-label {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.haunt-meter-label strong { color: var(--text); }
+.haunt-meter-bars { display: flex; gap: 3px; }
+.haunt-meter-seg {
+  width: 18px;
+  height: 6px;
+  border-radius: 2px;
+  border: 1px solid var(--border-strong);
+  background: var(--track);
+}
+.haunt-meter-seg.on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Banish: a few particles drift up from the dissolving ghost */
+.banish-particles {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.banish-particle {
+  position: absolute;
+  left: calc(var(--size) / -2);
+  top: calc(var(--size) / -2);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: var(--ghost-eyes);
+  box-shadow: 0 0 8px var(--accent);
+  opacity: 0;
+  animation: particle-drift 0.9s ease-out var(--delay) forwards;
+}
+@keyframes particle-drift {
+  0%   { opacity: 0.9; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0;   transform: translate(var(--dx), var(--dy)) scale(0.2); }
+}
+
+/* Returned ghosts shake in once when they appear, then float as usual */
+@keyframes ghost-shake-in {
+  0%   { transform: translateX(0) rotate(0); }
+  15%  { transform: translateX(-10px) rotate(-3deg); }
+  30%  { transform: translateX(10px) rotate(3deg); }
+  45%  { transform: translateX(-7px) rotate(-2deg); }
+  60%  { transform: translateX(6px) rotate(1.5deg); }
+  80%  { transform: translateX(-3px); }
+  100% { transform: translateX(0) rotate(0); }
+}
+.ghost--returned.ghost-float {
+  animation:
+    ghost-shake-in 0.4s ease-out 1,
+    ghost-float var(--float-dur, 3s) ease-in-out 0.4s infinite;
+}
+
+/* Reduced motion: static equivalents (no movement, no flicker, no particles) */
+@media (prefers-reduced-motion: reduce) {
+  .ghost-banish { opacity: 0.2 !important; }   /* banished: dimmed in place */
+  .banish-particles { display: none; }
+  .atmosphere::after { display: none; }        /* no flicker */
 }
 
 /* ── Tap targets: at least 44x44px on mobile / touch ── */
