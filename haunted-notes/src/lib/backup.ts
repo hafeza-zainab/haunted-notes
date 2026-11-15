@@ -310,3 +310,89 @@ export function parseBackupText(text: string, ctx: ValidateContext): ValidateRes
   }
   return validateBackup(parsed, ctx);
 }
+
+// ---- Merge (existing data always wins) ----------------------------------
+
+export interface ImportSummary {
+  notes: { added: number; skipped: number };
+  flashcards: { added: number; skipped: number };
+  events: { added: number; skipped: number };
+  dropped: DroppedCounts;
+  warnings: ImportWarning[];
+}
+
+export interface MergeResult {
+  data: BackupData;
+  summary: ImportSummary;
+}
+
+function cardContentKey(card: Flashcard): string {
+  return JSON.stringify([card.noteId, card.sentence, card.clozeWord]);
+}
+
+function eventKey(e: ReviewEvent): string {
+  return `${e.t}|${e.r}|${e.c}`;
+}
+
+/**
+ * Merges validated `incoming` data into `current`. Never mutates `current`, reuses existing
+ * objects, skips incoming items whose id (or card content) already exists.
+ */
+export function mergeBackup(
+  current: BackupData,
+  incoming: BackupData,
+  dropped: DroppedCounts = { notes: 0, flashcards: 0, events: 0 },
+  warnings: ImportWarning[] = [],
+): MergeResult {
+  const noteIds = new Set<string>();
+  for (const n of current.notes) noteIds.add(n.id);
+  const notes = [...current.notes];
+  let notesAdded = 0;
+  for (const n of incoming.notes) {
+    if (noteIds.has(n.id)) continue;
+    noteIds.add(n.id);
+    notes.push(n);
+    notesAdded += 1;
+  }
+
+  const cardIds = new Set<string>();
+  const cardKeys = new Set<string>();
+  for (const c of current.flashcards) {
+    cardIds.add(c.id);
+    cardKeys.add(cardContentKey(c));
+  }
+  const flashcards = [...current.flashcards];
+  let cardsAdded = 0;
+  for (const c of incoming.flashcards) {
+    const key = cardContentKey(c);
+    if (cardIds.has(c.id) || cardKeys.has(key)) continue;
+    cardIds.add(c.id);
+    cardKeys.add(key);
+    flashcards.push(c);
+    cardsAdded += 1;
+  }
+
+  const seen = new Set<string>();
+  for (const e of current.reviewLog.events) seen.add(eventKey(e));
+  const union: ReviewEvent[] = [...current.reviewLog.events];
+  let eventsAdded = 0;
+  for (const e of incoming.reviewLog.events) {
+    const key = eventKey(e);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    union.push(e);
+    eventsAdded += 1;
+  }
+  const reviewLog = sanitizeReviewLog({ v: REVIEW_LOG_VERSION, events: union });
+
+  return {
+    data: { notes, flashcards, reviewLog },
+    summary: {
+      notes: { added: notesAdded, skipped: incoming.notes.length - notesAdded },
+      flashcards: { added: cardsAdded, skipped: incoming.flashcards.length - cardsAdded },
+      events: { added: eventsAdded, skipped: incoming.reviewLog.events.length - eventsAdded },
+      dropped,
+      warnings,
+    },
+  };
+}
