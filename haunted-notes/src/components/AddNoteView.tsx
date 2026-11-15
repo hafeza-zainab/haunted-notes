@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { startSpeechRecognition } from '../lib/speech';
 import { extractTextFromImage, loadOcrEngine } from '../lib/ocr';
 import { useWhisper, ACCEPTED_AUDIO } from '../lib/useWhisper';
+import ModelStatus from './ModelStatus';
 import type { NoteInputMethod } from '../types';
 
 const TABS: { id: NoteInputMethod; label: string; icon: string }[] = [
@@ -287,6 +288,7 @@ const AddNoteView: React.FC = () => {
         {/* ── Audio file controls ── */}
         {inputMethod === 'audio' && (
           <div className="audio-controls">
+            <ModelStatus refreshKey={whisper.status} />
 
             {/* File picker — hidden while busy or done */}
             {!whisperBusy && whisper.status !== 'done' && (
