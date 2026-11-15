@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { MS_PER_DAY, currentStreak } from './insights';
+import { MS_PER_DAY, currentStreak, reviewedToday } from './insights';
 import type { ReviewEvent } from '../types';
 
 const MINUTE = 60_000;
@@ -123,6 +123,31 @@ describe('currentStreak future events and today', () => {
         expect(after).toBeGreaterThanOrEqual(1);
       }),
       { numRuns: 200 },
+    );
+  });
+});
+
+describe('reviewedToday properties', () => {
+  /** Local day number by floor-mod arithmetic, independent of the module under test. */
+  const refDay = (t: number, tz: number): number => {
+    const local = t - tz * MINUTE;
+    return (local - (((local % MS_PER_DAY) + MS_PER_DAY) % MS_PER_DAY)) / MS_PER_DAY;
+  };
+
+  // Feature: study-insights, Property 7: Reviewed-today count matches the reference
+  // **Validates: Requirements 6.1, 6.2**
+  it('equals the count of non-future events on today\'s local day and is at most the event count', () => {
+    fc.assert(
+      fc.property(scenarioArb, ({ now, tz, events }) => {
+        let expected = 0;
+        for (const e of events) {
+          if (e.t <= now && refDay(e.t, tz) === refDay(now, tz)) expected += 1;
+        }
+        const count = reviewedToday(events, now, tz);
+        expect(count).toBe(expected);
+        expect(count).toBeLessThanOrEqual(events.length);
+      }),
+      { numRuns: 300 },
     );
   });
 });
