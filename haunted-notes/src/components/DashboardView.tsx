@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
 import EmptyState from './EmptyState';
 import StudyInsights from './StudyInsights';
+import BackupPanel from './BackupPanel';
 import type { Note, Flashcard } from '../types';
 import { isDue, isBanished, nextReturnInMs, daysFromMs } from '../lib/srs';
 import { normalizeBlanks } from '../lib/blank';
@@ -302,7 +303,14 @@ const DashboardView: React.FC = () => {
   // Show dev tools only when ?dev=1 is present in the URL
   const isDevMode = new URLSearchParams(window.location.search).get('dev') === '1';
 
-  if (notes.length === 0) return <EmptyState />;
+  if (notes.length === 0) {
+    return (
+      <>
+        <EmptyState />
+        <BackupPanel />
+      </>
+    );
+  }
 
   // Build per-note card collections
   const noteRooms = notes.map((note) => ({
@@ -447,6 +455,8 @@ const DashboardView: React.FC = () => {
           </div>
         ))}
       </div>
+
+      <BackupPanel />
 
       {/* ── Reset all confirm ── */}
       {confirmReset && (
