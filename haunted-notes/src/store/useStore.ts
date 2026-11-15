@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Note, Flashcard, View } from '../types';
+import type { Note, Flashcard, View, ReviewLog } from '../types';
 import { generateFlashcards, updateWeaknessScore } from '../lib/cloze';
 import { scheduleCorrect, scheduleWrong, defaultSrsFields } from '../lib/srs';
 import { buildDemoData } from '../lib/demoData';
+import { emptyReviewLog, appendReview } from '../lib/reviewLog';
 
 interface HauntedState {
   notes: Note[];
@@ -16,6 +17,8 @@ interface HauntedState {
   quizDueOnly: boolean;
   /** True while demo notes/cards are loaded in the store. */
   isDemoLoaded: boolean;
+  /** Compact review history (time, room, correct) used for study insights. */
+  reviewLog: ReviewLog;
 
   // Actions
   addNote: (note: Omit<Note, 'id' | 'createdAt'>) => number;
@@ -44,6 +47,7 @@ export const useStore = create<HauntedState>()(
       quizNoteId: null,
       quizDueOnly: false,
       isDemoLoaded: false,
+      reviewLog: emptyReviewLog(),
 
       addNote: (noteData) => {
         const note: Note = {
@@ -76,6 +80,8 @@ export const useStore = create<HauntedState>()(
       },
 
       answerCard: (cardId, correct, hinted = false) => {
+        const card = get().flashcards.find((c) => c.id === cardId);
+        if (!card) return;
         set((state) => ({
           flashcards: state.flashcards.map((c) => {
             if (c.id !== cardId) return c;
@@ -85,6 +91,11 @@ export const useStore = create<HauntedState>()(
               ? scheduleCorrect(c, Date.now(), hinted)
               : scheduleWrong(c);
             return { ...withWeakness, ...srsUpdate };
+          }),
+          reviewLog: appendReview(state.reviewLog, {
+            t: Date.now(),
+            r: card.noteId,
+            c: correct ? 1 : 0,
           }),
         }));
         if (get().soundEnabled) {
@@ -108,6 +119,7 @@ export const useStore = create<HauntedState>()(
           quizNoteId: null,
           quizDueOnly: false,
           isDemoLoaded: false,
+          reviewLog: emptyReviewLog(),
         });
       },
 
