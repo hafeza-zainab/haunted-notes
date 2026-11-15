@@ -760,3 +760,145 @@ describe('mergeBackup', () => {
     expect(summary.warnings).toEqual(['review-log-ignored']);
   });
 });
+
+// ---- Property tests: merge ---------------------------------------------
+
+const contentKey = (c: Flashcard): string => JSON.stringify([c.noteId, c.sentence, c.clozeWord]);
+const evKey = (e: ReviewEvent): string => `${e.t}|${e.r}|${e.c}`;
+
+function uniqueBy<T>(items: T[], key: (x: T) => string): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const it of items) {
+    const k = key(it);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(it);
+  }
+  return out;
+}
+
+/** A valid store state: unique note ids, unique card ids and contents. */
+const arbCurrent: fc.Arbitrary<BackupData> = arbValidBackup.map((d) => ({
+  notes: d.notes,
+  flashcards: uniqueBy(d.flashcards, contentKey),
+  reviewLog: d.reviewLog,
+}));
+
+/** Incoming data that deliberately overlaps with `current` (same ids, same content, same events). */
+const arbMergePair: fc.Arbitrary<{ current: BackupData; incoming: BackupData }> = fc
+  .tuple(arbCurrent, arbValidBackup, fc.array(fc.boolean(), { minLength: 24, maxLength: 24 }), fc.boolean())
+  .map(([current, fresh, mask, reidCards]) => {
+    const pick = <T,>(xs: T[], offset: number): T[] => xs.filter((_, i) => mask[(i + offset) % mask.length]);
+    const sharedCards = pick(current.flashcards, 8).map((c, i) => (reidCards ? { ...c, id: `re-${i}` } : c));
+    const notes = uniqueBy([...pick(current.notes, 0), ...fresh.notes], (n) => n.id);
+    const flashcards = uniqueBy(
+      uniqueBy([...sharedCards, ...fresh.flashcards], contentKey),
+      (c) => c.id,
+    );
+    const events = [...pick(current.reviewLog.events, 16), ...fresh.reviewLog.events].sort((a, b) => a.t - b.t);
+    return {
+      current,
+      incoming: { notes, flashcards, reviewLog: { v: REVIEW_LOG_VERSION, events } },
+    };
+  });
+
+describe('mergeBackup properties', () => {
+  // Feature: data-safety-offline, Property 8: Merge preserves existing data and adds each new item once
+  // **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.8**
+  it('Property 8: Merge preserves existing data and adds each new item once', () => {
+    fc.assert(
+      fc.property(arbMergePair, ({ current, incoming }) => {
+        const before = JSON.stringify(current);
+        const { data } = mergeBackup(current, incoming);
+        expect(JSON.stringify(current)).toBe(before);
+
+        const nNotes = current.notes.length;
+        expect(data.notes.slice(0, nNotes).every((n, i) => n === current.notes[i])).toBe(true);
+        const curIds = new Set(current.notes.map((n) => n.id));
+        expect(data.notes.slice(nNotes)).toEqual(incoming.notes.filter((n) => !curIds.has(n.id)));
+
+        const nCards = current.flashcards.length;
+        expect(data.flashcards.slice(0, nCards).every((c, i) => c === current.flashcards[i])).toBe(true);
+        const cardIds = new Set(current.flashcards.map((c) => c.id));
+        const cardKeys = new Set(current.flashcards.map(contentKey));
+        expect(data.flashcards.slice(nCards)).toEqual(
+          incoming.flashcards.filter((c) => !cardIds.has(c.id) && !cardKeys.has(contentKey(c))),
+        );
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  // Feature: data-safety-offline, Property 9: Merge result has no duplicates
+  // **Validates: Requirements 8.5**
+  it('Property 9: Merge result has no duplicates', () => {
+    fc.assert(
+      fc.property(arbMergePair, ({ current, incoming }) => {
+        const { data } = mergeBackup(current, incoming);
+        expect(new Set(data.notes.map((n) => n.id)).size).toBe(data.notes.length);
+        expect(new Set(data.flashcards.map((c) => c.id)).size).toBe(data.flashcards.length);
+        expect(new Set(data.flashcards.map(contentKey)).size).toBe(data.flashcards.length);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  // Feature: data-safety-offline, Property 10: Merge is idempotent
+  // **Validates: Requirements 8.6**
+  it('Property 10: Merge is idempotent', () => {
+    fc.assert(
+      fc.property(arbMergePair, ({ current, incoming }) => {
+        const first = mergeBackup(current, incoming);
+        const second = mergeBackup(first.data, incoming);
+        expect(second.data).toEqual(first.data);
+        expect(second.summary.notes.added).toBe(0);
+        expect(second.summary.flashcards.added).toBe(0);
+        expect(second.summary.events.added).toBe(0);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  // Feature: data-safety-offline, Property 11: Summary counts add up
+  // **Validates: Requirements 8.7, 7.2**
+  it('Property 11: Summary counts add up', () => {
+    fc.assert(
+      fc.property(arbMergePair, ({ current, incoming }) => {
+        const { data, summary } = mergeBackup(current, incoming);
+        expect(summary.notes.added + summary.notes.skipped).toBe(incoming.notes.length);
+        expect(summary.flashcards.added + summary.flashcards.skipped).toBe(incoming.flashcards.length);
+        expect(summary.events.added + summary.events.skipped).toBe(incoming.reviewLog.events.length);
+        expect(data.notes.length - current.notes.length).toBe(summary.notes.added);
+        expect(data.flashcards.length - current.flashcards.length).toBe(summary.flashcards.added);
+        // Generated logs are far below the 500 cap, so growth equals added.
+        expect(data.reviewLog.events.length - current.reviewLog.events.length).toBe(summary.events.added);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  // Feature: data-safety-offline, Property 12: Merged review log is valid, sorted and capped
+  // **Validates: Requirements 9.2, 9.4**
+  it('Property 12: Merged review log is valid, sorted and capped', () => {
+    const arbLog = fc
+      .array(arbEvent, { maxLength: 400 })
+      .map((evs) => ({ v: REVIEW_LOG_VERSION, events: [...evs].sort((a, b) => a.t - b.t) }));
+    fc.assert(
+      fc.property(arbLog, arbLog, (cur, inc) => {
+        const merged = mergeBackup({ notes: [], flashcards: [], reviewLog: cur }, { notes: [], flashcards: [], reviewLog: inc }).data.reviewLog;
+        expect(merged.v).toBe(REVIEW_LOG_VERSION);
+        expect(merged.events.length).toBeLessThanOrEqual(500);
+        for (let i = 1; i < merged.events.length; i += 1) {
+          expect(merged.events[i].t).toBeGreaterThanOrEqual(merged.events[i - 1].t);
+        }
+        const distinct = new Set([...cur.events, ...inc.events].map(evKey));
+        if (distinct.size <= 500 && cur.events.length + inc.events.length <= 500) {
+          const got = new Set(merged.events.map(evKey));
+          for (const k of distinct) expect(got.has(k)).toBe(true);
+        }
+      }),
+      { numRuns: 100 },
+    );
+  });
+});
