@@ -4,7 +4,7 @@ import type { Note, Flashcard, View, ReviewLog } from '../types';
 import { generateFlashcards, updateWeaknessScore } from '../lib/cloze';
 import { scheduleCorrect, scheduleWrong, defaultSrsFields } from '../lib/srs';
 import { buildDemoData } from '../lib/demoData';
-import { emptyReviewLog, appendReview } from '../lib/reviewLog';
+import { emptyReviewLog, appendReview, sanitizeReviewLog } from '../lib/reviewLog';
 
 interface HauntedState {
   notes: Note[];
@@ -166,6 +166,9 @@ export const useStore = create<HauntedState>()(
         if (migrated.some((c, i) => c !== state.flashcards[i])) {
           state.flashcards = migrated;
         }
+        // Review log: a missing, corrupt or newer-version log becomes valid;
+        // notes and flashcards are untouched.
+        state.reviewLog = sanitizeReviewLog(state.reviewLog);
       },
     },
   ),
