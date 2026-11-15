@@ -403,6 +403,67 @@ progress {
   align-items: center;
 }
 
+/* Study insights panel (no animation or transition) */
+.insights {
+  margin-bottom: 1rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+}
+.insights h2 { margin: 0 0 0.75rem; font-size: 1.1rem; }
+.insights h3 {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.insights p { margin: 0.4rem 0 0; color: var(--text-muted); font-size: 0.9rem; }
+
+.insights-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+  margin: 0;
+}
+.insights-stat {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.insights-stat dt { color: var(--text-muted); font-size: 0.85rem; }
+.insights-stat dd {
+  margin: 0.15rem 0 0;
+  color: var(--accent);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.insights-weak {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+.insights-weak li { padding: 0.25rem 0; overflow-wrap: anywhere; }
+.insights-weak li span:last-child { color: var(--text-muted); }
+
+.insights-chart { margin-top: 1rem; }
+.insights-chart svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+.chart-bar { fill: var(--accent); }
+.chart-baseline { fill: var(--track); }
+.chart-label { fill: var(--text-muted); font-size: 11px; }
+.chart-count { fill: var(--text); }
+
+@media (min-width: 640px) {
+  .insights-stats { grid-template-columns: repeat(3, 1fr); }
+}
+
 /* Sort bar */
 .sort-bar {
   display: flex;
