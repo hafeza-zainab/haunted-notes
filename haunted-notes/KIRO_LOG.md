@@ -357,3 +357,20 @@ Lint, tests and build pass; main bundle 84.80 kB gzip.
 ### UNVERIFIED (not run in a browser)
 - Tasks 11.2 (offline reload, service worker control, installability, real `transformers-cache` file names) and 11.3 (import safety in the browser) were NOT run: the agent shell refused to start a dev or preview server. `REQUIRED_MODEL_FILES` in `offlineStatus.ts` is a guess until checked against the real cache.
 - Layout at 390px and 1280px, reduced motion emulation, heading order and chart label legibility for the new panels were checked only by static review.
+
+### Demo variety (Phase 1)
+- Three new demo cards got weakness 0.1, 0.3 and 0.5, so wisp, ghoul and banshee appear alongside the phantom (two returned cards at 0.7 and 0.6) and poltergeist (new cards at 1.0). Exactly two cards are due, none banished. Three tests added to `demoData.test.ts`. Not viewed in a browser.
+
+### OCR preprocessing (Phase 4)
+- Removed the hard black/white threshold in `ocr.ts`. Greyscale, 2x upscale (max width 2500px) and a mild contrast boost (factor 1.3 in the new pure module `ocrPixels.ts`) remain. Unit and property tests added. The "Works best with clear printed text" note is unchanged. OCR was not run end to end.
+- **SKIPPED: audio language switch.** A multilingual Whisper model is a different download from `Xenova/whisper-tiny.en`, which is the only model download `product.md` and `tech.md` allow. Adding it needs a steering change by the owner first.
+
+### Fault-finding (Phase 5, code level only, no browser)
+- **Bug found by adversarial tests (fixed):** valid JSON in localStorage with the wrong shape (`flashcards: null`, `flashcards` an object, `notes` a string, a `null` card inside `flashcards`) left the store with non-array state, and the rehydrate step called `.map` on it. Fix: new pure module `persistedState.ts` plus a `merge` option on the persisted store that rebuilds notes, cards, review log and UI settings from validated parts. 4 of the 8 corrupt-storage cases failed before the fix.
+- **Bug found by adversarial tests (fixed):** a localStorage quota error (`QuotaExceededError`) thrown by `setItem` propagated out of store actions such as `addNote`. Fix: the store uses a `safeStorage` wrapper that catches read and write errors and logs one warning.
+- Passed without changes: empty, whitespace and symbol-only notes give zero cards; a 20,000-character note and 20,000-character runs without spaces finish well under 3 s; 300 random binary strings never throw and no prompt contains its answer; an empty or punctuation-only answer is never judged correct or close; a maximum-size import (500 notes, 5,000 cards, 500 events) validates and merges in under a second and a repeat import adds nothing.
+- Round 1 found two bugs. Round 2 found none, so the loop stopped after 2 rounds.
+- Not done (needs a browser): rapid double-clicks, pasting HTML into inputs, tab switching during audio or OCR loading, back and forward, resizing, reduced motion on and off, keyboard-only walkthrough, console reading.
+
+### Final numbers
+- `npm run lint`, `npm run build` and `npm test` pass at the end: 285 tests in 32 files after the last test was added.
