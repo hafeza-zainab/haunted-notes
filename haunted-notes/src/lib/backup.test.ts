@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
+import { readFileSync } from 'node:fs';
 import {
   BACKUP_APP,
   BACKUP_LIMITS,
@@ -900,5 +901,15 @@ describe('mergeBackup properties', () => {
       }),
       { numRuns: 100 },
     );
+  });
+});
+
+describe('backup.ts source scan', () => {
+  it('uses no Object.assign, clock, React or Zustand', () => {
+    const src = readFileSync(new URL('./backup.ts', import.meta.url), 'utf8');
+    expect(src).not.toContain('Object.assign');
+    expect(src).not.toContain('Date.now');
+    expect(src).not.toContain("from 'react'");
+    expect(src).not.toContain("from 'zustand'");
   });
 });
