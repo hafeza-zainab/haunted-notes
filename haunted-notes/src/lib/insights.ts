@@ -1,7 +1,9 @@
-import type { ReviewEvent } from '../types';
+﻿import type { ReviewEvent, SrsFields } from '../types';
+import { isBanished } from './srs';
 
 export const MS_PER_DAY = 86_400_000;
 export const WINDOW_DAYS = 7;
+export const WEAKEST_ROOM_COUNT = 3;
 
 /** Local calendar day number. tzOffsetMinutes is the value of Date#getTimezoneOffset(). */
 export function dayIndex(t: number, tzOffsetMinutes: number): number {
@@ -104,4 +106,69 @@ export function dailyBuckets(
     bucket.correct += e.c;
   }
   return buckets;
+}
+
+/** Bar heights in [0, plotHeight]; the largest count gets plotHeight, zero gets 0. */
+export function barHeights(counts: number[], plotHeight: number): number[] {
+  const max = Math.max(0, ...counts);
+  if (max === 0) return counts.map(() => 0);
+  return counts.map((c) => (Math.max(0, c) / max) * plotHeight);
+}
+
+export interface WeakRoom {
+  noteId: string;
+  /** Mean weaknessScore of the room's unbanished cards, 0..1. */
+  weakness: number;
+}
+
+type RoomCard = SrsFields & { noteId: string; weaknessScore: number };
+
+/** Up to `limit` rooms by mean weakness of unbanished cards, highest first, noteId breaks ties. */
+export function weakestRooms(
+  notes: { id: string }[],
+  cards: RoomCard[],
+  now: number = Date.now(),
+  limit = WEAKEST_ROOM_COUNT,
+): WeakRoom[] {
+  const rooms: WeakRoom[] = [];
+  for (const note of notes) {
+    let sum = 0;
+    let count = 0;
+    for (const card of cards) {
+      if (card.noteId !== note.id || isBanished(card, now)) continue;
+      sum += card.weaknessScore;
+      count += 1;
+    }
+    if (count > 0) rooms.push({ noteId: note.id, weakness: sum / count });
+  }
+  rooms.sort((a, b) =>
+    b.weakness !== a.weakness ? b.weakness - a.weakness : a.noteId < b.noteId ? -1 : a.noteId > b.noteId ? 1 : 0,
+  );
+  return rooms.slice(0, Math.max(0, limit));
+}
+
+export interface Insights {
+  streak: number;
+  today: number;
+  accuracy: number | null;
+  buckets: DayBucket[];
+  weakest: WeakRoom[];
+}
+
+export function computeInsights(input: {
+  events: ReviewEvent[];
+  notes: { id: string }[];
+  cards: RoomCard[];
+  now?: number;
+  tzOffsetMinutes?: number;
+}): Insights {
+  const now = input.now ?? Date.now();
+  const tz = input.tzOffsetMinutes ?? 0;
+  return {
+    streak: currentStreak(input.events, now, tz),
+    today: reviewedToday(input.events, now, tz),
+    accuracy: accuracy7d(input.events, now, tz),
+    buckets: dailyBuckets(input.events, now, tz),
+    weakest: weakestRooms(input.notes, input.cards, now),
+  };
 }
