@@ -11,7 +11,7 @@ Lint, build and 285 tests (32 files) pass. Nothing was checked in a real browser
 - **Phase 0:** branch, status file, baseline (all green at start).
 - **Phase 1:** demo variety. All five ghost types appear on first load; exactly two returned ghosts. Tests added.
 - **Phase 2:** study insights (spec first, 36 tasks plus one reviewer-fix task). Review log (cap 500, schema version, safe sanitizing on load), dashboard panel (streak, reviewed today, 7-day accuracy, 3 weakest rooms), plain SVG bar chart with a hidden table. Unit tests and 11 fast-check properties.
-- **Phase 3:** data safety and offline (spec first, 55 tasks). Export, validated import with confirm dialog and merge, service worker (production only, versioned cache, app shell only), manifest, three icons, model-cache status in the Audio tab. Unit tests and 16 properties.
+- **Phase 3:** data safety and offline (spec first). Export, validated import with confirm dialog and merge, service worker (production only, versioned cache, app shell only), manifest, three icons, model-cache status in the Audio tab. Unit tests and 16 properties.
 - **Phase 4 (OCR part):** hard threshold removed; greyscale, 2x upscale (max 2500px) and a mild contrast boost remain.
 - **Phase 5:** fault-finding at code level, 2 rounds (round 2 found nothing). 
 - **Phase 6 (partial):** bundle size check.
@@ -53,7 +53,6 @@ Lint, build and 285 tests (32 files) pass. Nothing was checked in a real browser
 ## Known small issues
 - When the 500-event cap drops incoming review events, a repeat import counts them as added again in the summary. Stored data does not change.
 - `backup.test.ts` has a leftover `void MAX_TIME;` line to silence an unused constant.
-- Two uncommitted-by-design leftovers may remain in `.kiro/specs/data-safety-offline/` (`tasks.md` status and `tasks.meta.json`).
 
 ## Look at these yourself before merging
 Run the app first (`cd haunted-notes`, then the dev script from README), then:
