@@ -100,6 +100,7 @@ export function buildDemoData(): { notes: Note[]; flashcards: Flashcard[] } {
       'demo-note-java',
       'A Java class is a blueprint for creating objects.',
       'blueprint',
+      { weaknessScore: 0.3 }, // ghoul
     ),
     // This card was previously reviewed and is now back (reps: 1, dueAt in past)
     card(
@@ -123,12 +124,14 @@ export function buildDemoData(): { notes: Note[]; flashcards: Flashcard[] } {
       'demo-note-marketing',
       'SEO stands for Search Engine Optimization.',
       'SEO',
+      { weaknessScore: 0.1 }, // wisp
     ),
     card(
       'demo-card-mktg-2',
       'demo-note-marketing',
       'A conversion rate measures the percentage of visitors who complete a goal.',
       'conversion',
+      { weaknessScore: 0.5 }, // banshee
     ),
     // This card was previously reviewed and is now back (reps: 1, dueAt in past)
     card(
