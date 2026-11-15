@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { MS_PER_DAY, accuracy7d, barHeights, currentStreak, dailyBuckets, reviewedToday } from './insights';
+import { MS_PER_DAY, accuracy7d, barHeights, currentStreak, dailyBuckets, reviewedToday, weakestRooms } from './insights';
 import type { ReviewEvent } from '../types';
 
 const MINUTE = 60_000;
@@ -257,6 +257,50 @@ describe('barHeights properties', () => {
         },
       ),
       { numRuns: 200 },
+    );
+  });
+});
+
+describe('weakestRooms properties', () => {
+  const noteIdsArb = fc.uniqueArray(fc.constantFrom('n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7'), { maxLength: 7 });
+
+  const cardArb = (now: number) =>
+    fc.record({
+      noteId: fc.constantFrom('n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'orphan'),
+      weaknessScore: fc.double({ min: 0, max: 1 }),
+      ease: fc.constant(2.5),
+      intervalDays: fc.integer({ min: 0, max: 30 }),
+      reps: fc.integer({ min: 0, max: 5 }),
+      dueAt: fc.integer({ min: -10, max: 10 }).map((d) => now + d * MS_PER_DAY),
+    });
+
+  const scenario = nowArb.chain((now) =>
+    fc.record({
+      now: fc.constant(now),
+      ids: noteIdsArb,
+      cards: fc.array(cardArb(now), { maxLength: 30 }),
+    }),
+  );
+
+  // Feature: study-insights, Property 11: Weakest rooms are bounded, ordered and non-empty
+  // **Validates: Requirements 8.1, 8.2, 8.3, 8.6**
+  it('returns at most 3 ordered rooms, each with an unbanished card, weakness in [0,1], from known notes', () => {
+    fc.assert(
+      fc.property(scenario, ({ now, ids, cards }) => {
+        const notes = ids.map((id) => ({ id }));
+        const result = weakestRooms(notes, cards, now);
+        expect(result.length).toBeLessThanOrEqual(3);
+        for (let i = 0; i < result.length; i += 1) {
+          const room = result[i];
+          expect(ids).toContain(room.noteId);
+          expect(room.weakness).toBeGreaterThanOrEqual(0);
+          expect(room.weakness).toBeLessThanOrEqual(1);
+          if (i > 0) expect(result[i - 1].weakness).toBeGreaterThanOrEqual(room.weakness);
+          const live = cards.filter((c) => c.noteId === room.noteId && !(c.reps > 0 && c.dueAt > now));
+          expect(live.length).toBeGreaterThan(0);
+        }
+      }),
+      { numRuns: 300 },
     );
   });
 });
