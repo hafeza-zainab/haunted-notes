@@ -53,7 +53,7 @@ export function sanitizeReviewLog(raw: unknown): ReviewLog {
   try {
     if (!isRecord(raw)) return emptyReviewLog();
     const { v, events } = raw;
-    if (typeof v !== 'number' || !Number.isInteger(v) || v > REVIEW_LOG_VERSION) {
+    if (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > REVIEW_LOG_VERSION) {
       return emptyReviewLog();
     }
     if (!Array.isArray(events)) return emptyReviewLog();
