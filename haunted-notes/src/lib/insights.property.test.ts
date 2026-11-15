@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { MS_PER_DAY, currentStreak, reviewedToday } from './insights';
+import { MS_PER_DAY, accuracy7d, currentStreak, reviewedToday } from './insights';
 import type { ReviewEvent } from '../types';
 
 const MINUTE = 60_000;
@@ -146,6 +146,45 @@ describe('reviewedToday properties', () => {
         const count = reviewedToday(events, now, tz);
         expect(count).toBe(expected);
         expect(count).toBeLessThanOrEqual(events.length);
+      }),
+      { numRuns: 300 },
+    );
+  });
+});
+
+describe('accuracy7d properties', () => {
+  /** Local day number by floor-mod arithmetic, independent of the module under test. */
+  const refDay = (t: number, tz: number): number => {
+    const local = t - tz * MINUTE;
+    return (local - (((local % MS_PER_DAY) + MS_PER_DAY) % MS_PER_DAY)) / MS_PER_DAY;
+  };
+
+  // Feature: study-insights, Property 8: Accuracy is null or between 0 and 1
+  // **Validates: Requirements 7.1, 7.2, 7.3, 7.4, 10.3**
+  it('is null exactly for an empty window, else correct/total within [0,1] and never NaN', () => {
+    fc.assert(
+      fc.property(scenarioArb, ({ now, tz, events }) => {
+        const today = refDay(now, tz);
+        let total = 0;
+        let correct = 0;
+        for (const e of events) {
+          if (e.t > now) continue;
+          const d = refDay(e.t, tz);
+          if (d >= today - 6 && d <= today) {
+            total += 1;
+            correct += e.c;
+          }
+        }
+        const acc = accuracy7d(events, now, tz);
+        if (total === 0) {
+          expect(acc).toBeNull();
+        } else {
+          expect(acc).not.toBeNull();
+          expect(Number.isNaN(acc)).toBe(false);
+          expect(acc as number).toBeGreaterThanOrEqual(0);
+          expect(acc as number).toBeLessThanOrEqual(1);
+          expect(acc as number).toBeCloseTo(correct / total, 12);
+        }
       }),
       { numRuns: 300 },
     );
