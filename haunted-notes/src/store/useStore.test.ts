@@ -162,3 +162,62 @@ describe('useStore reviewLog rehydration', () => {
     ]);
   });
 });
+
+describe('useStore importBackup', () => {
+  const incoming = {
+    notes: [makeNote('room-b')],
+    flashcards: [{ ...makeCard('c2', 'room-b'), sentence: 'Other sentence.' }],
+    reviewLog: { v: 1, events: [{ t: 5, r: 'room-b', c: 1 as const }] },
+  };
+
+  it('changes only notes, flashcards and reviewLog and returns the summary', async () => {
+    const useStore = await loadStore();
+    useStore.setState({
+      notes: [makeNote('room-a')],
+      flashcards: [makeCard('c1', 'room-a')],
+      currentView: 'quiz',
+      soundEnabled: true,
+      quizNoteId: 'room-a',
+      quizDueOnly: true,
+      isDemoLoaded: true,
+    });
+    const summary = useStore.getState().importBackup(incoming);
+    const s = useStore.getState();
+    expect(s.notes.map((n) => n.id)).toEqual(['room-a', 'room-b']);
+    expect(s.flashcards.map((c) => c.id)).toEqual(['c1', 'c2']);
+    expect(s.reviewLog.events).toEqual([{ t: 5, r: 'room-b', c: 1 }]);
+    expect(summary.notes).toEqual({ added: 1, skipped: 0 });
+    expect(summary.flashcards).toEqual({ added: 1, skipped: 0 });
+    expect(summary.events).toEqual({ added: 1, skipped: 0 });
+    expect(s.currentView).toBe('quiz');
+    expect(s.soundEnabled).toBe(true);
+    expect(s.quizNoteId).toBe('room-a');
+    expect(s.quizDueOnly).toBe(true);
+    expect(s.isDemoLoaded).toBe(true);
+  });
+
+  it('a second call with the same data adds nothing', async () => {
+    const useStore = await loadStore();
+    useStore.getState().importBackup(incoming);
+    const after = useStore.getState();
+    const second = useStore.getState().importBackup(incoming);
+    expect(second.notes.added).toBe(0);
+    expect(second.flashcards.added).toBe(0);
+    expect(second.events.added).toBe(0);
+    expect(useStore.getState().notes).toEqual(after.notes);
+    expect(useStore.getState().flashcards).toEqual(after.flashcards);
+    expect(useStore.getState().reviewLog).toEqual(after.reviewLog);
+  });
+
+  it('keeps an existing card unchanged when the incoming card matches', async () => {
+    const useStore = await loadStore();
+    const mine = { ...makeCard('c1', 'room-a'), ease: 2.1, reps: 7 };
+    useStore.setState({ notes: [makeNote('room-a')], flashcards: [mine] });
+    useStore.getState().importBackup({
+      notes: [makeNote('room-a')],
+      flashcards: [makeCard('c1', 'room-a')],
+      reviewLog: { v: 1, events: [] },
+    });
+    expect(useStore.getState().flashcards).toEqual([mine]);
+  });
+});
