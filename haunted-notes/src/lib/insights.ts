@@ -50,3 +50,58 @@ export function reviewedToday(
   }
   return count;
 }
+
+/** Correct share (0..1) of events in the 7 local days ending today, or null when none. */
+export function accuracy7d(
+  events: ReviewEvent[],
+  now: number = Date.now(),
+  tzOffsetMinutes = 0,
+): number | null {
+  const today = dayIndex(now, tzOffsetMinutes);
+  const first = today - (WINDOW_DAYS - 1);
+  let total = 0;
+  let correct = 0;
+  for (const e of events) {
+    if (e.t > now) continue;
+    const d = dayIndex(e.t, tzOffsetMinutes);
+    if (d < first || d > today) continue;
+    total += 1;
+    correct += e.c;
+  }
+  return total === 0 ? null : correct / total;
+}
+
+export interface DayBucket {
+  dayKey: number;
+  label: string;
+  reviews: number;
+  correct: number;
+}
+
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** Exactly 7 buckets, oldest first; the last one is today. */
+export function dailyBuckets(
+  events: ReviewEvent[],
+  now: number = Date.now(),
+  tzOffsetMinutes = 0,
+): DayBucket[] {
+  const today = dayIndex(now, tzOffsetMinutes);
+  const buckets: DayBucket[] = [];
+  for (let i = WINDOW_DAYS - 1; i >= 0; i -= 1) {
+    const dayKey = today - i;
+    // dayKey is already a local day number, so the UTC weekday of its midnight is the local weekday.
+    const weekday = new Date(dayKey * MS_PER_DAY).getUTCDay();
+    buckets.push({ dayKey, label: WEEKDAY_LABELS[weekday], reviews: 0, correct: 0 });
+  }
+  const first = today - (WINDOW_DAYS - 1);
+  for (const e of events) {
+    if (e.t > now) continue;
+    const d = dayIndex(e.t, tzOffsetMinutes);
+    if (d < first || d > today) continue;
+    const bucket = buckets[d - first];
+    bucket.reviews += 1;
+    bucket.correct += e.c;
+  }
+  return buckets;
+}
