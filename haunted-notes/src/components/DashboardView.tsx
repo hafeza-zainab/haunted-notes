@@ -2,6 +2,7 @@ import React, { useState, useId, useRef, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
 import EmptyState from './EmptyState';
+import StudyInsights from './StudyInsights';
 import type { Note, Flashcard } from '../types';
 import { isDue, isBanished, nextReturnInMs, daysFromMs } from '../lib/srs';
 import { normalizeBlanks } from '../lib/blank';
@@ -414,6 +415,9 @@ const DashboardView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* ── Study insights ── */}
+      {notes.length > 0 && <StudyInsights />}
 
       {/* ── Sort controls ── */}
       <div className="sort-bar" role="group" aria-label="Sort rooms by">
