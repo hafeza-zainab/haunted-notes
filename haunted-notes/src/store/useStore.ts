@@ -5,6 +5,7 @@ import { generateFlashcards, updateWeaknessScore } from '../lib/cloze';
 import { scheduleCorrect, scheduleWrong, defaultSrsFields } from '../lib/srs';
 import { buildDemoData } from '../lib/demoData';
 import { emptyReviewLog, appendReview, sanitizeReviewLog } from '../lib/reviewLog';
+import { mergeBackup, type BackupData, type ImportSummary } from '../lib/backup';
 
 interface HauntedState {
   notes: Note[];
@@ -35,6 +36,8 @@ interface HauntedState {
   clearDemoData: () => void;
   /** Dev-only: shift every card's dueAt back by 24 h so scheduled ghosts return. */
   timeTravelDay: () => void;
+  /** Merges validated backup data into notes, flashcards and reviewLog only; returns the summary. */
+  importBackup: (data: BackupData) => ImportSummary;
 }
 
 export const useStore = create<HauntedState>()(
@@ -141,6 +144,16 @@ export const useStore = create<HauntedState>()(
         }));
       },
 
+      importBackup: (data) => {
+        const { notes, flashcards, reviewLog } = get();
+        const { data: merged, summary } = mergeBackup({ notes, flashcards, reviewLog }, data);
+        set({
+          notes: merged.notes,
+          flashcards: merged.flashcards,
+          reviewLog: merged.reviewLog,
+        });
+        return summary;
+      },
       timeTravelDay: () => {
         const MS_PER_DAY = 86_400_000;
         set((state) => ({
