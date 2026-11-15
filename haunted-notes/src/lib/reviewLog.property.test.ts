@@ -208,3 +208,29 @@ describe('sanitizeReviewLog keeps valid events', () => {
     );
   });
 });
+
+describe('review log serialization', () => {
+  // A valid Review_Log: current version, sorted by t (stable), at most the cap.
+  const validLogArb: fc.Arbitrary<ReviewLog> = fc
+    .array(eventArb, { maxLength: REVIEW_EVENT_CAP + 20 })
+    .map((events) => ({
+      v: REVIEW_LOG_VERSION,
+      events: events
+        .map((e, i) => ({ e, i }))
+        .sort((a, b) => a.e.t - b.e.t || a.i - b.i)
+        .map((x) => x.e)
+        .slice(-REVIEW_EVENT_CAP),
+    }));
+
+  // Feature: study-insights, Property 4: Log serialization round trip
+  // **Validates: Requirements 3.4**
+  it('Property 4: Log serialization round trip', () => {
+    fc.assert(
+      fc.property(validLogArb, (log) => {
+        const restored = sanitizeReviewLog(JSON.parse(JSON.stringify(log)));
+        expect(restored).toEqual(log);
+      }),
+      { numRuns: 150 },
+    );
+  });
+});
