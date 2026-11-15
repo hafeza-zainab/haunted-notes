@@ -87,3 +87,42 @@ describe('currentStreak properties', () => {
     );
   });
 });
+
+describe('currentStreak future events and today', () => {
+  // Feature: study-insights, Property 6: Streak ignores future events and never drops when today is added
+  // **Validates: Requirements 5.7, 5.4**
+  it('ignores events later than now', () => {
+    fc.assert(
+      fc.property(
+        scenarioArb,
+        fc.array(
+          fc.record({
+            dt: fc.integer({ min: 1, max: 30 * MS_PER_DAY }),
+            r: fc.constantFrom('a', 'b'),
+            c: fc.constantFrom<0 | 1>(0, 1),
+          }),
+          { maxLength: 20 },
+        ),
+        ({ now, tz, events }, future) => {
+          const added: ReviewEvent[] = future.map((f) => ({ t: now + f.dt, r: f.r, c: f.c }));
+          expect(currentStreak([...events, ...added], now, tz)).toBe(currentStreak(events, now, tz));
+        },
+      ),
+      { numRuns: 200 },
+    );
+  });
+
+  // Feature: study-insights, Property 6: Streak ignores future events and never drops when today is added
+  // **Validates: Requirements 5.7, 5.4**
+  it('never decreases when an event at now is added', () => {
+    fc.assert(
+      fc.property(scenarioArb, ({ now, tz, events }) => {
+        const before = currentStreak(events, now, tz);
+        const after = currentStreak([...events, { t: now, r: 'a', c: 1 }], now, tz);
+        expect(after).toBeGreaterThanOrEqual(before);
+        expect(after).toBeGreaterThanOrEqual(1);
+      }),
+      { numRuns: 200 },
+    );
+  });
+});
