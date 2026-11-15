@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+﻿import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import {
   BACKUP_APP,
@@ -7,6 +7,7 @@ import {
   backupFileName,
   buildExport,
   isFileSizeAllowed,
+  mergeBackup,
   parseBackupText,
   serializeExport,
   validateBackup,
@@ -661,3 +662,101 @@ describe('validation properties', () => {
 });
 
 void MAX_TIME;
+
+// ---- Unit tests: merge --------------------------------------------------
+
+function mNote(id: string, rawText = 'x'): Note {
+  return { id, rawText, inputMethod: 'type', createdAt: 1 };
+}
+
+function mCard(id: string, noteId: string, sentence = 'S', clozeWord = 'w', extra: Partial<Flashcard> = {}): Flashcard {
+  return {
+    id,
+    noteId,
+    sentence,
+    clozeWord,
+    prompt: 'p',
+    weaknessScore: 0.5,
+    streakCorrect: 0,
+    streakWrong: 0,
+    lastReviewed: null,
+    ...defaultSrsFields(0),
+    ...extra,
+  };
+}
+
+function mData(notes: Note[], flashcards: Flashcard[], events: ReviewEvent[] = []): BackupData {
+  return { notes, flashcards, reviewLog: { v: REVIEW_LOG_VERSION, events } };
+}
+
+describe('mergeBackup', () => {
+  it('skips a note with an existing id and keeps the existing record', () => {
+    const current = mData([mNote('a', 'mine')], []);
+    const incoming = mData([mNote('a', 'theirs')], []);
+    const { data, summary } = mergeBackup(current, incoming);
+    expect(data.notes).toEqual([mNote('a', 'mine')]);
+    expect(data.notes[0]).toBe(current.notes[0]);
+    expect(summary.notes).toEqual({ added: 0, skipped: 1 });
+  });
+
+  it('skips a card with the same content under a new id', () => {
+    const current = mData([mNote('a')], [mCard('c1', 'a')]);
+    const incoming = mData([mNote('a')], [mCard('c2', 'a')]);
+    const { data, summary } = mergeBackup(current, incoming);
+    expect(data.flashcards.map((c) => c.id)).toEqual(['c1']);
+    expect(summary.flashcards).toEqual({ added: 0, skipped: 1 });
+  });
+
+  it('keeps existing SRS fields when an incoming card matches', () => {
+    const mine = mCard('c1', 'a', 'S', 'w', { ease: 2.1, intervalDays: 9, reps: 4, dueAt: 777 });
+    const theirs = mCard('c1', 'a', 'S', 'w', { ease: 4, intervalDays: 1, reps: 0, dueAt: 5 });
+    const { data } = mergeBackup(mData([mNote('a')], [mine]), mData([mNote('a')], [theirs]));
+    expect(data.flashcards).toHaveLength(1);
+    expect(data.flashcards[0]).toBe(mine);
+    expect(data.flashcards[0].ease).toBe(2.1);
+    expect(data.flashcards[0].dueAt).toBe(777);
+  });
+
+  it('appends new items after existing ones in file order', () => {
+    const current = mData([mNote('a')], [mCard('c1', 'a', 'S1')]);
+    const incoming = mData(
+      [mNote('z'), mNote('b')],
+      [mCard('c9', 'z', 'S9'), mCard('c3', 'b', 'S3')],
+    );
+    const { data } = mergeBackup(current, incoming);
+    expect(data.notes.map((n) => n.id)).toEqual(['a', 'z', 'b']);
+    expect(data.flashcards.map((c) => c.id)).toEqual(['c1', 'c9', 'c3']);
+  });
+
+  it('does not mutate current', () => {
+    const current = mData([mNote('a')], [mCard('c1', 'a')], [{ t: 1, r: 'a', c: 1 }]);
+    const snapshot = JSON.stringify(current);
+    mergeBackup(current, mData([mNote('b')], [mCard('c2', 'b')], [{ t: 2, r: 'b', c: 0 }]));
+    expect(JSON.stringify(current)).toBe(snapshot);
+  });
+
+  it('applies the 500 event cap, keeping the newest', () => {
+    const cur: ReviewEvent[] = Array.from({ length: 400 }, (_, i) => ({ t: i, r: 'a', c: 1 as const }));
+    const inc: ReviewEvent[] = Array.from({ length: 300 }, (_, i) => ({ t: 1000 + i, r: 'a', c: 0 as const }));
+    const { data, summary } = mergeBackup(mData([], [], cur), mData([], [], inc));
+    expect(data.reviewLog.events).toHaveLength(500);
+    expect(data.reviewLog.events[499].t).toBe(1299);
+    expect(data.reviewLog.events[0].t).toBe(200);
+    expect(summary.events).toEqual({ added: 300, skipped: 0 });
+  });
+
+  it('reports summary numbers for a small example', () => {
+    const current = mData([mNote('a')], [mCard('c1', 'a')], [{ t: 1, r: 'a', c: 1 }]);
+    const incoming = mData(
+      [mNote('a'), mNote('b')],
+      [mCard('c1', 'a'), mCard('c2', 'b'), mCard('c3', 'b', 'S3')],
+      [{ t: 1, r: 'a', c: 1 }, { t: 2, r: 'b', c: 0 }],
+    );
+    const { summary } = mergeBackup(current, incoming, { notes: 1, flashcards: 2, events: 3 }, ['review-log-ignored']);
+    expect(summary.notes).toEqual({ added: 1, skipped: 1 });
+    expect(summary.flashcards).toEqual({ added: 2, skipped: 1 });
+    expect(summary.events).toEqual({ added: 1, skipped: 1 });
+    expect(summary.dropped).toEqual({ notes: 1, flashcards: 2, events: 3 });
+    expect(summary.warnings).toEqual(['review-log-ignored']);
+  });
+});
