@@ -1,24 +1,16 @@
 # Autopilot status (branch autopilot/nov-15)
 
-Updated: 2026-11-15
+Updated: 2026-11-15. Run complete. See `docs/AUTOPILOT_REPORT.md` for the full report.
 
 | Task | Status | Notes |
 |---|---|---|
-| Phase 0 baseline | DONE | Branch created. Lint, tests, build pass. |
-| Spec study-insights | DONE | 36 tasks + 8.1 reviewer CSS fix, all committed. 165 tests pass. |
-| Spec data-safety-offline | WRITTEN | Tasks not started. |
-| Phase 1 demo variety | NOT STARTED | |
-| Phase 3 data safety / offline | NOT STARTED | |
-| Phase 4 input quality | NOT STARTED | |
-| Phase 5 fault-finding | NOT STARTED | |
-| Phase 6 polish | NOT STARTED | |
-| Phase 7 docs | NOT STARTED | |
-| Phase 8 report | NOT STARTED | |
-
-## Found and fixed
-- sanitizeReviewLog hung on hugely negative `v`; now returns an empty log (found by property test).
-- ghost-ui-reviewer (source only): baseline contrast, off-scale spacing, tall panel at 390px; fixed in ec66685.
-
-## UNVERIFIED
-- Insights panel in a browser at 390px/1280px (not yet run).
-- Reduced motion emulation.
+| Phase 0 baseline | DONE | Lint, tests, build green. |
+| Phase 1 demo variety | DONE | All five ghost types; tests added. Not viewed in a browser. |
+| Phase 2 study insights | DONE | 36 tasks + reviewer CSS fix. |
+| Phase 3 data safety and offline | DONE | 55 tasks. Browser checks 11.2 and 11.3 UNVERIFIED. |
+| Phase 4 OCR | DONE | Threshold removed, mild contrast. |
+| Phase 4 audio language switch | SKIPPED | Needs a steering change (new model download). |
+| Phase 5 fault-finding | DONE (code level) | 2 rounds; 4 bugs fixed. Browser attacks UNVERIFIED. |
+| Phase 6 polish | PARTIAL | Bundle 90.9 kB gzip. No final screenshots (no server). |
+| Phase 7 docs | DONE | README, KIRO_LOG, KIRO_WRITEUP. |
+| Phase 8 report | DONE | docs/AUTOPILOT_REPORT.md |
