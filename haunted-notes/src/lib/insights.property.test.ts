@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { MS_PER_DAY, accuracy7d, currentStreak, reviewedToday } from './insights';
+import { MS_PER_DAY, accuracy7d, currentStreak, dailyBuckets, reviewedToday } from './insights';
 import type { ReviewEvent } from '../types';
 
 const MINUTE = 60_000;
@@ -185,6 +185,50 @@ describe('accuracy7d properties', () => {
           expect(acc as number).toBeLessThanOrEqual(1);
           expect(acc as number).toBeCloseTo(correct / total, 12);
         }
+      }),
+      { numRuns: 300 },
+    );
+  });
+});
+
+describe('dailyBuckets properties', () => {
+  /** Local day number by floor-mod arithmetic, independent of the module under test. */
+  const refDay = (t: number, tz: number): number => {
+    const local = t - tz * MINUTE;
+    return (local - (((local % MS_PER_DAY) + MS_PER_DAY) % MS_PER_DAY)) / MS_PER_DAY;
+  };
+
+  // Feature: study-insights, Property 9: Daily buckets cover seven days and agree with accuracy
+  // **Validates: Requirements 9.1, 7.4**
+  it('returns 7 consecutive days ending today, correct <= reviews, and totals match the accuracy window', () => {
+    fc.assert(
+      fc.property(scenarioArb, ({ now, tz, events }) => {
+        const buckets = dailyBuckets(events, now, tz);
+        const today = refDay(now, tz);
+        expect(buckets).toHaveLength(7);
+        buckets.forEach((b, i) => {
+          expect(b.dayKey).toBe(today - 6 + i);
+          expect(b.correct).toBeLessThanOrEqual(b.reviews);
+        });
+
+        let windowTotal = 0;
+        let windowCorrect = 0;
+        for (const e of events) {
+          if (e.t > now) continue;
+          const d = refDay(e.t, tz);
+          if (d >= today - 6 && d <= today) {
+            windowTotal += 1;
+            windowCorrect += e.c;
+          }
+        }
+        const sumReviews = buckets.reduce((s, b) => s + b.reviews, 0);
+        const sumCorrect = buckets.reduce((s, b) => s + b.correct, 0);
+        expect(sumReviews).toBe(windowTotal);
+        expect(sumCorrect).toBe(windowCorrect);
+
+        const acc = accuracy7d(events, now, tz);
+        if (sumReviews === 0) expect(acc).toBeNull();
+        else expect(acc as number).toBeCloseTo(sumCorrect / sumReviews, 12);
       }),
       { numRuns: 300 },
     );
