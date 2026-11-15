@@ -332,3 +332,28 @@ Spec written first, then built against it.
 - The reviewer was not re-run after these three small fixes; I checked each directly (focus on the heading, computed padding 8px 12px).
 
 Lint, tests and build pass; main bundle 84.80 kB gzip.
+
+
+---
+
+## Autopilot run (branch `autopilot/nov-15`, 2026-11-15)
+
+### Spec: study-insights (spec first, then built)
+- Specs: `.kiro/specs/study-insights/` (requirements, design, tasks). Built `reviewLog.ts`, `insights.ts`, store wiring with `sanitizeReviewLog` in `onRehydrateStorage`, `ReviewBarChart`, `StudyInsights`, styles and Dashboard hookup. Property tests cover append, sanitize, serialization round trip, streak, today count, accuracy, buckets, bar heights and weakest rooms.
+- **Bug found by a property test (fixed):** `sanitizeReviewLog` hung on a hugely negative schema version `v` (the migration loop ran from `v` up to 1). It now rejects `v < 0` and returns an empty log. The hang also made the full `npm test` run time out for several minutes.
+- **Bug found by a property test (fixed):** `weakestRooms` returned a NaN weakness when a card had `weaknessScore: NaN`, which would render "weakness NaN%" and break sorting. Non-finite scores now count as 0 and scores are clamped to [0, 1]. Unit test added.
+- **ghost-ui-reviewer (static, no browser):** FAIL on chart baseline contrast (about 1.2:1), off-scale spacing and an estimated tall panel at 390px. Fixed in `ec66685` (baseline uses `--border-strong`, spacing on the 0.25rem scale, three compact stat columns). Not re-measured in a browser.
+
+### Spec: data-safety-offline (spec first, then built)
+- Specs: `.kiro/specs/data-safety-offline/`. Built `backup.ts` (export, untrusted-input validator, merge), `ImportDialog`, `BackupPanel`, `swStamp.ts`, `public/sw.js`, the stamping Vite plugin, manifest, three PNG icons from `scripts/make-icons.mjs`, production-only `registerSw.ts`, `offlineStatus.ts`, `modelCache.ts` and `ModelStatus`.
+- Property tests cover the export envelope, round trip, validator totality (random garbage never throws), envelope defects, dropped invalid records, key whitelist and prototype safety, ignored review logs, merge preserving data, no duplicates, idempotence, summary counts, merged log, service worker stamping, precache selection and model status. No bug was found in the backup code by these tests.
+- Known small issue, not fixed: when the 500-event cap drops incoming events, a repeat import counts them as added again in the summary. Stored data is unchanged.
+- No new dependencies. `package.json` has no diff against `main`.
+
+### Measurements (`npm run build`, vite gzip)
+- Main bundle: 86.5 kB after study-insights, 90.2 kB after data-safety-offline (limit 250 kB). Whisper worker and WASM stay separate chunks.
+- `npm run lint`, `npm test` (255 tests, 27 files) and `npm run build` pass. Built `dist/sw.js` has no unreplaced build tokens.
+
+### UNVERIFIED (not run in a browser)
+- Tasks 11.2 (offline reload, service worker control, installability, real `transformers-cache` file names) and 11.3 (import safety in the browser) were NOT run: the agent shell refused to start a dev or preview server. `REQUIRED_MODEL_FILES` in `offlineStatus.ts` is a guess until checked against the real cache.
+- Layout at 390px and 1280px, reduced motion emulation, heading order and chart label legibility for the new panels were checked only by static review.
