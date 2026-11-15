@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { MS_PER_DAY, accuracy7d, currentStreak, dailyBuckets, reviewedToday } from './insights';
+import { MS_PER_DAY, accuracy7d, barHeights, currentStreak, dailyBuckets, reviewedToday } from './insights';
 import type { ReviewEvent } from '../types';
 
 const MINUTE = 60_000;
@@ -231,6 +231,32 @@ describe('dailyBuckets properties', () => {
         else expect(acc as number).toBeCloseTo(sumCorrect / sumReviews, 12);
       }),
       { numRuns: 300 },
+    );
+  });
+});
+
+describe('barHeights properties', () => {
+  // Feature: study-insights, Property 10: Bar heights are bounded and proportional
+  // **Validates: Requirements 9.3, 9.7**
+  it('keeps heights within [0, plotHeight], maps 0 to 0 and the max count to plotHeight', () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.integer({ min: 0, max: 10_000 }), { minLength: 1, maxLength: 14 }),
+        fc.integer({ min: 1, max: 1000 }),
+        (counts, plotHeight) => {
+          const heights = barHeights(counts, plotHeight);
+          expect(heights).toHaveLength(counts.length);
+          const max = Math.max(...counts);
+          counts.forEach((c, i) => {
+            expect(heights[i]).toBeGreaterThanOrEqual(0);
+            expect(heights[i]).toBeLessThanOrEqual(plotHeight);
+            if (c === 0) expect(heights[i]).toBe(0);
+            if (max > 0 && c === max) expect(heights[i]).toBe(plotHeight);
+            if (max > 0) expect(heights[i]).toBeCloseTo((c / max) * plotHeight, 9);
+          });
+        },
+      ),
+      { numRuns: 200 },
     );
   });
 });
