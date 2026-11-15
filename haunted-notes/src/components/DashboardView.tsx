@@ -5,21 +5,15 @@ import EmptyState from './EmptyState';
 import type { Note, Flashcard } from '../types';
 import { isDue, isBanished, nextReturnInMs, daysFromMs } from '../lib/srs';
 import { normalizeBlanks } from '../lib/blank';
+import { noteTitle } from '../lib/noteTitle';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const PREVIEW_GHOST_COUNT = 3;
-const TITLE_MAX_LEN       = 40;
 
 type SortMode = 'weakest' | 'newest';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function noteTitle(note: Note): string {
-  if (note.title) return note.title;
-  const t = note.rawText.trim().replace(/\s+/g, ' ');
-  return t.length > TITLE_MAX_LEN ? t.slice(0, TITLE_MAX_LEN - 1) + '…' : t;
-}
 
 function roomSortWeight(cards: Flashcard[]): number {
   const haunted = cards.filter((c) => !isBanished(c));
