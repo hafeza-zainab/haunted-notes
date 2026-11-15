@@ -1357,3 +1357,51 @@ progress {
   width: 1.25rem;
   text-align: center;
 }
+
+/* Backup and restore (Dashboard). No animation, so no reduced-motion entry. */
+.backup-panel {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.backup-panel h2 { margin: 0 0 0.75rem; font-size: 1.1rem; }
+.backup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.backup-actions button { min-height: 44px; min-width: 44px; }
+.backup-status {
+  margin: 0.75rem 0 0;
+  min-height: 1.5rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.backup-dialog {
+  max-width: min(32rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.backup-dialog::backdrop {
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+}
+.backup-dialog-title { margin: 0 0 0.75rem; font-size: 1.15rem; }
+.backup-counts,
+.backup-warnings { margin: 0 0 0.75rem; padding-left: 1.25rem; }
+.backup-dialog-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.backup-dialog-actions button { min-height: 44px; min-width: 44px; }
+
+@media (min-width: 640px) {
+  .backup-actions,
+  .backup-dialog-actions { flex-direction: row; }
+}
