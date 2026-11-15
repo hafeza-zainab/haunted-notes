@@ -1,4 +1,4 @@
-﻿import type { ReviewEvent, SrsFields } from '../types';
+import type { ReviewEvent, SrsFields } from '../types';
 import { isBanished } from './srs';
 
 export const MS_PER_DAY = 86_400_000;
@@ -136,7 +136,7 @@ export function weakestRooms(
     let count = 0;
     for (const card of cards) {
       if (card.noteId !== note.id || isBanished(card, now)) continue;
-      sum += card.weaknessScore;
+      sum += Number.isFinite(card.weaknessScore) ? Math.min(1, Math.max(0, card.weaknessScore)) : 0;
       count += 1;
     }
     if (count > 0) rooms.push({ noteId: note.id, weakness: sum / count });

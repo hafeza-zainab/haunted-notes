@@ -165,3 +165,13 @@ describe('computeInsights', () => {
     expect(r.weakest).toEqual([{ noteId: 'a', weakness: 0.5 }]);
   });
 });
+
+import { weakestRooms as weakestRoomsNaN } from './insights';
+describe('weakestRooms with corrupt scores', () => {
+  it('treats NaN and out-of-range scores as finite values in [0, 1]', () => {
+    const base = { ease: 2.5, intervalDays: 0, reps: 0, dueAt: 0 };
+    const out = weakestRoomsNaN([{ id: 'a' }, { id: 'b' }], [{ ...base, noteId: 'a', weaknessScore: Number.NaN }, { ...base, noteId: 'b', weaknessScore: 5 }], 0);
+    expect(out.every((r) => Number.isFinite(r.weakness) && r.weakness >= 0 && r.weakness <= 1)).toBe(true);
+    expect(out[0].noteId).toBe('b');
+  });
+});
