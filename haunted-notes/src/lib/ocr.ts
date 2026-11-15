@@ -1,5 +1,7 @@
 // tesseract.js is heavy: it is loaded with a dynamic import() the first time the
 // Photo tab is used, never in the initial bundle.
+import { applyGreyContrast } from './ocrPixels';
+
 let tesseractModule: Promise<typeof import('tesseract.js')> | null = null;
 
 /** Start (or reuse) the dynamic import of the OCR engine. Safe to call repeatedly. */
@@ -15,16 +17,13 @@ export function loadOcrEngine(): Promise<typeof import('tesseract.js')> {
 
 const MAX_WIDTH = 2500;
 const SCALE   = 2;
-// Contrast threshold: pixels brighter than this become white, darker become black.
-// 0–255; 128 is neutral. Higher values push more mid-tones to black.
-const THRESHOLD = 140;
 
 /**
  * Preprocess an image file on a canvas for better OCR accuracy:
  *   1. Decode to an ImageBitmap (works in both browser and worker contexts)
  *   2. Upscale ×2, capping at MAX_WIDTH
  *   3. Convert to greyscale
- *   4. Apply a hard-threshold for contrast (each pixel → pure black or white)
+ *   4. Apply a mild contrast boost (no hard threshold)
  *
  * Returns a Blob (PNG) ready to hand to Tesseract.
  */
@@ -51,21 +50,9 @@ async function preprocessImage(file: File): Promise<Blob> {
   ctx.drawImage(bitmap, 0, 0, dstW, dstH);
   bitmap.close();
 
-  // Get pixel data and apply greyscale + threshold in one pass
+  // Greyscale plus a mild contrast boost (no hard threshold: Tesseract binarises itself)
   const imageData = ctx.getImageData(0, 0, dstW, dstH);
-  const data = imageData.data; // Uint8ClampedArray: [R,G,B,A, R,G,B,A, …]
-
-  for (let i = 0; i < data.length; i += 4) {
-    // Luminance-weighted greyscale (ITU-R BT.601)
-    const grey = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-    // Hard threshold → binary black/white
-    const binary = grey >= THRESHOLD ? 255 : 0;
-    data[i]     = binary; // R
-    data[i + 1] = binary; // G
-    data[i + 2] = binary; // B
-    // data[i + 3] = alpha — leave untouched
-  }
-
+  applyGreyContrast(imageData.data);
   ctx.putImageData(imageData, 0, 0);
 
   // Export as PNG blob
@@ -79,7 +66,7 @@ async function preprocessImage(file: File): Promise<Blob> {
 
 /**
  * Run OCR on an image file and return the extracted text.
- * The image is preprocessed (greyscale + upscale + threshold) before recognition.
+ * The image is preprocessed (greyscale + upscale + mild contrast) before recognition.
  * Progress is reported via the optional callback (0–100).
  */
 export async function extractTextFromImage(
