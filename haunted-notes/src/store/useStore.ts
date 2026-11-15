@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
 import type { Note, Flashcard, View, ReviewLog } from '../types';
 import { generateFlashcards, updateWeaknessScore } from '../lib/cloze';
 import { scheduleCorrect, scheduleWrong, defaultSrsFields } from '../lib/srs';
 import { buildDemoData } from '../lib/demoData';
 import { emptyReviewLog, appendReview, sanitizeReviewLog } from '../lib/reviewLog';
+import { sanitizeNotes, sanitizeFlashcards, sanitizeUi } from '../lib/persistedState';
 import { mergeBackup, type BackupData, type ImportSummary } from '../lib/backup';
 
 interface HauntedState {
@@ -39,6 +40,34 @@ interface HauntedState {
   /** Merges validated backup data into notes, flashcards and reviewLog only; returns the summary. */
   importBackup: (data: BackupData) => ImportSummary;
 }
+
+/**
+ * localStorage that never throws: private mode, a full quota or blocked storage
+ * must not break store actions. A failed write is dropped (state stays in memory).
+ */
+const safeStorage: StateStorage = {
+  getItem: (name) => {
+    try {
+      return window.localStorage.getItem(name);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name, value) => {
+    try {
+      window.localStorage.setItem(name, value);
+    } catch (err) {
+      console.warn('Haunted Notes: could not save to localStorage', err);
+    }
+  },
+  removeItem: (name) => {
+    try {
+      window.localStorage.removeItem(name);
+    } catch {
+      /* ignore */
+    }
+  },
+};
 
 export const useStore = create<HauntedState>()(
   persist(
@@ -166,6 +195,17 @@ export const useStore = create<HauntedState>()(
     }),
     {
       name: 'haunted-notes-storage',
+      storage: createJSONStorage(() => safeStorage),
+      merge: (persisted, current) => {
+        const p = typeof persisted === 'object' && persisted !== null ? (persisted as Record<string, unknown>) : {};
+        return {
+          ...current,
+          ...sanitizeUi(p),
+          notes: sanitizeNotes(p.notes),
+          flashcards: sanitizeFlashcards(p.flashcards),
+          reviewLog: sanitizeReviewLog(p.reviewLog),
+        };
+      },
 
       // Migrate legacy cards that are missing SRS fields
       onRehydrateStorage: () => (state) => {
