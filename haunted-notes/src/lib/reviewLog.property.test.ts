@@ -111,3 +111,100 @@ describe('sanitizeReviewLog properties', () => {
     );
   });
 });
+
+describe('sanitizeReviewLog keeps valid events', () => {
+  // Small t range so ties are common and stability is exercised.
+  const tiedEventArb: fc.Arbitrary<ReviewEvent> = fc.record({
+    t: fc.integer({ min: 0, max: 20 }),
+    r: fc.string({ minLength: 1, maxLength: 6 }),
+    c: fc.constantFrom<0 | 1>(0, 1),
+  });
+  const validEventArb = fc.oneof(eventArb, tiedEventArb);
+
+  const goodBase = { t: 5, r: 'room', c: 1 as const };
+  const invalidItemArb: fc.Arbitrary<unknown> = fc.oneof(
+    // Non-record items.
+    fc.constantFrom<unknown>(null, undefined, 0, 1, 'x', '', true, false, [], [1, 2]),
+    fc.array(fc.integer(), { maxLength: 3 }),
+    // Records with exactly one invalid field.
+    fc
+      .oneof(
+        fc.constantFrom<unknown>(-1, -0.5, Number.NaN, Infinity, -Infinity, '5', null, undefined, true, {}),
+        fc.double({ max: -1e-9, noNaN: true, noDefaultInfinity: true }),
+      )
+      .map((t) => ({ ...goodBase, t })),
+    fc
+      .constantFrom<unknown>('', 0, 1, null, undefined, true, [], {})
+      .map((r) => ({ ...goodBase, r })),
+    fc
+      .oneof(
+        fc.constantFrom<unknown>(2, -1, 0.5, '0', '1', true, false, null, undefined, []),
+        fc.integer().filter((n) => n !== 0 && n !== 1),
+      )
+      .map((c) => ({ ...goodBase, c })),
+    // Missing fields.
+    fc.constantFrom<unknown>({}, { t: 1, r: 'a' }, { t: 1, c: 0 }, { r: 'a', c: 0 }),
+  );
+
+  type Tagged = { valid: true; item: ReviewEvent } | { valid: false; item: unknown };
+  const taggedArb: fc.Arbitrary<Tagged> = fc.oneof(
+    { weight: 3, arbitrary: validEventArb.map((item): Tagged => ({ valid: true, item })) },
+    { weight: 2, arbitrary: invalidItemArb.map((item): Tagged => ({ valid: false, item })) },
+  );
+
+  const expectedFrom = (tagged: Tagged[]): ReviewEvent[] => {
+    const valid = tagged
+      .filter((x): x is { valid: true; item: ReviewEvent } => x.valid)
+      .map((x, i) => ({ e: x.item, i }));
+    valid.sort((a, b) => a.e.t - b.e.t || a.i - b.i);
+    return valid.map((x) => x.e).slice(-REVIEW_EVENT_CAP);
+  };
+
+  // Feature: study-insights, Property 3: Sanitizing keeps valid events and drops invalid ones
+  // **Validates: Requirements 2.4, 4.3**
+  it('Property 3: Sanitizing keeps valid events and drops invalid ones', () => {
+    fc.assert(
+      fc.property(fc.array(taggedArb, { maxLength: 60 }), (tagged) => {
+        const events = tagged.map((x) => x.item);
+        const out = sanitizeReviewLog({ v: REVIEW_LOG_VERSION, events });
+        expect(out.v).toBe(REVIEW_LOG_VERSION);
+        expect(out.events).toEqual(expectedFrom(tagged));
+      }),
+      { numRuns: 200 },
+    );
+  });
+
+  // Feature: study-insights, Property 3: Sanitizing keeps valid events and drops invalid ones
+  // **Validates: Requirements 2.4, 4.3**
+  it('Property 3: only the newest 500 valid events survive when the list is long', () => {
+    fc.assert(
+      fc.property(
+        fc.array(taggedArb, { minLength: 450, maxLength: 700 }),
+        (tagged) => {
+          const events = tagged.map((x) => x.item);
+          const out = sanitizeReviewLog({ v: REVIEW_LOG_VERSION, events });
+          const expected = expectedFrom(tagged);
+          expect(out.events.length).toBeLessThanOrEqual(REVIEW_EVENT_CAP);
+          expect(out.events).toEqual(expected);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  // Feature: study-insights, Property 3: Sanitizing keeps valid events and drops invalid ones
+  // **Validates: Requirements 2.4, 4.3**
+  it('Property 3: extra keys on valid events are stripped', () => {
+    fc.assert(
+      fc.property(fc.array(eventArb, { maxLength: 30 }), (list) => {
+        const decorated = list.map((e) => ({ ...e, extra: 'x', n: 1 }));
+        const out = sanitizeReviewLog({ v: REVIEW_LOG_VERSION, events: decorated });
+        for (const e of out.events) {
+          expect(Object.keys(e).sort()).toEqual(['c', 'r', 't']);
+        }
+        expect(out.events).toHaveLength(list.length);
+      }),
+      { numRuns: 100 },
+    );
+  });
+});
