@@ -43,3 +43,17 @@ export interface Flashcard extends SrsFields {
 }
 
 export type View = 'add' | 'dashboard' | 'quiz';
+
+/** One review: time (ms), room (note) id, correct flag. */
+export interface ReviewEvent {
+  t: number;
+  r: string;
+  c: 0 | 1;
+}
+
+export interface ReviewLog {
+  /** Schema version of this object. */
+  v: number;
+  /** Oldest first, at most 500. */
+  events: ReviewEvent[];
+}
