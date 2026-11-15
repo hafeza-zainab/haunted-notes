@@ -406,7 +406,7 @@ progress {
 /* Study insights panel (no animation or transition) */
 .insights {
   margin-bottom: 1rem;
-  padding: 0.9rem 1.1rem;
+  padding: 1rem;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -414,30 +414,30 @@ progress {
 }
 .insights h2 { margin: 0 0 0.75rem; font-size: 1.1rem; }
 .insights h3 {
-  margin: 1rem 0 0.4rem;
-  font-size: 0.82rem;
+  margin: 1rem 0 0.5rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-.insights p { margin: 0.4rem 0 0; color: var(--text-muted); font-size: 0.9rem; }
+.insights p { margin: 0.5rem 0 0; color: var(--text-muted); font-size: 0.9rem; }
 
 .insights-stats {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.6rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
   margin: 0;
 }
 .insights-stat {
-  padding: 0.6rem 0.8rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 .insights-stat dt { color: var(--text-muted); font-size: 0.85rem; }
 .insights-stat dd {
-  margin: 0.15rem 0 0;
+  margin: 0.25rem 0 0;
   color: var(--accent);
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 700;
 }
 
@@ -456,12 +456,12 @@ progress {
   height: auto;
 }
 .chart-bar { fill: var(--accent); }
-.chart-baseline { fill: var(--track); }
+.chart-baseline { fill: var(--border-strong); }
 .chart-label { fill: var(--text-muted); font-size: 11px; }
 .chart-count { fill: var(--text); }
 
 @media (min-width: 640px) {
-  .insights-stats { grid-template-columns: repeat(3, 1fr); }
+  .insights-stat dd { font-size: 1.5rem; }
 }
 
 /* Sort bar */
