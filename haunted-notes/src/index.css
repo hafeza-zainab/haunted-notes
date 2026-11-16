@@ -448,22 +448,47 @@ progress {
 .insights-weak li { padding: 0.25rem 0; overflow-wrap: anywhere; }
 .insights-weak li span:last-child { color: var(--text-muted); }
 
-.insights-chart { margin-top: 1rem; }
+.insights-chart { margin-top: 1rem; min-width: 0; }
 .insights-chart svg {
   display: block;
   width: 100%;
-  max-width: 100%;
+  max-width: 32rem;
+  max-height: 140px;
   height: auto;
+  margin: 0 auto;
 }
 .chart-bar { fill: var(--accent); }
 .chart-baseline { fill: var(--border-strong); }
-.chart-label { fill: var(--text-muted); font-size: 11px; }
-.chart-count { fill: var(--text); }
+/* 1 viewBox unit = 1 CSS px (see ReviewBarChart), so this is the rendered size */
+.chart-label { fill: var(--text-muted); font-size: 12px; }
+.chart-count { fill: var(--text); font-size: 13px; }
 
 @media (min-width: 640px) {
   .insights-stat dd { font-size: 1.5rem; }
 }
 
+/* Wide screens: stats and weakest rooms on the left, chart on the right */
+@media (min-width: 1024px) {
+  .insights {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 32rem);
+    column-gap: 1.5rem;
+    align-items: start;
+    padding: 0.75rem 1rem;
+  }
+  .insights > * { grid-column: 1; }
+  .insights h2 { margin-bottom: 0.5rem; }
+  .insights h3 { margin: 0.5rem 0 0.25rem; }
+  .insights-stat { padding: 0.25rem 0.75rem; }
+  .insights-stat dd { margin-top: 0; font-size: 1.25rem; }
+  .insights-weak li { padding: 0.125rem 0; }
+  .insights > .insights-chart {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    align-self: center;
+    margin-top: 0;
+  }
+}
 /* Sort bar */
 .sort-bar {
   display: flex;
