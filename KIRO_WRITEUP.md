@@ -1,5 +1,7 @@
 # How Kiro was used: Haunted Notes (Kiroween 2026)
 
+Evidence index with links to every file mentioned below: [docs/KIRO_EVIDENCE.md](docs/KIRO_EVIDENCE.md).
+
 Fill in the <...> parts as you go. Only claim what you really did. Judges score "variety of Kiro tools used impactfully" and "was there experimentation".
 
 ## 1. Kiro surfaces (IDE / CLI / Web / Crew)

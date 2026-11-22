@@ -72,6 +72,7 @@ npm run build     # tsc -b && vite build
 
 - [Kiro usage log](haunted-notes/KIRO_LOG.md)
 - [Kiro write-up](KIRO_WRITEUP.md)
+- [Kiro evidence index](docs/KIRO_EVIDENCE.md)
 - [Hooks](.kiro/hooks/)
 - [Steering](.kiro/steering/)
 - [Specs](.kiro/specs/)
