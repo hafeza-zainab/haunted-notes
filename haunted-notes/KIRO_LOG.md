@@ -395,3 +395,9 @@ Lint, tests and build pass; main bundle 84.80 kB gzip.
 - Tests: 15 in `loadReport.test.ts` (3 fast-check properties: totality, valid data gives no notice or backup, backup equals the raw value), 8 store tests, 3 render tests. 311 tests pass; lint and build pass; main bundle 91.6 kB gzip.
 - Noticed: `reviewLog.property.test.ts` "Property 1" timed out once at the 5 s default while the CPU was busy (72% in use) and passed on rerun in about 2.5 s. Not changed.
 - UNVERIFIED: the notice in a real browser (layout, focus, 390px). Needs `npm run dev`.
+
+
+### Dependency pins, test timeout and MCP tool record
+- **Pins:** every dependency and devDependency in `haunted-notes/package.json` is now the exact version that was already installed (19 packages, `^` and `~` removed). Examples: `zustand 5.0.16`, `@huggingface/transformers 3.8.1`, `tesseract.js 5.1.1`, `@vitejs/plugin-react 6.2.1`, `globals 17.14.0`. Nothing was upgraded. `npm install` regenerated `package-lock.json`; its diff changes only the declared specifiers, with no `version`, `resolved` or `integrity` line changed. `scripts/check-submission.mjs` item 8 went from FAIL to PASS.
+- **Timeout:** `vite.config.ts` now imports `defineConfig` from `vitest/config` and sets `test.testTimeout` to 30000 ms (default was 5000), after `reviewLog.property.test.ts` timed out once on a busy machine. No test was changed.
+- **Playwright MCP tools called in the A5 run** (list supplied by the owner from the A5 report; that report is not in this repository, so I could not check it): `browser_navigate`, `browser_snapshot`, `browser_console_messages`, `browser_click`, `browser_type`, `browser_take_screenshot`, `browser_find`, `browser_resize`, `browser_evaluate`, `browser_emulate_media`, `browser_run_code_unsafe`. The custom agent `ghost-ui-reviewer` forbids `browser_run_code_unsafe` and its allowed list has no `browser_click` or `browser_type`, so this list belongs to the main agent's run.

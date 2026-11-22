@@ -2,7 +2,8 @@ import react from '@vitejs/plugin-react'
 import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { defineConfig, type Plugin } from 'vite'
+import type { Plugin } from 'vite'
+import { defineConfig } from 'vitest/config'
 import {
   makeBuildId,
   selectPrecacheUrls,
@@ -53,5 +54,9 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
+  },
+  test: {
+    // Property tests can be slow on busy or slower machines; 30 s avoids false timeouts.
+    testTimeout: 30000,
   },
 })

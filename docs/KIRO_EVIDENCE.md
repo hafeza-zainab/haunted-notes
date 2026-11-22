@@ -62,7 +62,7 @@ In [.kiro/steering/](../.kiro/steering/):
 - [testing.md](../.kiro/steering/testing.md): `fileMatch` on `src/lib/**`. Requires unit and property tests with `now` passed explicitly. It shaped the property tests in section 6.
 
 Effect, from the log: steering enforced accessibility and single-responsibility components without per-component reminders, and kept heavy libraries out of the main bundle.
-Gap: `tech.md` asks for exact version pins, but 17 dependencies in `haunted-notes/package.json` still use `^` or `~` ranges (see [SUBMISSION_CHECKLIST.md](SUBMISSION_CHECKLIST.md)).
+Dependencies in `haunted-notes/package.json` are pinned to exact versions, as `tech.md` asks (see [SUBMISSION_CHECKLIST.md](SUBMISSION_CHECKLIST.md), item 8).
 
 ## 6. Property-based testing
 
@@ -87,7 +87,9 @@ Properties that found no bug: `srs.ts` (the log records none), the backup valida
 - [.kiro/settings/mcp.json](../.kiro/settings/mcp.json) configures the `playwright` server, pinned to `@playwright/mcp@0.0.85`, headless and isolated, using a cached Chromium.
 - Used for: the demo quiz flow, the `?dev=1` "+1 day" button, screenshots at 1280px and 390px, a reduced-motion run, and the hint, reveal and results checks in the better-quiz spec ([log, "Playwright MCP setup" and "B2: Better quiz"](../haunted-notes/KIRO_LOG.md)). Screenshots are in [docs/screens/](screens/).
 - The custom agent uses the same server for contrast and tap-target measurements.
-- **Gaps:** the log does not record individual tool names. The autopilot run could not start a server from its shell, so its browser checks are UNVERIFIED. The config contains a path to Chromium on the author's machine.
+- **Tools called in the A5 run** (list supplied by the repository owner from the A5 report; the report file itself is not in this repository, so this list is not independently checkable): `browser_navigate`, `browser_snapshot`, `browser_console_messages`, `browser_click`, `browser_type`, `browser_take_screenshot`, `browser_find`, `browser_resize`, `browser_evaluate`, `browser_emulate_media`, `browser_run_code_unsafe`.
+- Note: [ghost-ui-reviewer](../.kiro/agents/ghost-ui-reviewer.md) forbids `browser_run_code_unsafe` and its allowed list has no `browser_click` or `browser_type`, so this list belongs to the main agent's A5 run, not to the custom agent.
+- **Gaps:** the log did not record tool names before this entry. The autopilot run could not start a server from its shell, so its browser checks are UNVERIFIED. The config contains a path to Chromium on the author's machine.
 
 ## 8. Kiro powers
 
@@ -96,6 +98,6 @@ Properties that found no bug: `srs.ts` (the log records none), the backup valida
 ## Open gaps
 
 - CLI, Web and Crew usage: none.
-- MCP tool names are not in the log.
+- MCP tool names were not recorded when the calls were made; the list in section 7 comes from the owner's A5 report.
 - The hooks' presence in the Agent Hooks panel is not confirmed.
 - Browser checks for offline behavior, import safety and the final chart layout are UNVERIFIED until `npm run dev` is running (a later browser pass is planned).

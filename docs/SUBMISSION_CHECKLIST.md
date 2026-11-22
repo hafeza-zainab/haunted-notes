@@ -17,15 +17,13 @@ Status: PASS = checked from files. FAIL = a file problem to fix. MANUAL = cannot
 | 5b | README: demo video URL | FAIL | placeholder `<YouTube URL>`. Needs your real URL |
 | 6 | `KIRO_WRITEUP.md` has no unfilled placeholders | FAIL | your sections remain: surfaces (line 7), verdict (15), steering effect and second steering file (20), hooks (25), MCP benefit (29). Only you can write these |
 | 7 | `.playwright-mcp/` and `node_modules/` ignored, not tracked | PASS | |
-| 8 | `package.json` dependencies are exact versions | FAIL | 17 packages use `^` or `~` ranges (list below). `fast-check` and `vitest` are already exact |
+| 8 | `package.json` dependencies are exact versions | PASS | all 19 pinned to the installed version; `package-lock.json` regenerated with no resolved version changes |
 
 I did not invent any URL and did not rewrite your write-up sections.
 
-### Item 8 detail (not changed)
+### Item 8 detail
 
-Ranges: `@huggingface/transformers ^3.5.1`, `react ^19.3.1`, `react-dom ^19.3.1`, `tesseract.js ^5.1.0`, `zustand ^5.0.5`, `@eslint/js ^10.0.1`, `@types/node ^24.19.2`, `@types/react ^19.3.0`, `@types/react-dom ^19.3.0`, `@vitejs/plugin-react ^6.1.2`, `eslint ^10.14.0`, `eslint-plugin-react-hooks ^7.1.1`, `eslint-plugin-react-refresh ^0.5.7`, `globals ^17.13.0`, `typescript ~6.0.3`, `typescript-eslint ^8.72.1`, `vite ^8.3.6`.
-
-`.kiro/steering/tech.md` says to pin exact versions. `package-lock.json` already fixes what gets installed, so this is a rule and tidiness issue, not a security one. To fix, either run `npm install --save-exact <name>@<installed version>` for each, or edit `package.json` to the versions in `package-lock.json` and run `npm install` once to confirm the lock does not change. I left it because it edits dependency files, which this audit did not ask for.
+Fixed. Every dependency and devDependency was set to the version already installed (for example `zustand 5.0.16`, `@huggingface/transformers 3.8.1`, `tesseract.js 5.1.1`). Nothing was upgraded.
 
 ## MANUAL items (you must do these)
 
@@ -57,7 +55,7 @@ FAIL   6   KIRO_WRITEUP.md has no unfilled placeholders
          line 7, line 15, line 20, line 25, line 29
 PASS   7   .playwright-mcp/ and node_modules/ ignored and not tracked
          ignored={".playwright-mcp":true,"haunted-notes/node_modules":true} trackedPlaywright=0 trackedNodeModules=0
-FAIL   8   package.json dependencies are exact versions
+PASS   8   package.json dependencies are exact versions
          @huggingface/transformers@^3.5.1, react@^19.3.1, react-dom@^19.3.1, tesseract.js@^5.1.0, zustand@^5.0.5, @eslint/js@^10.0.1, @types/node@^24.19.2, @types/react@^19.3.0, @types/react-dom@^19.3.0, @vitejs/plugin-react@^6.1.2, eslint@^10.14.0, eslint-plugin-react-hooks@^7.1.1, eslint-plugin-react-refresh@^0.5.7, globals@^17.13.0, typescript@~6.0.3, typescript-eslint@^8.72.1, vite@^8.3.6
 MANUAL M1  GitHub repository is public
 MANUAL M2  Demo video on YouTube is public and under 3 minutes, no copyrighted music
