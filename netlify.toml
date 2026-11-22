@@ -1,0 +1,32 @@
+# Netlify static hosting for Haunted Notes. Not deployed yet.
+# The app lives in haunted-notes/; Netlify builds there and serves dist/ at the site root.
+
+[build]
+  base = "haunted-notes"
+  command = "npm run build"
+  publish = "dist"
+
+# The service worker and manifest must always be revalidated, so a new build
+# replaces the old worker instead of leaving users on a stale shell.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# Vite puts a content hash in every file name under assets/, so these never change.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# SPA fallback. Without force = true, Netlify serves real files first and only
+# falls back to index.html for paths that do not exist.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

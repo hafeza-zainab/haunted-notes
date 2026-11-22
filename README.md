@@ -59,6 +59,18 @@ npm run build
 npm run preview
 ```
 
+## Deploy
+
+The repository is ready for free static hosting on Netlify. Nothing has been deployed yet.
+
+1. In Netlify, choose "Import an existing project" and pick this GitHub repository.
+2. Netlify reads `netlify.toml` at the repository root: it builds in `haunted-notes/` with `npm run build` and publishes `haunted-notes/dist`.
+3. Deploy, then put the site URL in the **Live app** line at the top of this README.
+
+`netlify.toml` also sets these headers: `sw.js` and `manifest.webmanifest` are sent with `Cache-Control: no-cache`, so a new build replaces the old service worker; hashed files under `assets/` are cached for a year as `immutable`. Unknown paths fall back to `index.html`; real files are always served first.
+
+The app is served from the site root, which is where the service worker registers its scope. Serving it from a sub-path has not been tested.
+
 ## Test
 
 ```bash
