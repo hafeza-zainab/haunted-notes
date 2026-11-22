@@ -5,6 +5,7 @@ import { extractTextFromImage, loadOcrEngine } from '../lib/ocr';
 import { useWhisper, ACCEPTED_AUDIO } from '../lib/useWhisper';
 import ModelStatus from './ModelStatus';
 import type { NoteInputMethod } from '../types';
+import StitchStrip from './StitchStrip';
 
 const TABS: { id: NoteInputMethod; label: string; icon: string }[] = [
   { id: 'type',  label: 'Type',       icon: '⌨'  },
@@ -188,6 +189,7 @@ const AddNoteView: React.FC = () => {
   return (
     <section className="add-note-view" aria-label="Add a new note">
       <h2>Add Note</h2>
+      <StitchStrip />
 
       {/* Method selector */}
       <div className="method-tabs" role="tablist" aria-label="Input method">

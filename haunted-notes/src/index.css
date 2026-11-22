@@ -504,6 +504,57 @@ progress {
 }
 .load-notice p { margin: 0; flex: 1 1 14rem; font-size: 0.9rem; overflow-wrap: anywhere; }
 .load-notice button { min-height: 44px; min-width: 44px; }
+/* "How it's stitched" strip: static, no animation or transition */
+.stitch-strip {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  text-align: left;
+}
+.stitch-strip figcaption {
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.stitch-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.stitch-inputs,
+.stitch-stages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.stitch-stages li { display: flex; align-items: center; gap: 0.5rem; }
+.stitch-chip {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.stitch-chip--stage { border-color: var(--border-strong); }
+.stitch-arrow { color: var(--accent); font-weight: 700; }
+/* Narrow screens stack the inputs above the pipeline, so the join arrow points down */
+.stitch-arrow--join { display: inline-block; transform: rotate(90deg); }
+
+@media (min-width: 640px) {
+  .stitch-flow { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .stitch-arrow--join { transform: none; }
+}
+
 /* Sort bar */
 .sort-bar {
   display: flex;

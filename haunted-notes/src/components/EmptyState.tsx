@@ -1,5 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
+import StitchStrip from './StitchStrip';
 
 const EmptyState: React.FC = () => {
   const setView      = useStore((s) => s.setView);
@@ -35,6 +36,8 @@ const EmptyState: React.FC = () => {
 
       <h2>No ghosts yet…</h2>
       <p>Add your first note to summon some study ghosts.</p>
+
+      <StitchStrip />
 
       <div className="empty-state-actions">
         <button
