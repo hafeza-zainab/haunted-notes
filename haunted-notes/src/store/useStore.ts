@@ -7,6 +7,7 @@ import { buildDemoData } from '../lib/demoData';
 import { emptyReviewLog, appendReview, sanitizeReviewLog } from '../lib/reviewLog';
 import { sanitizeNotes, sanitizeFlashcards, sanitizeUi } from '../lib/persistedState';
 import { assessSavedValue, needsBackup, planBackup, BACKUP_KEY, type LoadReport } from '../lib/loadReport';
+import { TOUR_STEPS, nextTourStep } from '../lib/tour';
 import { mergeBackup, type BackupData, type ImportSummary } from '../lib/backup';
 
 interface HauntedState {
@@ -43,6 +44,12 @@ interface HauntedState {
   /** Set when saved data had to be dropped on load. Never persisted. */
   loadNotice: LoadReport | null;
   dismissLoadNotice: () => void;
+  /** Current 60-second tour step, or null when closed. Never persisted. */
+  tourStep: number | null;
+  /** Load the demo (if needed) and open the first tour step. */
+  startTour: () => void;
+  advanceTour: () => void;
+  endTour: () => void;
 }
 
 /**
@@ -102,6 +109,15 @@ const safeStorage: StateStorage = {
     }
   },
 };
+
+/** View change for a tour step. The quiz step opens an unfiltered quiz. */
+function tourPatch(index: number): Partial<HauntedState> {
+  const step = TOUR_STEPS[index];
+  if (step.view === 'quiz') {
+    return { tourStep: index, currentView: 'quiz', quizNoteId: null, quizDueOnly: false };
+  }
+  return { tourStep: index, currentView: step.view };
+}
 
 export const useStore = create<HauntedState>()(
   persist(
@@ -209,6 +225,16 @@ export const useStore = create<HauntedState>()(
 
       loadNotice: null,
       dismissLoadNotice: () => set({ loadNotice: null }),
+      tourStep: null,
+      startTour: () => {
+        get().loadDemoData();
+        set(tourPatch(0));
+      },
+      advanceTour: () => {
+        const next = nextTourStep(get().tourStep);
+        set(next === null ? { tourStep: null } : tourPatch(next));
+      },
+      endTour: () => set({ tourStep: null }),
       importBackup: (data) => {
         const { notes, flashcards, reviewLog } = get();
         const { data: merged, summary } = mergeBackup({ notes, flashcards, reviewLog }, data);
@@ -232,10 +258,11 @@ export const useStore = create<HauntedState>()(
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => safeStorage),
-      // loadNotice is session-only: never written to localStorage.
+      // loadNotice and tourStep are session-only: never written to localStorage.
       partialize: (state) => {
         const rest: Partial<HauntedState> = { ...state };
         delete rest.loadNotice;
+        delete rest.tourStep;
         return rest;
       },
       merge: (persisted, current) => {

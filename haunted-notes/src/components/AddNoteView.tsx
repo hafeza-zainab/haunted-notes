@@ -19,6 +19,7 @@ const AddNoteView: React.FC = () => {
   const setView      = useStore((s) => s.setView);
   const isDemoLoaded = useStore((s) => s.isDemoLoaded);
   const loadDemoData = useStore((s) => s.loadDemoData);
+  const startTour    = useStore((s) => s.startTour);
 
   const [inputMethod, setInputMethod] = useState<NoteInputMethod>('type');
   const [text, setText] = useState('');
@@ -439,6 +440,9 @@ const AddNoteView: React.FC = () => {
             aria-label="Try demo: load sample notes and open the dashboard"
           >
             👻 Try demo →
+          </button>
+          <button type="button" className="btn-ghost" onClick={startTour}>
+            <span aria-hidden="true">⏱ </span>60-second tour
           </button>
         </aside>
       )}

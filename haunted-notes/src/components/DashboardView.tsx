@@ -394,7 +394,7 @@ const DashboardView: React.FC = () => {
             </button>
           )}
           {totalHaunting > 0 && (
-            <button className="btn-primary" onClick={startQuizAll}>
+            <button className="btn-primary" onClick={startQuizAll} data-tour="start-quiz">
               👻 Start Quiz
             </button>
           )}

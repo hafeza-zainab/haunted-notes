@@ -555,6 +555,39 @@ progress {
   .stitch-arrow--join { transform: none; }
 }
 
+/* 60-second tour coach mark: no animation or transition */
+.tour-coach {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 150;
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+.tour-count {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tour-title { margin: 0.25rem 0 0.5rem; font-size: 1.1rem; }
+.tour-text { margin: 0 0 0.75rem; }
+.tour-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.tour-actions button { min-height: 44px; min-width: 44px; }
+.tour-target {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius);
+}
+
 /* Sort bar */
 .sort-bar {
   display: flex;
