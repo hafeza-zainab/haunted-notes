@@ -374,3 +374,24 @@ Lint, tests and build pass; main bundle 84.80 kB gzip.
 
 ### Final numbers
 - `npm run lint`, `npm run build` and `npm test` pass at the end: 285 tests in 32 files after the last test was added.
+
+
+---
+
+## Prize prep (branch `prize-prep`, off `main`)
+
+### P4: Submission-readiness audit
+- Added `scripts/check-submission.mjs` (Node built-ins and `git` only, read-only) and `docs/SUBMISSION_CHECKLIST.md`. The script checks LICENSE, `.kiro/` not ignored and tracked, specs/steering/hooks populated, secret patterns and `.env` files in tracked files (164 files scanned, none found), README sections, write-up placeholders, ignore rules for `.playwright-mcp/` and `node_modules/`, and exact dependency pins.
+- Result: 5 checks PASS, 4 FAIL, 6 MANUAL. FAILs: README live-app and demo-video URL placeholders, `KIRO_WRITEUP.md` placeholders (your verdict sections), and 17 dependencies with `^` or `~` ranges.
+- Fixed one clear gap: the README had no License section; added one that points to the MIT `LICENSE`. Did not invent URLs, fill your write-up sections, or edit `package.json`.
+
+### P6: Kiro evidence index
+- Added `docs/KIRO_EVIDENCE.md` with eight sections (surfaces, custom agent, hooks, specs, steering, property-based testing, MCP, powers), linked from `README.md` and `KIRO_WRITEUP.md`. All relative links were checked to exist. Sections with no evidence say NOT USED (CLI, Web, Crew, powers). Gaps listed: MCP tool names are not recorded in this log; hooks appearing in the Agent Hooks panel was never confirmed.
+
+### P3: Safer loading of saved data
+- Before this change the store silently dropped malformed saved notes and cards. Now `src/lib/loadReport.ts` (pure) inspects the raw saved string. If anything would be dropped, or the value cannot be read, the storage wrapper copies the raw string to `haunted-notes-storage-backup` before the cleaned state can be saved. An existing backup is never overwritten. If the backup write fails (quota), the notice says so instead of claiming a backup exists.
+- A dismissible `LoadNotice` (`role="status"`, Dismiss button 44px) appears at the top of the dashboard and on the empty state, with counts only and no note or card text. The notice lives in the store but is excluded from persistence by `partialize`.
+- A legacy card that only lacks SRS fields is repaired, not counted as dropped, so ordinary upgrades show no notice.
+- Tests: 15 in `loadReport.test.ts` (3 fast-check properties: totality, valid data gives no notice or backup, backup equals the raw value), 8 store tests, 3 render tests. 311 tests pass; lint and build pass; main bundle 91.6 kB gzip.
+- Noticed: `reviewLog.property.test.ts` "Property 1" timed out once at the 5 s default while the CPU was busy (72% in use) and passed on rerun in about 2.5 s. Not changed.
+- UNVERIFIED: the notice in a real browser (layout, focus, 390px). Needs `npm run dev`.
