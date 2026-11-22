@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useId, useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { TOUR_STEPS, nextTourStep, tourStepAt } from '../lib/tour';
 
@@ -27,7 +27,7 @@ const TourCoach: React.FC = () => {
       marked = el && step.box ? (el.closest(step.box) ?? el) : el;
       if (marked) {
         marked.classList.add('tour-target');
-        marked.scrollIntoView({ block: 'center' });
+        marked.scrollIntoView({ block: 'start' });
       }
       boxRef.current?.focus();
     });

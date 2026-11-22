@@ -588,6 +588,11 @@ progress {
   border-radius: var(--radius);
 }
 
+/* Keep the outlined target clear of the fixed tour panel: scroll it to just
+   below the sticky nav, and leave room at the end of the page while the tour is open. */
+.tour-target { scroll-margin-top: 5rem; }
+.main-content:has(~ .tour-coach) { padding-bottom: 18rem; }
+
 /* Sort bar */
 .sort-bar {
   display: flex;
