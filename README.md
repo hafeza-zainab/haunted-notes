@@ -84,3 +84,7 @@ Specs live in `.kiro/specs/` at the repository root. The Playwright MCP config i
 - Offline behavior, installability and import safety in a real browser have not been verified yet (see the Kiro usage log).
 - Audio transcription is English only (`whisper-tiny.en`).
 - OCR works best with clear printed text.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
