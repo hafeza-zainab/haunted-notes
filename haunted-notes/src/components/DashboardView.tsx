@@ -4,6 +4,7 @@ import GhostSvg from './GhostSvg';
 import EmptyState from './EmptyState';
 import StudyInsights from './StudyInsights';
 import BackupPanel from './BackupPanel';
+import LoadNotice from './LoadNotice';
 import type { Note, Flashcard } from '../types';
 import { isDue, isBanished, nextReturnInMs, daysFromMs } from '../lib/srs';
 import { normalizeBlanks } from '../lib/blank';
@@ -306,6 +307,7 @@ const DashboardView: React.FC = () => {
   if (notes.length === 0) {
     return (
       <>
+        <LoadNotice />
         <EmptyState />
         <BackupPanel />
       </>
@@ -352,6 +354,7 @@ const DashboardView: React.FC = () => {
 
   return (
     <section className="dashboard-view" aria-label="Ghost dashboard">
+      <LoadNotice />
 
       {/* ── Summary bar ── */}
       <div className="summary-bar">

@@ -489,6 +489,21 @@ progress {
     margin-top: 0;
   }
 }
+/* Load notice: saved items dropped on load (no animation or transition) */
+.load-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+}
+.load-notice p { margin: 0; flex: 1 1 14rem; font-size: 0.9rem; overflow-wrap: anywhere; }
+.load-notice button { min-height: 44px; min-width: 44px; }
 /* Sort bar */
 .sort-bar {
   display: flex;

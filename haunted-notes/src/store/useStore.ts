@@ -6,6 +6,7 @@ import { scheduleCorrect, scheduleWrong, defaultSrsFields } from '../lib/srs';
 import { buildDemoData } from '../lib/demoData';
 import { emptyReviewLog, appendReview, sanitizeReviewLog } from '../lib/reviewLog';
 import { sanitizeNotes, sanitizeFlashcards, sanitizeUi } from '../lib/persistedState';
+import { assessSavedValue, needsBackup, planBackup, BACKUP_KEY, type LoadReport } from '../lib/loadReport';
 import { mergeBackup, type BackupData, type ImportSummary } from '../lib/backup';
 
 interface HauntedState {
@@ -39,16 +40,49 @@ interface HauntedState {
   timeTravelDay: () => void;
   /** Merges validated backup data into notes, flashcards and reviewLog only; returns the summary. */
   importBackup: (data: BackupData) => ImportSummary;
+  /** Set when saved data had to be dropped on load. Never persisted. */
+  loadNotice: LoadReport | null;
+  dismissLoadNotice: () => void;
 }
 
 /**
  * localStorage that never throws: private mode, a full quota or blocked storage
  * must not break store actions. A failed write is dropped (state stays in memory).
  */
+const STORAGE_KEY = 'haunted-notes-storage';
+
+/** Report from the last read of the saved value, picked up once by `merge`. */
+let pendingLoadReport: LoadReport | null = null;
+
+/**
+ * Before anything is cleaned or overwritten: if the saved value would lose items
+ * (or cannot be read), copy the raw string to a backup key. An existing backup is
+ * never overwritten. Returns the report to show, or null when nothing was lost.
+ */
+function backupBeforeLoad(raw: string | null): LoadReport | null {
+  const report = assessSavedValue(raw);
+  if (!needsBackup(report)) return null;
+  try {
+    const existing = window.localStorage.getItem(BACKUP_KEY);
+    const plan = planBackup(raw, report, existing);
+    if (plan !== null) window.localStorage.setItem(BACKUP_KEY, plan);
+    return { ...report, backedUp: true };
+  } catch (err) {
+    console.warn('Haunted Notes: could not save a backup copy', err);
+    return report;
+  }
+}
+
 const safeStorage: StateStorage = {
   getItem: (name) => {
     try {
-      return window.localStorage.getItem(name);
+      const raw = window.localStorage.getItem(name);
+      if (name !== STORAGE_KEY) return raw;
+      const report = backupBeforeLoad(raw);
+      pendingLoadReport = report;
+      // An unreadable value is not handed to the parser; the app starts empty
+      // and the raw value stays safe in the backup key.
+      return report?.unreadable ? null : raw;
     } catch {
       return null;
     }
@@ -173,6 +207,8 @@ export const useStore = create<HauntedState>()(
         }));
       },
 
+      loadNotice: null,
+      dismissLoadNotice: () => set({ loadNotice: null }),
       importBackup: (data) => {
         const { notes, flashcards, reviewLog } = get();
         const { data: merged, summary } = mergeBackup({ notes, flashcards, reviewLog }, data);
@@ -194,8 +230,14 @@ export const useStore = create<HauntedState>()(
       },
     }),
     {
-      name: 'haunted-notes-storage',
+      name: STORAGE_KEY,
       storage: createJSONStorage(() => safeStorage),
+      // loadNotice is session-only: never written to localStorage.
+      partialize: (state) => {
+        const rest: Partial<HauntedState> = { ...state };
+        delete rest.loadNotice;
+        return rest;
+      },
       merge: (persisted, current) => {
         const p = typeof persisted === 'object' && persisted !== null ? (persisted as Record<string, unknown>) : {};
         return {
@@ -204,6 +246,7 @@ export const useStore = create<HauntedState>()(
           notes: sanitizeNotes(p.notes),
           flashcards: sanitizeFlashcards(p.flashcards),
           reviewLog: sanitizeReviewLog(p.reviewLog),
+          loadNotice: pendingLoadReport,
         };
       },
 
