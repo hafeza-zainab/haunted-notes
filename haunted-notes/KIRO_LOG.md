@@ -401,3 +401,29 @@ Lint, tests and build pass; main bundle 84.80 kB gzip.
 - **Pins:** every dependency and devDependency in `haunted-notes/package.json` is now the exact version that was already installed (19 packages, `^` and `~` removed). Examples: `zustand 5.0.16`, `@huggingface/transformers 3.8.1`, `tesseract.js 5.1.1`, `@vitejs/plugin-react 6.2.1`, `globals 17.14.0`. Nothing was upgraded. `npm install` regenerated `package-lock.json`; its diff changes only the declared specifiers, with no `version`, `resolved` or `integrity` line changed. `scripts/check-submission.mjs` item 8 went from FAIL to PASS.
 - **Timeout:** `vite.config.ts` now imports `defineConfig` from `vitest/config` and sets `test.testTimeout` to 30000 ms (default was 5000), after `reviewLog.property.test.ts` timed out once on a busy machine. No test was changed.
 - **Playwright MCP tools called in the A5 run** (list supplied by the owner from the A5 report; that report is not in this repository, so I could not check it): `browser_navigate`, `browser_snapshot`, `browser_console_messages`, `browser_click`, `browser_type`, `browser_take_screenshot`, `browser_find`, `browser_resize`, `browser_evaluate`, `browser_emulate_media`, `browser_run_code_unsafe`. The custom agent `ghost-ui-reviewer` forbids `browser_run_code_unsafe` and its allowed list has no `browser_click` or `browser_type`, so this list belongs to the main agent's run.
+
+---
+
+## Prize prep 2 (branch `prize-prep-2`, off `main` at `fa539f1`)
+
+No browser was available: nothing listened on port 5173 or 4173, and the agent shell refuses to start servers. All browser steps are UNVERIFIED; see `docs/BROWSER_CHECKS.md`.
+
+### P2: "Four inputs, one ghost pipeline" strip
+- New `StitchStrip` component on the empty state and under the Add Note title: Type, Speak, Photo and Audio file into Flashcards, Ghosts, Spaced review. A static figure with two labelled lists; arrows are `aria-hidden`. No interactive elements, existing tokens only, no animation. Inputs stack above the pipeline below 640px.
+- Render test added (3 tests). Screenshots not taken (UNVERIFIED).
+
+### P5: Netlify config (not deployed)
+- `netlify.toml` at the repo root: base `haunted-notes`, `npm run build`, publish `dist`; `Cache-Control: no-cache` on `/sw.js` and `/manifest.webmanifest`; `public, max-age=31536000, immutable` on `/assets/*`; SPA fallback `/*` to `/index.html` with status 200 (real files are served first). README has a new Deploy section.
+- Header paths were checked against `dist/` after `npm run build`. Service worker behavior under preview and on Netlify: UNVERIFIED.
+
+### P7: 60-second tour
+- "60-second tour" button next to Try demo on the empty state and in the Add Note demo shortcut. It loads the demo (once) and shows 5 coach-mark steps: rooms, a returned ghost, Start Quiz, Hint and Reveal (opens an unfiltered quiz), study insights.
+- Pure step list in `src/lib/tour.ts`; state and actions (`tourStep`, `startTour`, `advanceTour`, `endTour`) in the store, excluded from persistence. `TourCoach` is a fixed `role="dialog"` panel named by the step title, with Next (Finish on the last step) and Skip tour, both 44px. Focus moves to the panel on each step and returns to `#main-content` on close; Escape closes. Added `data-tour="start-quiz"` to the Start Quiz button as a stable target.
+- Tests: 7 in `tour.test.ts` (one fast-check property), 5 store tests, 4 render tests. One of my render-test expectations was wrong (it assumed React comment separators that `renderToStaticMarkup` does not emit); fixed in the test, the component was correct.
+
+### ghost-ui-reviewer (static, no browser)
+- Reviewed the strip, the tour, the load notice and the chart. PASS on computed contrast, 44px targets, aria names, focus handling and reduced motion.
+- **FAIL (static estimate):** at 390px the fixed tour panel (estimated 230 to 260px tall) could cover tall outlined targets such as the insights panel. Fix: targets scroll to just below the sticky nav (`block: 'start'` and `scroll-margin-top: 5rem`), and `main` gets `padding-bottom: 18rem` while the tour is open. Not measured.
+
+### Numbers
+- `npm run lint`, `npm test` (330 tests, 39 files) and `npm run build` pass. Main bundle 92.8 kB gzip.
