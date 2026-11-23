@@ -427,3 +427,38 @@ No browser was available: nothing listened on port 5173 or 4173, and the agent s
 
 ### Numbers
 - `npm run lint`, `npm test` (330 tests, 39 files) and `npm run build` pass. Main bundle 92.8 kB gzip.
+
+---
+
+## Browser verification pass (branch `prize-prep-2`, Playwright MCP)
+
+Run against the dev server (port 5173) and the production preview (port 4173), at 390, 768 and 1280px. Full results in `docs/BROWSER_CHECKS.md`; 19 screenshots in `docs/screens/final-*.png`.
+
+Playwright MCP tools called in this pass: `browser_navigate`, `browser_resize`, `browser_evaluate`, `browser_snapshot`, `browser_click`, `browser_type`, `browser_press_key`, `browser_file_upload`, `browser_take_screenshot`, `browser_console_messages`, `browser_run_code_unsafe` (only for `setOffline`, reloads with request-failure logging, and short scripted flows).
+
+### Bugs found in the browser and fixed
+1. **Offline start was broken.** On the preview build, an offline reload loaded the cached `index.html` but the main JS and CSS failed with `ERR_FAILED`, so the app never started. The files were in the cache and `fetch()` from the page got them, but the page's `<script type="module" crossorigin>` and crossorigin stylesheet are sent with an `Origin` header and the server answers `Vary: Origin`, so `caches.match` missed. Fix: `caches.match(request, { ignoreVary: true })` in `public/sw.js`, plus a source-scan test. After the fix: offline reload renders with 0 failed requests, Try demo and a quiz work, and the update path deleted the old cache.
+2. **Horizontal scroll at 390px** when a note title is longer than about 30 characters: the rooms grid used `1fr`, whose minimum is the content width, and the title is `nowrap`. The page was 398px wide. Fix: `minmax(0, 1fr)`.
+3. **Focus lost to `<body>`** after the load notice Dismiss, and after the import dialog closed (focus was returned while the modal was still open and the page inert). Both now return focus to a visible control or the main region.
+4. **Insights panel at 1280px was 246px tall** (target about 220px). Tighter spacing in the 1024px block only: now 202px.
+5. **"No reviews yet" wrapped to three lines** in the large number style at 390px, making the stat cards 162px tall. Now a small muted label: 109px.
+6. **Tour step 1 target 24px under the sticky nav** at 390px (the nav is 104px tall, the scroll margin was 80px). Raised to 7.5rem. All 5 steps then measured: 0px covered by the panel, 0px under the nav.
+7. **ghost-ui-reviewer FAIL:** the hidden audio and photo file inputs were Tab stops. Added `tabIndex={-1}` and `aria-hidden="true"`.
+
+### Passed without changes
+- Quiz round (correct, hinted correct, wrong, reveal, skip), results, Review missed, and the insights panel updating to streak 1, 6 reviewed, 67% accuracy.
+- Export, re-import of the same file ("Nothing new will be added"), and a hostile file with `<script>`, `<img onerror>`, `<b onmouseover>` and `__proto__` keys: plain text only, nothing ran, no prototype pollution.
+- Service worker scope, activation and control; manifest and 3 icons served with the right types; no worker on the dev server; the Audio tab model status offline with 0 network requests.
+- Console: 0 errors and 0 warnings on every dev view; on the preview, errors only from the two offline reloads before fix 1.
+
+### Not changed, noted
+- Once the demo is loaded there is no "60-second tour" button anywhere.
+- The import status says "Imported 1 notes, 1 cards" (no singular form).
+- One run of the tour closed by itself during a dev-server CSS hot update; with no edits it stayed open.
+
+### Still UNVERIFIED
+- Model status "ready" (needs the roughly 40 MB model download) and `REQUIRED_MODEL_FILES` against a real cache.
+- The install prompt, Netlify headers, the tour at 1280px, labels at 360px, and the photo input fix by keyboard (checked by code only).
+
+### Numbers
+- `npm run lint`, `npm test` (331 tests, 39 files) and `npm run build` pass. Main bundle 92.8 kB gzip.
