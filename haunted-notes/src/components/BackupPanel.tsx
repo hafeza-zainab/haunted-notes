@@ -94,7 +94,12 @@ const BackupPanel: React.FC = () => {
 
   const closeDialog = () => {
     setPending(null);
-    importBtnRef.current?.focus();
+    // Wait until the modal dialog is gone: while it is open the page behind it is
+    // inert and focus() does nothing. If this panel was replaced (the empty state
+    // swaps to the dashboard after an import), fall back to the main region.
+    requestAnimationFrame(() => {
+      (importBtnRef.current ?? document.getElementById('main-content'))?.focus();
+    });
   };
 
   const handleConfirm = () => {

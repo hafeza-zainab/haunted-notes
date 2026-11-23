@@ -49,7 +49,7 @@ const StudyInsights: React.FC = () => {
         </div>
         <div className="insights-stat">
           <dt>accuracy, 7 days</dt>
-          <dd>
+          <dd className={insights.accuracy === null ? 'insights-stat-empty' : undefined}>
             {insights.accuracy === null
               ? 'No reviews yet'
               : `${Math.round(insights.accuracy * 100)}%`}

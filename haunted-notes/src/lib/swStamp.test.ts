@@ -130,4 +130,9 @@ describe('public/sw.js source scan', () => {
       expect(swSource).toContain(`'${ext}'`)
     }
   })
+
+  it('matches cached shell assets with ignoreVary (crossorigin requests carry an Origin header)', () => {
+    const assetFirst = swSource.slice(swSource.indexOf('async function assetFirst'))
+    expect(assetFirst).toMatch(/caches\.match\(request, \{ ignoreVary: true \}\)/)
+  })
 })

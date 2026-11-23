@@ -66,7 +66,10 @@ async function navigate(request) {
 }
 
 async function assetFirst(request) {
-  const cached = await caches.match(request)
+  // ignoreVary: module scripts and crossorigin styles are requested with an Origin
+  // header, while precache stored them without one. Servers that send
+  // `Vary: Origin` (vite preview does) would otherwise miss the cache offline.
+  const cached = await caches.match(request, { ignoreVary: true })
   if (cached) return cached
   const response = await fetch(request)
   if (response.status === 200 && response.type === 'basic') {

@@ -276,6 +276,9 @@ const AddNoteView: React.FC = () => {
               className="sr-only"
               onChange={onPhotoChange}
               aria-label="Upload image for OCR"
+              // Opened by the visible button; keep this hidden input out of the tab order
+              tabIndex={-1}
+              aria-hidden="true"
             />
             {ocrProgress !== null && (
               <div className="task-progress" role="status" aria-live="polite">
@@ -310,6 +313,9 @@ const AddNoteView: React.FC = () => {
                   className="sr-only"
                   onChange={onAudioChange}
                   aria-label="Upload audio file for transcription"
+                  // Opened by the visible button; keep this hidden input out of the tab order
+                  tabIndex={-1}
+                  aria-hidden="true"
                 />
               </>
             )}

@@ -441,6 +441,13 @@ progress {
   font-weight: 700;
 }
 
+/* "No reviews yet" is a label, not a number: keep it small so the stat cards stay short */
+.insights-stat dd.insights-stat-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .insights-weak {
   margin: 0;
   padding-left: 1.25rem;
@@ -474,14 +481,14 @@ progress {
     grid-template-columns: minmax(0, 1fr) minmax(0, 32rem);
     column-gap: 1.5rem;
     align-items: start;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
   }
   .insights > * { grid-column: 1; }
-  .insights h2 { margin-bottom: 0.5rem; }
-  .insights h3 { margin: 0.5rem 0 0.25rem; }
+  .insights h2 { margin-bottom: 0.25rem; }
+  .insights h3 { margin: 0.25rem 0; }
   .insights-stat { padding: 0.25rem 0.75rem; }
   .insights-stat dd { margin-top: 0; font-size: 1.25rem; }
-  .insights-weak li { padding: 0.125rem 0; }
+  .insights-weak li { padding: 0; font-size: 0.9rem; line-height: 1.4; }
   .insights > .insights-chart {
     grid-column: 2;
     grid-row: 1 / span 4;
@@ -590,7 +597,7 @@ progress {
 
 /* Keep the outlined target clear of the fixed tour panel: scroll it to just
    below the sticky nav, and leave room at the end of the page while the tour is open. */
-.tour-target { scroll-margin-top: 5rem; }
+.tour-target { scroll-margin-top: 7.5rem; }
 .main-content:has(~ .tour-coach) { padding-bottom: 18rem; }
 
 /* Sort bar */
@@ -627,7 +634,7 @@ progress {
 /* Rooms grid — 1 col mobile, up to 3 cols desktop */
 .rooms-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
 }
 
@@ -870,10 +877,10 @@ progress {
 
 /* Desktop: up to 3 rooms per row */
 @media (min-width: 640px) {
-  .rooms-grid { grid-template-columns: repeat(2, 1fr); }
+  .rooms-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (min-width: 960px) {
-  .rooms-grid { grid-template-columns: repeat(3, 1fr); }
+  .rooms-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .main-content { max-width: 1100px; }
 }
 
