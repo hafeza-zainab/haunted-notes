@@ -66,6 +66,28 @@ describe('60-second tour in the store', () => {
     expect(useStore.getState().tourStep).toBeNull();
   });
 
+  it('replayTour opens step 0 on the dashboard and never loads or reloads the demo', async () => {
+    const { useStore } = await load();
+    useStore.getState().loadDemoData();
+    const before = useStore.getState().flashcards;
+    useStore.setState({ currentView: 'add' });
+    useStore.getState().replayTour();
+    const s = useStore.getState();
+    expect(s.tourStep).toBe(0);
+    expect(s.currentView).toBe('dashboard');
+    expect(s.flashcards).toBe(before);
+  });
+
+  it('replayTour with your own notes does not add demo notes', async () => {
+    const { useStore } = await load();
+    useStore.getState().addNote({ rawText: 'The heart pumps blood around the whole body every day.', inputMethod: 'type' });
+    const notes = useStore.getState().notes;
+    useStore.getState().replayTour();
+    expect(useStore.getState().notes).toBe(notes);
+    expect(useStore.getState().isDemoLoaded).toBe(false);
+    expect(useStore.getState().tourStep).toBe(0);
+  });
+
   it('endTour closes it, and the tour step is never persisted', async () => {
     const { useStore, storage } = await load();
     useStore.getState().startTour();

@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import type { View } from '../types';
 import { isBanished } from '../lib/srs';
 import HauntMeter from './HauntMeter';
+import { countLabel } from '../lib/plural';
 
 const NavBar: React.FC = () => {
   const currentView = useStore((s) => s.currentView);
@@ -29,7 +30,7 @@ const NavBar: React.FC = () => {
         {hauntedCount > 0 && (
           <span className="ghost-badge">
             <span aria-hidden="true">{hauntedCount}</span>
-            <span className="sr-only">{hauntedCount} ghosts haunting</span>
+            <span className="sr-only">{countLabel(hauntedCount, 'ghost')} haunting</span>
           </span>
         )}
       </div>

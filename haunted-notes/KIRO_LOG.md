@@ -462,3 +462,13 @@ Playwright MCP tools called in this pass: `browser_navigate`, `browser_resize`, 
 
 ### Numbers
 - `npm run lint`, `npm test` (331 tests, 39 files) and `npm run build` pass. Main bundle 92.8 kB gzip.
+
+---
+
+## Tour button on the dashboard and pluralization (branch `prize-prep-2`)
+
+- **Tour after the demo:** a "60-second tour" button in the dashboard summary bar, next to Start Quiz (`btn-ghost`, no `aria-label`, so its name is its visible text; the clock emoji is `aria-hidden`). It calls a new store action `replayTour`, which opens step 0 on the dashboard without loading or reloading the demo, and also works with your own notes. A `.btn-tour` class keeps it 44px tall at every width (the shared 44px rule only applies below 640px; at 1280 it was 40px).
+- **Pluralization:** new pure helper `countLabel(n, singular, plural?)` in `src/lib/plural.ts`. Fixed plurals replaced in the export and import status (now in `src/lib/backupStatus.ts`: "Imported 1 note, 1 card and 1 review event."), the NavBar screen-reader badge ("1 ghost haunting"), and the hint length ("1 letter"). Already correct and unchanged: the day count, haunt meter, room count, returned-ghost count, streak label and load notice.
+- **Tests:** `plural.test.ts` (unit plus one fast-check property), `backupStatus.test.ts`, two `replayTour` store tests (no demo load, the same card array, no demo added to your own notes), and `DashboardView.test.tsx` (button present with the demo and with your own notes, name equals visible text, NavBar "1 ghost" and "2 ghosts").
+- **Playwright MCP, 390 and 1280px:** with the demo loaded the button is 147 x 44px at both widths; Tab from Start Quiz reaches it with the 2px accent ring; Enter opens step 1 with focus in the panel; the card count stays 9 (no demo reload); Escape returns focus to the main region; no horizontal scroll; 0 console errors or warnings. Screenshots `final-dashboard-tour-button-{390,1280}.png`.
+- `npm run lint`, `npm test` (342 tests, 42 files) and `npm run build` pass. Main bundle 92.9 kB gzip.

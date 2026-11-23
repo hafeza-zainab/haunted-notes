@@ -37,7 +37,7 @@ Nav ends at 104px. The panel starts at 627px (602px on the quiz step).
 - No demo answer in any step's text: PASS.
 - Screenshots: `final-tour-step{1,2,3,4,5}-390.png`.
 - Not checked at 1280px with Playwright.
-- Note: once the demo is loaded there is no tour button anywhere (it is on the empty state and in the Add Note demo box, which hides when the demo is loaded). Not changed.
+- Once the demo is loaded, the tour starts from a "60-second tour" button in the dashboard summary bar (added later; 147 x 44px at 390 and 1280px, checked with Playwright).
 
 ## 3. Quiz round and Review missed (390px)
 
@@ -61,7 +61,7 @@ Nav ends at 104px. The panel starts at 627px (602px on the quiz step).
 | Hostile file: `<script>` and `<img onerror>` in a note title, `<script>` in note text, `<b onmouseover>` in a card prompt, `__proto__` keys at the top level and in a note | PASS | Dialog shows counts only (1 new note, 1 new card). After Merge the title renders as plain text (0 child elements), 0 injected `img`/`script`/`b` elements, no script ran, `Object.prototype` not polluted, existing 3 notes kept. |
 | Focus after Cancel or Escape | FIXED | Returns to Import backup (see Fixes 5). |
 | Focus after Merge | FIXED | Was `<body>`; now the Import button, or the main region when the panel is replaced. |
-| Minor, not changed | NOTE | Status text says "Imported 1 notes, 1 cards" (no singular form). A hostile prompt containing `__` is shown with that run turned into the fixed `_____` blank; text only, harmless. |
+| Minor | NOTE | The status text now uses singular forms ("Imported 1 note, 1 card"), fixed later. A hostile prompt containing `__` is shown with that run turned into the fixed `_____` blank; text only, harmless. |
 
 ## 5. Offline on the production preview (390px)
 

@@ -11,6 +11,7 @@ import {
 } from '../lib/backup';
 import type { BackupData, ImportSummary, RejectReason } from '../lib/backup';
 import ImportDialog from './ImportDialog';
+import { exportStatus, importStatus } from '../lib/backupStatus';
 
 const REJECT_MESSAGE: Record<RejectReason, string> = {
   'not-json': 'Import failed: that file is not valid JSON.',
@@ -52,7 +53,7 @@ const BackupPanel: React.FC = () => {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    setStatus(`Exported ${notes.length} notes and ${flashcards.length} cards.`);
+    setStatus(exportStatus(notes.length, flashcards.length));
   };
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,9 +106,7 @@ const BackupPanel: React.FC = () => {
   const handleConfirm = () => {
     if (!pending) return;
     const s = importBackup(pending.data);
-    setStatus(
-      `Imported ${s.notes.added} notes, ${s.flashcards.added} cards and ${s.events.added} review events.`,
-    );
+    setStatus(importStatus(s));
     closeDialog();
   };
 

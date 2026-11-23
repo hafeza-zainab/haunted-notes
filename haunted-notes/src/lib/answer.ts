@@ -4,6 +4,8 @@
  * Pure answer checking and hints for the quiz. No React, no Zustand, no DOM.
  */
 
+import { countLabel } from './plural';
+
 /** Answers with at least this many letters (after normalising) allow one typo. */
 export const TYPO_MIN_LENGTH = 6;
 
@@ -79,7 +81,7 @@ export function hintFor(answer: string, level: HintLevel): string {
   const natural =
     level === 1
       ? `Starts with “${first}”`
-      : `Starts with “${first}”, ${text.length} letters`;
+      : `Starts with “${first}”, ${countLabel(text.length, 'letter')}`;
   if (!containsWholeWord(natural, text)) return natural;
 
   return level === 1 ? first : `${first} · ${text.length}`;

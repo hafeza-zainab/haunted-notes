@@ -48,6 +48,8 @@ interface HauntedState {
   tourStep: number | null;
   /** Load the demo (if needed) and open the first tour step. */
   startTour: () => void;
+  /** Open the first tour step with the notes already in the store; never loads the demo. */
+  replayTour: () => void;
   advanceTour: () => void;
   endTour: () => void;
 }
@@ -230,6 +232,7 @@ export const useStore = create<HauntedState>()(
         get().loadDemoData();
         set(tourPatch(0));
       },
+      replayTour: () => set(tourPatch(0)),
       advanceTour: () => {
         const next = nextTourStep(get().tourStep);
         set(next === null ? { tourStep: null } : tourPatch(next));

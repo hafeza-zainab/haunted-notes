@@ -600,6 +600,9 @@ progress {
 .tour-target { scroll-margin-top: 7.5rem; }
 .main-content:has(~ .tour-coach) { padding-bottom: 18rem; }
 
+/* Dashboard "60-second tour" button: 44px target at every width, not only on mobile */
+.btn-tour { min-height: 44px; }
+
 /* Sort bar */
 .sort-bar {
   display: flex;

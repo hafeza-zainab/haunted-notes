@@ -295,6 +295,7 @@ const DashboardView: React.FC = () => {
   const setQuizNoteId  = useStore((s) => s.setQuizNoteId);
   const setQuizDueOnly = useStore((s) => s.setQuizDueOnly);
   const clearDemoData  = useStore((s) => s.clearDemoData);
+  const replayTour     = useStore((s) => s.replayTour);
   const timeTravelDay  = useStore((s) => s.timeTravelDay);
   const resetAll       = useStore((s) => s.resetAll);
 
@@ -398,6 +399,9 @@ const DashboardView: React.FC = () => {
               👻 Start Quiz
             </button>
           )}
+          <button className="btn-ghost btn-tour" onClick={replayTour}>
+            <span aria-hidden="true">⏱ </span>60-second tour
+          </button>
           {isDemoLoaded && (
             <button
               className="btn-ghost btn-sm"
