@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import DemoBar from './DemoBar';
@@ -109,6 +111,16 @@ describe('DemoBar', () => {
     const failed = render({ narrationUnavailable: true });
     expect(failed).toMatch(/<p class="demo-narration-note" role="status">Narration unavailable<\/p>/);
     expect(failed.match(/Narration unavailable/g)).toHaveLength(1);
+  });
+
+  it('the empty status line stays in the accessibility tree (found by ghost-ui-reviewer)', () => {
+    // display:none would remove the live region, and text added later might not be announced.
+    const css = readFileSync(join(process.cwd(), 'src', 'index.css'), 'utf8');
+    const rule = css.match(/\.demo-narration-note:empty\s*\{[^}]*\}/)?.[0] ?? '';
+    expect(rule).not.toBe('');
+    expect(rule).not.toMatch(/display\s*:\s*none/);
+    expect(rule).not.toMatch(/visibility\s*:\s*hidden/);
+    expect(rule).toMatch(/position\s*:\s*absolute/); // out of the flex gap, still present
   });
 
   it('captions stay visible whether sound is on, off or the narration failed', () => {

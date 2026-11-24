@@ -22,6 +22,10 @@ const DemoStartPrompt: React.FC<Props> = ({ onStart, onCancel }) => {
       if (e.key === 'Escape') {
         e.preventDefault();
         onCancel();
+      } else if (e.key === 'Tab') {
+        // A modal dialog: its one button is the only place focus can go.
+        e.preventDefault();
+        buttonRef.current?.focus();
       }
     };
     document.addEventListener('keydown', onKey);

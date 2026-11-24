@@ -565,7 +565,7 @@ progress {
 /* Run demo: caption bar, shield, text card, outline.
    Motion rule: nothing here animates, so the reduced-motion block needs no extra override. */
 .btn-run-demo { min-height: 44px; min-width: 44px; }
-body.demo-running .main-content { padding-bottom: 15rem; }
+body.demo-running .main-content { padding-bottom: 16rem; }
 .demo-shield {
   position: fixed;
   inset: 0;
@@ -617,18 +617,28 @@ body.demo-running .main-content { padding-bottom: 15rem; }
 .demo-dot.current { width: 1.5rem; border-radius: 6px; background: var(--accent); border-color: var(--text); } /* longer shape, so state is not colour alone */
 .demo-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .demo-narration-note { margin: 0; font-size: 0.875rem; color: var(--text); }
-.demo-narration-note:empty { display: none; }
+/* Empty: still in the accessibility tree (a live region must exist before its text appears),
+   but visually hidden and out of the flex gap. */
+.demo-narration-note:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .demo-btn { min-height: 44px; min-width: 44px; }
-body.demo-running [data-demo] { scroll-margin-top: 7.5rem; scroll-margin-bottom: 15rem; }
+body.demo-running [data-demo] { scroll-margin-top: 7.5rem; scroll-margin-bottom: 16rem; }
 .demo-highlight {
   outline: 3px solid var(--accent);
   outline-offset: 4px;
   border-radius: var(--radius);
-  scroll-margin-bottom: 15rem;
+  scroll-margin-bottom: 16rem;
 }
 @media (min-width: 768px) {
   .demo-bar { padding: 0.75rem 2rem; }
-  body.demo-running .main-content { padding-bottom: 12rem; }
+  body.demo-running .main-content { padding-bottom: 13rem; }
 }
 /* Start with sound prompt for ?demo=1. No animation. */
 .demo-prompt {
@@ -639,7 +649,7 @@ body.demo-running [data-demo] { scroll-margin-top: 7.5rem; scroll-margin-bottom:
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: rgba(13, 13, 20, 0.94);
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
 }
 .demo-prompt-box {
   display: flex;
