@@ -6,6 +6,9 @@ const CACHE = PREFIX + BUILD_ID
 const SCOPE = self.registration.scope
 const INDEX_URL = new URL('index.html', SCOPE).href
 const SKIP_SUFFIXES = ['/sw.js', '/manifest.webmanifest', '.wasm', '.onnx', '.traineddata']
+// Narration clips: the browser asks for media in byte ranges, which a cache-first worker
+// would break, and they are not part of the offline shell.
+const SKIP_DIRS = ['/demo-audio/']
 
 // An unstamped worker (for example served by `vite dev`) has an id starting with "__".
 const UNSTAMPED = /^__/.test(BUILD_ID)
@@ -47,6 +50,7 @@ self.addEventListener('activate', (event) => {
 function shouldSkip(request, url) {
   if (request.method !== 'GET') return true
   if (url.origin !== self.location.origin) return true
+  if (SKIP_DIRS.some((dir) => url.pathname.includes(dir))) return true
   return SKIP_SUFFIXES.some((suffix) => url.pathname.endsWith(suffix))
 }
 

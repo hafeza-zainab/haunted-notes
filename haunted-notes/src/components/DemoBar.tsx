@@ -7,13 +7,18 @@ interface Props {
   caption: string;
   elapsedMs: number;
   totalMs: number;
+  /** Narration sound is on. */
+  soundOn: boolean;
+  /** A narration clip could not load or play. */
+  narrationUnavailable: boolean;
   onTogglePause: () => void;
+  onToggleSound: () => void;
   onStop: () => void;
 }
 
 /**
  * Bottom control bar for "Run demo". Shows the chapter, the caption, elapsed and
- * total time, a progress strip, the chapter dots and the Pause and Stop buttons.
+ * total time, a progress strip, the chapter dots and the Pause, Sound and Stop buttons.
  * Props only: it reads no store and starts nothing. The total comes from the
  * script, never from a typed-in number.
  */
@@ -23,7 +28,10 @@ const DemoBar: React.FC<Props> = ({
   caption,
   elapsedMs,
   totalMs,
+  soundOn,
+  narrationUnavailable,
   onTogglePause,
+  onToggleSound,
   onStop,
 }) => {
   const pct = totalMs > 0 ? Math.min(100, Math.round((elapsedMs / totalMs) * 100)) : 0;
@@ -41,6 +49,11 @@ const DemoBar: React.FC<Props> = ({
 
       <p className="demo-caption" role="status" aria-live="polite">
         {caption}
+      </p>
+
+      {/* Always in the page so screen readers announce the text when it appears. */}
+      <p className="demo-narration-note" role="status">
+        {narrationUnavailable ? 'Narration unavailable' : ''}
       </p>
 
       <div
@@ -70,6 +83,10 @@ const DemoBar: React.FC<Props> = ({
           <button type="button" className="btn-secondary demo-btn" onClick={onTogglePause}>
             <span aria-hidden="true">{paused ? '▶ ' : '⏸ '}</span>
             {paused ? 'Resume' : 'Pause'}
+          </button>
+          <button type="button" className="btn-secondary demo-btn" onClick={onToggleSound}>
+            <span aria-hidden="true">{soundOn ? '🔊 ' : '🔇 '}</span>
+            {soundOn ? 'Sound on' : 'Sound off'}
           </button>
           <button type="button" className="btn-danger-outline demo-btn" onClick={onStop}>
             <span aria-hidden="true">⏹ </span>Stop

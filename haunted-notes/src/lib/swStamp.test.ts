@@ -136,3 +136,92 @@ describe('public/sw.js source scan', () => {
     expect(assetFirst).toMatch(/caches\.match\(request, \{ ignoreVary: true \}\)/)
   })
 })
+
+describe('narration clips and the service worker', () => {
+  interface FetchEventLike {
+    request: { method: string; url: string; mode: string }
+    respondWith: (p: Promise<unknown>) => void
+  }
+
+  /** Run the real sw.js against a fake worker scope and return its fetch listener. */
+  function loadFetchListener(): (e: FetchEventLike) => void {
+    let fetchListener: ((e: FetchEventLike) => void) | undefined
+    const fakeSelf = {
+      registration: { scope: 'http://localhost/', unregister: async () => true },
+      location: { origin: 'http://localhost' },
+      clients: { claim: async () => undefined },
+      skipWaiting: () => undefined,
+      addEventListener: (type: string, fn: (e: FetchEventLike) => void) => {
+        if (type === 'fetch') fetchListener = fn
+      },
+    }
+    const fakeCaches = {
+      match: async () => undefined,
+      open: async () => ({ put: async () => undefined }),
+      keys: async () => [] as string[],
+      delete: async () => true,
+    }
+    const fakeFetch = async () => ({ status: 404, type: 'basic', clone: () => ({}) })
+    new Function('self', 'caches', 'fetch', swSource)(fakeSelf, fakeCaches, fakeFetch)
+    if (!fetchListener) throw new Error('sw.js did not register a fetch listener')
+    return fetchListener
+  }
+
+  async function intercepts(path: string): Promise<boolean> {
+    const listener = loadFetchListener()
+    let responded: Promise<unknown> | null = null
+    listener({
+      request: { method: 'GET', url: `http://localhost${path}`, mode: 'no-cors' },
+      respondWith: (p) => {
+        responded = p
+      },
+    })
+    if (responded) await (responded as Promise<unknown>).catch(() => undefined)
+    return responded !== null
+  }
+
+  it('does not intercept /demo-audio/ requests (media sends range requests)', async () => {
+    expect(await intercepts('/demo-audio/chapter-1.wav')).toBe(false)
+    expect(await intercepts('/demo-audio/manifest.json')).toBe(false)
+    expect(await intercepts('/some/base/demo-audio/chapter-9.wav')).toBe(false)
+  })
+
+  it('still handles ordinary shell assets, and still skips the heavy files', async () => {
+    expect(await intercepts('/assets/index-abc.js')).toBe(true)
+    expect(await intercepts('/model.wasm')).toBe(false)
+    expect(await intercepts('/sw.js')).toBe(false)
+  })
+
+  it('puts /demo-audio/ in the same bypass section as the heavy files', () => {
+    expect(swSource).toMatch(/const SKIP_DIRS = \['\/demo-audio\/'\]/)
+  })
+
+  it('never precaches a clip, whatever the file list or the extras contain', () => {
+    const out = selectPrecacheUrls(
+      ['index.html', 'assets/a.js', 'demo-audio/chapter-1.wav', 'assets/demo-audio/x.js'],
+      ['manifest.webmanifest', 'demo-audio/manifest.json', 'demo-audio/chapter-2.wav'],
+    )
+    expect(out).toEqual(['assets/a.js', 'index.html', 'manifest.webmanifest'])
+  })
+
+  it('Property: no precache entry ever contains demo-audio/', () => {
+    fc.assert(
+      fc.property(fc.array(fc.string()), fc.array(fc.string()), (names, extra) => {
+        const out = selectPrecacheUrls([...names, 'demo-audio/chapter-3.wav'], [...extra, 'demo-audio/x'])
+        expect(out.some((n) => n.includes('demo-audio/'))).toBe(false)
+      }),
+    )
+  })
+
+  it('the build config does not list the clips as extra precache files', () => {
+    const config = readFileSync(join(process.cwd(), 'vite.config.ts'), 'utf8')
+    const list = config.slice(config.indexOf('EXTRA_PRECACHE'), config.indexOf(']', config.indexOf('EXTRA_PRECACHE')))
+    expect(list).not.toContain('demo-audio')
+  })
+
+  it('netlify.toml caches /demo-audio/* for an hour', () => {
+    const toml = readFileSync(join(process.cwd(), '..', 'netlify.toml'), 'utf8')
+    const block = toml.slice(toml.indexOf('for = "/demo-audio/*"'))
+    expect(block).toMatch(/^for = "\/demo-audio\/\*"\s+\[headers\.values\]\s+Cache-Control = "public, max-age=3600"/)
+  })
+})

@@ -26,7 +26,10 @@ export function makeBuildId(
   return hash(sorted.join('\n')).slice(0, 12)
 }
 
-/** Keep `index.html` and `assets/*.js|css`, then append extras, sort and de-duplicate. */
+/**
+ * Keep `index.html` and `assets/*.js|css`, then append extras, sort and de-duplicate.
+ * Narration clips (`demo-audio/`) are never precached, whatever the caller passes.
+ */
 export function selectPrecacheUrls(
   fileNames: readonly string[],
   extra: readonly string[],
@@ -36,5 +39,7 @@ export function selectPrecacheUrls(
       name === 'index.html' ||
       (name.startsWith('assets/') && /\.(js|css)$/.test(name)),
   )
-  return Array.from(new Set([...shell, ...extra])).sort()
+  return Array.from(new Set([...shell, ...extra]))
+    .filter((name) => !name.includes('demo-audio/'))
+    .sort()
 }

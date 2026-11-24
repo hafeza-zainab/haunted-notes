@@ -13,7 +13,10 @@ function render(over: Partial<React.ComponentProps<typeof DemoBar>> = {}) {
       caption="Hint shows the first letter, then the length."
       elapsedMs={75_000}
       totalMs={scriptTotalMs()}
+      soundOn={true}
+      narrationUnavailable={false}
       onTogglePause={noop}
+      onToggleSound={noop}
       onStop={noop}
       {...over}
     />,
@@ -72,10 +75,10 @@ describe('DemoBar', () => {
     expect(html).not.toContain(`${CHAPTER_TITLES[5]} (done)`);
   });
 
-  it('has Pause and Stop buttons whose names equal their visible text', () => {
+  it('has Pause, Sound and Stop buttons whose names equal their visible text', () => {
     const html = render();
     const buttons = [...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)];
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(3);
     for (const [tag] of buttons) {
       expect(tag).not.toContain('aria-label'); // name comes from the visible text
       expect(tag).toContain('type="button"');
@@ -83,6 +86,35 @@ describe('DemoBar', () => {
     }
     expect(html).toContain('Pause</button>');
     expect(html).toContain('Stop</button>');
+  });
+
+  it('the Sound button says "Sound on" or "Sound off" in text, not by colour or icon alone', () => {
+    const on = render({ soundOn: true });
+    expect(on).toContain('Sound on</button>');
+    expect(on).not.toContain('Sound off');
+    const off = render({ soundOn: false });
+    expect(off).toContain('Sound off</button>');
+    expect(off).not.toContain('Sound on');
+    for (const html of [on, off]) {
+      const tag = html.match(/<button[^>]*>(?:(?!<\/button>).)*Sound (?:on|off)<\/button>/)?.[0] ?? '';
+      expect(tag).not.toContain('aria-label');
+      expect(tag).toContain('<span aria-hidden="true">');
+    }
+  });
+
+  it('shows "Narration unavailable" in a status region only when a clip failed', () => {
+    const ok = render({ narrationUnavailable: false });
+    expect(ok).toMatch(/<p class="demo-narration-note" role="status"><\/p>/);
+    expect(ok).not.toContain('Narration unavailable');
+    const failed = render({ narrationUnavailable: true });
+    expect(failed).toMatch(/<p class="demo-narration-note" role="status">Narration unavailable<\/p>/);
+    expect(failed.match(/Narration unavailable/g)).toHaveLength(1);
+  });
+
+  it('captions stay visible whether sound is on, off or the narration failed', () => {
+    for (const over of [{ soundOn: false }, { narrationUnavailable: true }, { soundOn: false, narrationUnavailable: true }]) {
+      expect(render(over)).toContain('Hint shows the first letter, then the length.');
+    }
   });
 
   it('the button shows Resume while paused', () => {

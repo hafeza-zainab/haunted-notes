@@ -1,26 +1,55 @@
-import React, { useEffect, useRef, useSyncExternalStore } from 'react';
-import { getRunState, startDemo, stopDemo, subscribe, togglePause } from '../demo/runner';
+import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import {
+  demoUrlParams,
+  getRunState,
+  startDemo,
+  stopDemo,
+  subscribe,
+  togglePause,
+  toggleSound,
+} from '../demo/runner';
 import DemoBar from './DemoBar';
 import DemoCard from './DemoCard';
+import DemoStartPrompt from './DemoStartPrompt';
 
-/** Delay before `?demo=1` starts, so the first screen has painted. */
+/** Delay before the silent `?demo=1&sound=0` start, so the first screen has painted. */
 const AUTOSTART_DELAY_MS = 600;
 
 /**
  * Mounted once in App. While a run is active it shows the shield (blocks the user's
  * pointer and keys on the app), an optional text card and the control bar. Escape
- * stops the run. `?demo=1` starts a run after load.
+ * stops the run.
+ *
+ * `?demo=1` has no click, and browsers block sound that starts without one, so it
+ * shows a "Start with sound" button. `?demo=1&sound=0` needs no sound and starts by
+ * itself after load.
  */
 const DemoPlayer: React.FC = () => {
   const run = useSyncExternalStore(subscribe, getRunState, getRunState);
   const active = run.status !== 'idle';
   const barRef = useRef<HTMLDivElement>(null);
+  const [promptOpen, setPromptOpen] = useState(() => {
+    const p = demoUrlParams();
+    return p.demo && !p.silent;
+  });
 
-  // ?demo=1 starts a run once after load (the timer is cleared if React remounts).
+  // ?demo=1&sound=0 starts silently once after load (the timer is cleared if React remounts).
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('demo') !== '1') return;
+    const p = demoUrlParams();
+    if (!p.demo || !p.silent) return;
     const id = window.setTimeout(() => void startDemo(), AUTOSTART_DELAY_MS);
     return () => window.clearTimeout(id);
+  }, []);
+
+  const startWithSound = useCallback(() => {
+    setPromptOpen(false);
+    // Runs inside the click, so the browser lets the first clip play.
+    void startDemo({ sound: true });
+  }, []);
+
+  const cancelPrompt = useCallback(() => {
+    setPromptOpen(false);
+    requestAnimationFrame(() => document.getElementById('main-content')?.focus());
   }, []);
 
   // Room under the bar, and Escape plus a key shield, only while a run is active.
@@ -56,7 +85,9 @@ const DemoPlayer: React.FC = () => {
     wasActive.current = active;
   }, [active]);
 
-  if (!active) return null;
+  if (!active) {
+    return promptOpen ? <DemoStartPrompt onStart={startWithSound} onCancel={cancelPrompt} /> : null;
+  }
 
   return (
     <>
@@ -69,7 +100,10 @@ const DemoPlayer: React.FC = () => {
           caption={run.caption}
           elapsedMs={run.elapsedMs}
           totalMs={run.totalMs}
+          soundOn={run.sound}
+          narrationUnavailable={run.narration === 'unavailable'}
           onTogglePause={togglePause}
+          onToggleSound={toggleSound}
           onStop={stopDemo}
         />
       </div>

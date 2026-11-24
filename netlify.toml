@@ -18,6 +18,12 @@
   [headers.values]
     Cache-Control = "no-cache"
 
+# Narration clips keep their names, so cache them for an hour only.
+[[headers]]
+  for = "/demo-audio/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
 # Vite puts a content hash in every file name under assets/, so these never change.
 [[headers]]
   for = "/assets/*"

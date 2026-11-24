@@ -15,6 +15,8 @@
 import { useStore } from '../store/useStore';
 import { clearSnapshot, takeSnapshot, writeSnapshot } from '../lib/demoSnapshot';
 import { emptyReviewLog } from '../lib/reviewLog';
+import { createNarrator, type Narrator } from '../lib/demoNarrator';
+import { narrationSrc } from '../lib/demoNarration';
 import { normalizeBlanks } from '../lib/blank';
 import {
   DEMO_STEPS,
@@ -49,6 +51,10 @@ export interface DemoRunState {
   elapsedMs: number;
   /** Length of the script at normal speed, in ms. */
   totalMs: number;
+  /** Narration sound on (kept in memory only; it survives from one run to the next). */
+  sound: boolean;
+  /** A narration clip could not load or play; the run goes on with captions only. */
+  narration: 'ok' | 'unavailable';
 }
 
 const IDLE: DemoRunState = {
@@ -59,6 +65,8 @@ const IDLE: DemoRunState = {
   card: null,
   elapsedMs: 0,
   totalMs: scriptTotalMs(),
+  sound: true,
+  narration: 'ok',
 };
 
 let state: DemoRunState = IDLE;
@@ -80,6 +88,45 @@ export function getRunState(): DemoRunState {
 
 export function isRunning(): boolean {
   return state.status !== 'idle';
+}
+
+// ── Narration ────────────────────────────────────────────────────────────────
+
+/** `?demo=1` starts a run; `?sound=0` asks for it to be silent. Safe where there is no window. */
+export function demoUrlParams(): { demo: boolean; silent: boolean } {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    return { demo: p.get('demo') === '1', silent: p.get('sound') === '0' };
+  } catch {
+    return { demo: false, silent: false };
+  }
+}
+
+/** Sound preference. Null until the first run, then kept in memory only (never stored). */
+let soundOn: boolean | null = null;
+/** The narrator for the run in progress. */
+let narrator: Narrator | null = null;
+
+function currentSound(): boolean {
+  if (soundOn === null) soundOn = !demoUrlParams().silent;
+  return soundOn;
+}
+
+/** Create the one audio element for this run. A failure here only means no narration. */
+function createRunNarrator(sound: boolean): Narrator | null {
+  try {
+    const audio = new Audio();
+    audio.preload = 'auto';
+    return createNarrator({
+      audio,
+      srcFor: narrationSrc,
+      sound,
+      onUnavailable: () => publish({ narration: 'unavailable' }),
+    });
+  } catch {
+    publish({ narration: 'unavailable' });
+    return null;
+  }
 }
 
 // ── Clock and waiting ────────────────────────────────────────────────────────
@@ -218,9 +265,16 @@ async function runAction(action: DemoAction, start: number): Promise<void> {
 
 async function play(): Promise<void> {
   let cursor = 0;
+  let chapter = -1;
   for (let i = 0; i < DEMO_STEPS.length; i++) {
     const step = DEMO_STEPS[i];
     publish({ stepIndex: i, chapter: step.chapter, caption: step.caption, card: step.card ?? null });
+    if (step.chapter !== chapter) {
+      // The clip starts at the chapter's scheduled start. For the first chapter this runs
+      // before any await, so the first play() is still inside the user's click.
+      chapter = step.chapter;
+      narrator?.chapterStarted(chapter, cursor, active);
+    }
     for (const action of step.actions) {
       await runAction(action, cursor);
       cursor += action.ms;
@@ -232,11 +286,13 @@ async function play(): Promise<void> {
 
 // ── Public controls ──────────────────────────────────────────────────────────
 
-export async function startDemo(): Promise<void> {
+/** Start a run. options.sound overrides the remembered preference (used by the Start with sound button). */
+export async function startDemo(options: { sound?: boolean } = {}): Promise<void> {
   if (isRunning()) return;
   aborted = false;
   paused = false;
   active = 0;
+  if (options.sound !== undefined) soundOn = options.sound;
 
   const snapshot = takeSnapshot(useStore.getState());
   if (!writeSnapshot(window.localStorage, snapshot)) {
@@ -244,7 +300,8 @@ export async function startDemo(): Promise<void> {
     console.warn('Haunted Notes demo: could not save the recovery snapshot');
   }
   useStore.getState().beginDemoRun();
-  publish({ ...IDLE, status: 'running', totalMs: scriptTotalMs() });
+  publish({ ...IDLE, status: 'running', totalMs: scriptTotalMs(), sound: currentSound() });
+  narrator = createRunNarrator(currentSound());
 
   let lastTick = performance.now();
   let lastPublish = 0;
@@ -267,13 +324,20 @@ export async function startDemo(): Promise<void> {
   } finally {
     clearInterval(clock);
     clearHighlights();
+    // Stop, reset and release the audio first, then give the user's data back.
+    try {
+      narrator?.stop();
+    } catch (err) {
+      console.warn('Haunted Notes demo: could not stop the narration', err);
+    }
+    narrator = null;
     try {
       useStore.getState().endDemoRun(snapshot);
     } catch (err) {
       console.warn('Haunted Notes demo: restore failed', err);
     }
     clearSnapshot(window.localStorage);
-    publish({ ...IDLE });
+    publish({ ...IDLE, sound: currentSound() });
     requestAnimationFrame(focusMain);
   }
 }
@@ -286,5 +350,14 @@ export function stopDemo(): void {
 export function togglePause(): void {
   if (!isRunning()) return;
   paused = !paused;
+  if (paused) narrator?.pause(active);
+  else narrator?.resume(active);
   publish({ status: paused ? 'paused' : 'running' });
+}
+
+/** Sound on or off. Turning it on mid-run starts the current clip at the right second. */
+export function toggleSound(): void {
+  soundOn = !currentSound();
+  narrator?.setSound(soundOn, active);
+  publish({ sound: soundOn });
 }
