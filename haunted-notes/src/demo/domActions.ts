@@ -53,6 +53,11 @@ export function highlight(el: HTMLElement): void {
   el.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
 }
 
+/** Bring an element the script is about to use into view, clear of the nav and the bar. */
+export function reveal(el: HTMLElement): void {
+  el.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+}
+
 export function clearHighlights(): void {
   document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => el.classList.remove(HIGHLIGHT_CLASS));
 }

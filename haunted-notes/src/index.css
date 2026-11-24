@@ -617,6 +617,7 @@ body.demo-running .main-content { padding-bottom: 14rem; }
 .demo-dot.current { background: var(--accent); border-color: var(--text); }
 .demo-buttons { display: flex; gap: 0.5rem; }
 .demo-btn { min-height: 44px; min-width: 44px; }
+body.demo-running [data-demo] { scroll-margin-top: 7.5rem; scroll-margin-bottom: 14rem; }
 .demo-highlight {
   outline: 3px solid var(--accent);
   outline-offset: 4px;

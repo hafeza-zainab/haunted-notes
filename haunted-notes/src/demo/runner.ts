@@ -31,6 +31,7 @@ import {
   focusMain,
   highlight,
   isField,
+  reveal,
   setFieldValue,
 } from './domActions';
 
@@ -169,6 +170,7 @@ function currentAnswer(): string {
 
 async function typeInto(name: string, text: string, start: number, ms: number): Promise<void> {
   const el = await waitForTarget(name);
+  reveal(el);
   if (!isField(el)) throw new DemoMissingTarget(`${name} (not a text field)`);
   const n = text.length;
   for (let i = 1; i <= n; i++) {
@@ -185,7 +187,11 @@ async function runAction(action: DemoAction, start: number): Promise<void> {
     case 'wait':
       return;
     case 'click':
-      (await waitForTarget(action.target)).click();
+      {
+        const el = await waitForTarget(action.target);
+        reveal(el);
+        el.click();
+      }
       return;
     case 'type':
       await typeInto(action.target, action.text, start, action.ms);
