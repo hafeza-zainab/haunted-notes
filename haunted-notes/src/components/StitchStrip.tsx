@@ -10,7 +10,7 @@ const STAGES = ['Flashcards', 'Ghosts', 'Spaced review'] as const;
 const StitchStrip: React.FC = () => {
   const captionId = useId();
   return (
-    <figure className="stitch-strip" aria-labelledby={captionId}>
+    <figure className="stitch-strip" aria-labelledby={captionId} data-demo="stitch-strip">
       <figcaption id={captionId}>Four inputs, one ghost pipeline</figcaption>
       <div className="stitch-flow">
         <ul className="stitch-inputs" aria-label="Inputs">

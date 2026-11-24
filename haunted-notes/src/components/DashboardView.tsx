@@ -223,6 +223,7 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
               <div
                 key={card.id}
                 className="ghost-card"
+                data-demo={isDue(card) && card.reps > 0 ? 'returned-ghost' : undefined}
                 role="listitem"
                 title={normalizeBlanks(card.prompt)}
               >
@@ -377,7 +378,7 @@ const DashboardView: React.FC = () => {
             )}
           </span>
           {nextMs !== null && (
-            <span className="stat stat--next">
+            <span className="stat stat--next" data-demo="next-return">
               Next ghost returns in{' '}
               <strong>{nextDays} day{nextDays !== 1 ? 's' : ''}</strong>
             </span>
@@ -395,7 +396,7 @@ const DashboardView: React.FC = () => {
             </button>
           )}
           {totalHaunting > 0 && (
-            <button className="btn-primary" onClick={startQuizAll} data-tour="start-quiz">
+            <button className="btn-primary" onClick={startQuizAll} data-tour="start-quiz" data-demo="start-quiz">
               👻 Start Quiz
             </button>
           )}
@@ -450,7 +451,7 @@ const DashboardView: React.FC = () => {
       </div>
 
       {/* ── Room grid ── */}
-      <div className="rooms-grid" role="list">
+      <div className="rooms-grid" role="list" data-demo="rooms-grid">
         {sorted.map(({ note, cards }) => (
           <div key={note.id} role="listitem">
             <HauntedRoom

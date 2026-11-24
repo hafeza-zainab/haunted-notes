@@ -47,6 +47,7 @@ const GhostSvg: React.FC<GhostSvgProps> = ({
       height={displaySize}
       viewBox="0 0 100 120"
       aria-label={label}
+      data-demo={`ghost-${type}`}
       role="img"
       className={animClass}
       style={{ opacity, transition: 'opacity 0.4s, transform 0.4s' }}

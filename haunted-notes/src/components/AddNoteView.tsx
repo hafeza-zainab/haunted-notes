@@ -198,6 +198,7 @@ const AddNoteView: React.FC = () => {
           <button
             key={id}
             role="tab"
+            data-demo={`tab-${id}`}
             aria-selected={inputMethod === id}
             className={`tab-btn ${inputMethod === id ? 'active' : ''}`}
             onClick={() => switchTab(id)}
@@ -212,6 +213,7 @@ const AddNoteView: React.FC = () => {
         <label htmlFor="note-text" className="sr-only">Note text</label>
         <textarea
           id="note-text"
+          data-demo="note-text"
           className="note-textarea"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -247,7 +249,7 @@ const AddNoteView: React.FC = () => {
           </div>
         )}
         {inputMethod === 'mic' && (
-          <p className="input-hint">
+          <p className="input-hint" data-demo="mic-hint">
             Live mic uses your browser's speech recognition, which in some browsers sends audio to the browser vendor's speech service.
           </p>
         )}
@@ -399,7 +401,7 @@ const AddNoteView: React.FC = () => {
               </button>
             )}
 
-            <p className="audio-hint">
+            <p className="audio-hint" data-demo="audio-hint">
               Supported: mp3, wav, m4a, webm · Max 3 minutes.
               The model (~40 MB) downloads once and is cached in your browser.
             </p>
@@ -420,6 +422,7 @@ const AddNoteView: React.FC = () => {
         <div className="form-actions">
           <button
             type="submit"
+            data-demo="add-note-submit"
             className="btn-primary"
             disabled={anyBusy}
           >

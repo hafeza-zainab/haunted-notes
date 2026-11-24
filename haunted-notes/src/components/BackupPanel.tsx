@@ -114,12 +114,13 @@ const BackupPanel: React.FC = () => {
     <section className="backup-panel" aria-labelledby="backup-heading">
       <h2 id="backup-heading">Backup and restore</h2>
       <div className="backup-actions">
-        <button type="button" className="btn-secondary" onClick={handleExport}>
+        <button type="button" className="btn-secondary" onClick={handleExport} data-demo="backup-export">
           Export backup
         </button>
         <button
           type="button"
           className="btn-secondary"
+          data-demo="backup-import"
           ref={importBtnRef}
           onClick={() => inputRef.current?.click()}
         >
@@ -135,6 +136,9 @@ const BackupPanel: React.FC = () => {
           onChange={(e) => void handleFile(e)}
         />
       </div>
+      <p className="input-hint" data-demo="privacy-line">
+        Your notes stay in this browser. A backup is a file you save yourself.
+      </p>
       <p className="backup-status" role="status" aria-live="polite">
         {status}
       </p>

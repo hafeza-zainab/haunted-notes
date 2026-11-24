@@ -236,7 +236,7 @@ const QuizView: React.FC = () => {
     return (
       <section className="quiz-view quiz-complete" aria-label="Quiz complete">
         {/* Focus lands here so keyboard and screen-reader users are not left on <body> */}
-        <h2 ref={focusOnMount} tabIndex={-1}>{completionMsg}</h2>
+        <h2 ref={focusOnMount} tabIndex={-1} data-demo="quiz-results">{completionMsg}</h2>
         {quizTitle && <p className="quiz-note-label">Room: {quizTitle}</p>}
         <p className="quiz-final-score">
           <strong>{score.correct}</strong> correct out of{' '}
@@ -262,7 +262,7 @@ const QuizView: React.FC = () => {
                 </li>
               ))}
             </ul>
-            <button className="btn-primary" onClick={reviewMissed}>
+            <button className="btn-primary" onClick={reviewMissed} data-demo="review-missed">
               Review missed
             </button>
           </div>
@@ -270,6 +270,7 @@ const QuizView: React.FC = () => {
 
         <button
           className={missedCards.length > 0 ? 'btn-ghost' : 'btn-primary'}
+          data-demo="back-dashboard"
           onClick={exitQuiz}
         >
           Back to Dashboard
@@ -344,7 +345,7 @@ const QuizView: React.FC = () => {
       </div>
 
       <div className="quiz-card">
-        <p className="quiz-prompt">
+        <p className="quiz-prompt" data-demo="quiz-prompt">
           <span className="sr-only">Fill in the blank: </span>
           {normalizeBlanks(currentCard.prompt)}
         </p>
@@ -378,6 +379,7 @@ const QuizView: React.FC = () => {
           <input
             ref={inputRef}
             id="quiz-answer"
+            data-demo="quiz-input"
             className="quiz-input"
             type="text"
             value={input}
@@ -393,6 +395,7 @@ const QuizView: React.FC = () => {
             <button
               ref={nextRef}
               type="submit"
+              data-demo="quiz-submit"
               className="btn-primary"
               disabled={submitDisabled}
             >
@@ -402,6 +405,7 @@ const QuizView: React.FC = () => {
               type="button"
               className="btn-ghost"
               onClick={handleHint}
+              data-demo="quiz-hint"
               disabled={answerState !== 'idle'}
               // aria-disabled (not disabled) at the maximum, so focus stays on the button
               aria-disabled={hintMaxed ? true : undefined}
@@ -412,6 +416,7 @@ const QuizView: React.FC = () => {
               type="button"
               className="btn-ghost"
               onClick={handleSkip}
+              data-demo="quiz-skip"
               disabled={answerState !== 'idle'}
             >
               Skip
@@ -420,6 +425,7 @@ const QuizView: React.FC = () => {
               type="button"
               className="btn-ghost"
               onClick={handleReveal}
+              data-demo="quiz-reveal"
               disabled={answerState !== 'idle'}
             >
               Reveal

@@ -46,7 +46,7 @@ const ReviewBarChart: React.FC<Props> = ({ buckets }) => {
   const heights = barHeights(counts, PLOT_H);
 
   return (
-    <div className="insights-chart" ref={wrapRef}>
+    <div className="insights-chart" ref={wrapRef} data-demo="insights-chart">
       <svg
         viewBox={`0 0 ${viewW} ${VIEW_H}`}
         preserveAspectRatio="xMidYMid meet"

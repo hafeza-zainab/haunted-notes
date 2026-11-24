@@ -53,6 +53,7 @@ const EmptyState: React.FC = () => {
           <button
             className="btn-ghost"
             onClick={handleTryDemo}
+            data-demo="try-demo"
             aria-label="Try demo: load sample notes"
           >
             👻 Try demo

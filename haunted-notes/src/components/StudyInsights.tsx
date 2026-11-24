@@ -36,7 +36,7 @@ const StudyInsights: React.FC = () => {
   const titleById = new Map(notes.map((n) => [n.id, noteTitle(n)]));
 
   return (
-    <section className="insights" aria-labelledby={headingId}>
+    <section className="insights" aria-labelledby={headingId} data-demo="insights">
       <h2 id={headingId}>Study insights</h2>
       <dl className="insights-stats">
         <div className="insights-stat">

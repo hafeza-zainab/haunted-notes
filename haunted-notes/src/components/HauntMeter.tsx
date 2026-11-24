@@ -15,6 +15,7 @@ const HauntMeter: React.FC = () => {
   return (
     <div
       className="haunt-meter"
+      data-demo="haunt-meter"
       role="meter"
       aria-labelledby={labelId}
       aria-valuemin={0}

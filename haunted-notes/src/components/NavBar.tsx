@@ -41,6 +41,7 @@ const NavBar: React.FC = () => {
         {navItems.map(({ view, label, icon }) => (
           <li key={view}>
             <button
+              data-demo={`nav-${view}`}
               className={`nav-btn ${currentView === view ? 'active' : ''}`}
               onClick={() => setView(view)}
               aria-current={currentView === view ? 'page' : undefined}
