@@ -262,10 +262,10 @@ describe('scheduleWrong', () => {
     );
   });
 
-  it('ease stays at or above 1.3 over any answer history', () => {
+  it('ease stays at its default over any answer history', () => {
     fc.assert(
       fc.property(reachableArb, ({ card }) => {
-        expect(card.ease).toBeGreaterThanOrEqual(1.3);
+        expect(card.ease).toBe(2.5);
       }),
     );
   });
