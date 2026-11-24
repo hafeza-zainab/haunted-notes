@@ -163,3 +163,22 @@ Run with the Playwright MCP against the dev server (`http://localhost:5173`), wi
 
 ### 8.5 Not covered
 No test clicks a real file chooser or the export button during a run: the script never does, and the source scan test enforces it. Not run: a 768px run, Firefox and Safari, a run with the demo already loaded as the user's own data (the snapshot logic is unit-tested), and a real tab close (a reload was used instead).
+### 8.6 After the 2-3-5-7 ladder (branch `ladder-2357`, dev server)
+The demo changed: the dashboard shows "Review ladder: 2, 3, 5, 7 days", the spaced repetition chapter has a new "ignored" step, and the script is now 34 steps and **162.6 s (2:42)**. Section 8.1 to 8.5 above describe the earlier 158.3 s script.
+
+| Check | 1280px | 390px (reduced motion on) | Measured |
+|---|---|---|---|
+| All 34 steps play; last step starts at 156.6 s, so the total is 162.6 s | PASS | PASS | Equal to the scripted total. Under the 170 s limit. |
+| Captions match the screen in the spaced repetition chapter | PASS | PASS (seen in a screenshot) | "Ghosts return after 2, 3, 5, then 7 days." with "Next ghost returns in 2 days" and "Review ladder: 2, 3, 5, 7 days" both outlined. After the two-day jump: 6 ghosts returned (the 3-day built-in ones are not yet due), "Next ghost returns in 1 day". |
+| "Ignored" step: ghosts grow | PASS | PASS | Before: 6 returned; haunt meter "Restless"; weakest rooms Biology 80%, Java 45%, Marketing 21%; ghost sizes 80, 66, 66, 66, 42, 49, 35 px. After five more days: 8 returned; meter "Crowded"; Biology 93%, Java 65%, Marketing 46%; sizes 80, 75, 75, 75, 63, 52, 59, 58, 45 px, with more poltergeists and banshees. |
+| Haunt meter, weakest rooms and room sort use the grown weakness | PASS | not run | Values above come from the dashboard during the run. |
+| `?dev=1` "+1 day" button gone | PASS | not run | `.btn-dev` not in the DOM. |
+| Data restored; snapshot key removed; focus on main | PASS | PASS | Notes, cards and review log equal the originals. |
+| No console errors or warnings | PASS | PASS | In-page recorder empty. |
+| No horizontal scroll | not run | PASS | Max overflow 0 px. The ladder line is 24 px tall in the summary bar at 390px. |
+| Bar and buttons | not run | PASS | Bar height 205 px; smallest button 44 px. |
+| Every programmatic click is visible above the bar at the moment of the click | not run | PASS | 25 of 25 visible, 0 hidden (measured synchronously, with reduced motion on so the scroll is instant). |
+| Every highlighted element fully visible above the bar | not run | PASS | 20 of 20 targets at 100% at every sample. |
+
+Screenshot: `demo-autoplay-ignored-390.png` (spaced repetition chapter, grown ghosts and the bar).
+Not run again after the ladder change: a 390px run with motion on, 768px, the production preview and offline mode, export and import.

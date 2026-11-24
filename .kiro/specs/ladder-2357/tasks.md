@@ -5,4 +5,4 @@
 - [x] 3. Demo: returned cards on the 2-day rung; travel step jumps two days (`times`); `demoLadder.test.ts`
 - [x] 4. README, `.kiro/README.md` and `testing.md` describe the ladder
 - [x] 4a. Haunt meter, insights and room sort use `effectiveWeakness`; the `?dev=1` button is removed; the dashboard shows "Review ladder: 2, 3, 5, 7 days"; the demo has an "ignored" step
-- [ ] 5. Browser check of the demo on the ladder (1280px): captions, orange ghosts after the jump, restore
+- [x] 5. Browser check of the demo on the ladder (1280px and 390px): captions, orange ghosts after the jump, restore
