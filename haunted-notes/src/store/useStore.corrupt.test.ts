@@ -62,7 +62,10 @@ describe('corrupted localStorage (autopilot fault-finding)', () => {
   });
 
   it('a localStorage quota error on write does not throw out of an action', async () => {
+    // The quota error is expected here: silence its warning, but check it was reported.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const useStore = await loadWith(undefined, true);
     expect(() => useStore.getState().addNote({ rawText: 'The heart pumps blood around the body quickly.', inputMethod: 'type' })).not.toThrow();
+    expect(warn).toHaveBeenCalledWith('Haunted Notes: could not save to localStorage', expect.any(DOMException));
   });
 });

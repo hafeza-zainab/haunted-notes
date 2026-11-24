@@ -472,3 +472,12 @@ Playwright MCP tools called in this pass: `browser_navigate`, `browser_resize`, 
 - **Tests:** `plural.test.ts` (unit plus one fast-check property), `backupStatus.test.ts`, two `replayTour` store tests (no demo load, the same card array, no demo added to your own notes), and `DashboardView.test.tsx` (button present with the demo and with your own notes, name equals visible text, NavBar "1 ghost" and "2 ghosts").
 - **Playwright MCP, 390 and 1280px:** with the demo loaded the button is 147 x 44px at both widths; Tab from Start Quiz reaches it with the 2px accent ring; Enter opens step 1 with focus in the panel; the card count stays 9 (no demo reload); Escape returns focus to the main region; no horizontal scroll; 0 console errors or warnings. Screenshots `final-dashboard-tour-button-{390,1280}.png`.
 - `npm run lint`, `npm test` (342 tests, 42 files) and `npm run build` pass. Main bundle 92.9 kB gzip.
+
+---
+
+## Quiet test output (branch `main`)
+
+- **Problem:** with console output shown, `npm test` printed 15 warnings: 11 blocks from `StudyInsights.test.tsx` and 1 from `LoadNotice.test.tsx` ("could not save to localStorage ReferenceError: window is not defined", 14 lines in all), plus one expected "QuotaExceededError" warning from the quota test in `useStore.corrupt.test.ts`. Tests run in Node, which has no `window`, so every store write in those render tests hit the localStorage wrapper's catch. Note: this shell's Vitest run hides logs from passing tests, so the noise only showed with `--silent=false`; a normal terminal shows it.
+- **Fix:** new shared setup `src/test/setup.ts`, registered as `test.setupFiles` in `vite.config.ts`. It gives the Node test environment an in-memory `window.localStorage` (cleared before each test), so the cause is gone and no real warning is hidden. It is assigned directly, not with `vi.stubGlobal`, so test files that stub their own `window` and call `vi.unstubAllGlobals()` get it back afterwards.
+- **Quota test kept:** it now spies on `console.warn` to silence the expected warning, and additionally asserts that the warning was reported with a `DOMException`. No test was removed or weakened.
+- **Result:** `npx vitest run --silent=false` prints 0 stderr blocks; `npm test` prints no error output; 342 tests in 42 files pass. `npm run lint` and `npm run build` pass.

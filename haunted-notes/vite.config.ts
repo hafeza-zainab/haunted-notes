@@ -58,5 +58,7 @@ export default defineConfig({
   test: {
     // Property tests can be slow on busy or slower machines; 30 s avoids false timeouts.
     testTimeout: 30000,
+    // In-memory window.localStorage for the Node test environment
+    setupFiles: ['./src/test/setup.ts'],
   },
 })
