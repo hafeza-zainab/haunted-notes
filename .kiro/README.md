@@ -6,7 +6,7 @@ Built for **Kiroween 2026** (category: Frankenstein). Haunted Notes stitches tog
 
 - **Live app:** <ADD NETLIFY URL>
 - **Demo video:** <ADD YOUTUBE URL>
-- **Try spaced repetition quickly:** open the app, click **Try demo**, then add `?dev=1` to the URL for a **+1 day** time-travel button (press it twice for the first return).
+- **Try spaced repetition quickly:** open the app and click **Run demo**. It jumps the clock two days so banished ghosts return.
 
 ## What it does
 

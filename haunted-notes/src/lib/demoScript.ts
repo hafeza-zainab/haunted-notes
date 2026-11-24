@@ -270,10 +270,11 @@ export const DEMO_STEPS: readonly DemoStep[] = [
   {
     id: 'srs-next',
     chapter: 4,
-    caption: 'Banished ghosts return later. The dashboard says when.',
+    caption: 'Ghosts return after 2, 3, 5, then 7 days.',
     actions: [
       { op: 'click', target: 'back-dashboard', ms: 700 },
-      { op: 'highlight', target: 'next-return', ms: 3800 },
+      { op: 'highlight', target: 'next-return', ms: 2000 },
+      { op: 'highlight', target: 'ladder', ms: 2100 },
     ],
   },
   {
@@ -289,9 +290,17 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     id: 'srs-returned',
     chapter: 4,
     caption: 'Orange ghosts have returned and are due for review.',
-    actions: [{ op: 'highlight', target: 'returned-ghost', ms: 6500 }],
+    actions: [{ op: 'highlight', target: 'returned-ghost', ms: 4500 }],
   },
-
+  {
+    id: 'srs-ignore',
+    chapter: 4,
+    caption: 'Sample: five more days ignored, and the ghosts grow stronger.',
+    actions: [
+      { op: 'store', name: 'timeTravelDay', times: 5, ms: 1500 },
+      { op: 'highlight', target: 'returned-ghost', ms: 4500 },
+    ],
+  },
   // 5. Study insights
   {
     id: 'insights-stats',

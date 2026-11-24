@@ -10,7 +10,7 @@ Format: screen recording + short on-screen captions. No narration. No copyrighte
 - Scored under "Presentation": clear end-to-end demo, what problem it solves, who it is for, why it matters, easy to follow, memorable.
 
 ## Fastest route: let the app play itself
-The app has a self-playing **Run demo** (replaces the old 60-second tour). It takes 2:38 at normal speed, so it fits under 3:00 with an end card on top.
+The app has a self-playing **Run demo** (replaces the old 60-second tour). It takes 2:42 at normal speed, so it fits under 3:00 with an end card on top.
 1. Open the app at `/?demo=1` (it starts after about half a second) or press **Run demo**. Use a clean browser window, zoom 110 to 125%.
 2. Record the window with OBS or Game Bar. Do not touch the mouse or keyboard: a transparent shield ignores clicks, and Escape stops the run.
 3. The caption bar at the bottom is part of the recording. Chapters: intro, four inputs, ghost rooms, the quiz, spaced repetition, study insights, your data stays yours, built with Kiro, end card.
@@ -38,7 +38,7 @@ The app has a self-playing **Run demo** (replaces the old 60-second tour). It ta
 | 0:20-0:45 | Add Note: show typing, the Audio tab (upload a short clip, speed up the transcription 2x), the Photo tab | "Type, speak, snap a photo, or upload audio" then "All processed in your browser" |
 | 0:45-1:00 | Click Try demo: dashboard with rooms and the five ghost types | "Every unmastered fact becomes a ghost" |
 | 1:00-1:35 | Quiz: use a Hint, answer wrong (shake), answer right (banish with particles), use Reveal, finish, press Review missed | "Answer right to banish it" then "Miss one, and it haunts you again" |
-| 1:35-1:50 | Dashboard "Next ghost returns in 1 day", then open ?dev=1 and press +1 day so an orange ghost returns | "Spaced repetition brings ghosts back" |
+| 1:35-1:50 | Dashboard "Next ghost returns in 1 day", then the Run demo clock jump (two days) so orange ghosts return | "Spaced repetition brings ghosts back" |
 | 1:50-2:00 | Study insights panel: streak, accuracy, chart | "Track your streak and weak rooms" |
 | 2:00-2:10 | Turn on offline in DevTools, reload, Try demo works; show Export backup | "Works offline. Your notes stay in your browser" |
 | 2:10-2:20 | Phone-width view (390px), then the Run demo button | "Built for phones, keyboards and reduced motion" |

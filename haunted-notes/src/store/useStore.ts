@@ -37,7 +37,7 @@ interface HauntedState {
   resetAll: () => void;
   loadDemoData: () => void;
   clearDemoData: () => void;
-  /** Dev-only: shift every card's dueAt back by 24 h so scheduled ghosts return. */
+  /** Shift every card's dueAt back by 24 h so scheduled ghosts return sooner. Used by Run demo. */
   timeTravelDay: () => void;
   /** Merges validated backup data into notes, flashcards and reviewLog only; returns the summary. */
   importBackup: (data: BackupData) => ImportSummary;

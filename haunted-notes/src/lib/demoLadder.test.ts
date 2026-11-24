@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildDemoData } from './demoData';
 import { DEMO_STEPS } from './demoScript';
-import { isDue, isLate, scheduleCorrect, nextReturnInMs, daysFromMs } from './srs';
+import { isDue, isLate, scheduleCorrect, nextReturnInMs, daysFromMs, effectiveWeakness, GROWTH_CAP } from './srs';
 
 const DAY = 86_400_000;
 
@@ -48,5 +48,25 @@ describe('Run demo on the 2-3-5-7 ladder', () => {
     const ms = nextReturnInMs(cards, t0);
     expect(ms).not.toBeNull();
     expect(daysFromMs(ms as number)).toBe(2);
+  });
+
+  it('the ignore step: five more days make every returned ghost stronger, by the capped amount', () => {
+    const t0 = Date.now();
+    const jump = (days: number) => answerAll(t0).map((c) => ({ ...c, dueAt: c.dueAt - days * DAY }));
+    // After the two-day jump nobody is overdue yet, so nothing has grown.
+    for (const c of jump(2).filter((x) => isDue(x, t0))) {
+      expect(effectiveWeakness(c, t0)).toBe(c.weaknessScore);
+    }
+    // Five more days: the seven returned ghosts are five days overdue, which hits the cap.
+    const grown = jump(7).filter((x) => isDue(x, t0) && x.dueAt <= t0 - 5 * DAY);
+    expect(grown.length).toBeGreaterThanOrEqual(7);
+    for (const c of grown) {
+      const stored = c.weaknessScore;
+      expect(effectiveWeakness(c, t0)).toBeCloseTo(Math.min(1, stored + GROWTH_CAP), 10);
+    }
+    const step = DEMO_STEPS.find((s) => s.id === 'srs-ignore');
+    const act = step?.actions.find((a) => a.op === 'store');
+    expect(act && act.op === 'store' ? act.times : undefined).toBe(5);
+    expect(step?.caption.toLowerCase()).toContain('sample');
   });
 });

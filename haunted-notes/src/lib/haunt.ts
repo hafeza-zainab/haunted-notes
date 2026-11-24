@@ -6,7 +6,7 @@
  */
 
 import type { SrsFields } from '../types';
-import { isBanished } from './srs';
+import { effectiveWeakness, isBanished } from './srs';
 
 // ── Ghost types ──────────────────────────────────────────────────────────────
 
@@ -56,8 +56,9 @@ export function hauntedLevel(
   let weakCount = 0;
   for (const c of cards) {
     if (isBanished(c, now)) continue;
-    load += c.weaknessScore;
-    if (c.weaknessScore >= WEAK_FROM) weakCount += 1;
+    const w = effectiveWeakness(c, now); // an ignored ghost counts as stronger
+    load += w;
+    if (w >= WEAK_FROM) weakCount += 1;
   }
 
   let tier: HauntedTier = 0;

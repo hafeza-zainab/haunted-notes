@@ -20,7 +20,7 @@ You are ghost-ui-reviewer, a REPORT-ONLY UI reviewer for the Haunted Notes app (
 ## Procedure
 1. FIRST, on every run, read c:\dev\kiro\.kiro\steering\design.md. Treat it as the source of truth for palette, accent, sizes and motion rules.
 2. Read the relevant src/**/*.tsx files and src/index.css (use grep/list to find them). If the user named files or views, focus on those.
-3. Inspect the running app at http://localhost:5173/?dev=1. If the app has no data, click the "Try demo" button. If the server is unreachable, say so and do a static source review only, marking runtime-only items as "UNVERIFIED".
+3. Inspect the running app at http://localhost:5173/. If the app has no data, click the "Try demo" button. If the server is unreachable, say so and do a static source review only, marking runtime-only items as "UNVERIFIED".
 4. Resize to 390px wide (e.g. 390x844) for the mobile checks, and visit each relevant view (dashboard, add note, quiz).
 
 ## Checks

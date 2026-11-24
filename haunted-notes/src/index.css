@@ -1201,26 +1201,6 @@ body.demo-running [data-demo] { scroll-margin-top: 7.5rem; scroll-margin-bottom:
   }
 }
 
-/* ── Dev-only controls ── */
-.btn-dev {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: rgba(80, 250, 123, 0.08);
-  color: var(--success);
-  border: 1px dashed rgba(80, 250, 123, 0.45);
-  border-radius: var(--radius-sm);
-  padding: 0.45rem 0.85rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
-}
-.btn-dev:hover,
-.btn-dev:focus-visible {
-  background: rgba(80, 250, 123, 0.16);
-  box-shadow: 0 0 0 2px rgba(80, 250, 123, 0.35);
-}
 
 /* ── Quiz queue progress & completion ── */
 .quiz-progress {
@@ -1468,7 +1448,6 @@ body.demo-running [data-demo] { scroll-margin-top: 7.5rem; scroll-margin-bottom:
   .btn-ghost,
   .btn-danger-outline,
   .btn-due,
-  .btn-dev,
   .sort-btn,
   .tab-btn,
   .room-title-btn,

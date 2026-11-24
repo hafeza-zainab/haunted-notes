@@ -86,7 +86,7 @@ Properties that found no bug: `srs.ts` (the log records none), the backup valida
 ## 7. MCP
 
 - [.kiro/settings/mcp.json](../.kiro/settings/mcp.json) configures the `playwright` server, pinned to `@playwright/mcp@0.0.85`, headless and isolated, using a cached Chromium.
-- Used for: the demo quiz flow, the `?dev=1` "+1 day" button, screenshots at 1280px and 390px, a reduced-motion run, and the hint, reveal and results checks in the better-quiz spec ([log, "Playwright MCP setup" and "B2: Better quiz"](../haunted-notes/KIRO_LOG.md)). Screenshots are in [docs/screens/](screens/).
+- Used for: the demo quiz flow, the `?dev=1` "+1 day" button (since removed; Run demo does the time jump), screenshots at 1280px and 390px, a reduced-motion run, and the hint, reveal and results checks in the better-quiz spec ([log, "Playwright MCP setup" and "B2: Better quiz"](../haunted-notes/KIRO_LOG.md)). Screenshots are in [docs/screens/](screens/).
 - The custom agent uses the same server for contrast and tap-target measurements.
 - **Tools called in the A5 run** (list supplied by the repository owner from the A5 report; the report file itself is not in this repository, so this list is not independently checkable): `browser_navigate`, `browser_snapshot`, `browser_console_messages`, `browser_click`, `browser_type`, `browser_take_screenshot`, `browser_find`, `browser_resize`, `browser_evaluate`, `browser_emulate_media`, `browser_run_code_unsafe`.
 - Note: [ghost-ui-reviewer](../.kiro/agents/ghost-ui-reviewer.md) forbids `browser_run_code_unsafe` and its allowed list has no `browser_click` or `browser_type`, so this list belongs to the main agent's A5 run, not to the custom agent.

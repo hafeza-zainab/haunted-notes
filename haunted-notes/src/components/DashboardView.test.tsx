@@ -14,7 +14,6 @@ function seed(patch: Record<string, unknown>) {
 let saved: Record<string, unknown>;
 beforeEach(() => {
   saved = { ...useStore.getInitialState() };
-  // DashboardView reads window.location.search for the ?dev=1 tools
   vi.stubGlobal('window', { location: { search: '' } });
 });
 afterEach(() => {

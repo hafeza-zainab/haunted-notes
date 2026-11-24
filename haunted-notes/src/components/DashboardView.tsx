@@ -7,7 +7,7 @@ import BackupPanel from './BackupPanel';
 import LoadNotice from './LoadNotice';
 import RunDemoButton from './RunDemoButton';
 import type { Note, Flashcard } from '../types';
-import { isDue, isBanished, nextReturnInMs, daysFromMs, effectiveWeakness } from '../lib/srs';
+import { isDue, isBanished, nextReturnInMs, daysFromMs, effectiveWeakness, LADDER_DAYS } from '../lib/srs';
 import { normalizeBlanks } from '../lib/blank';
 import { noteTitle } from '../lib/noteTitle';
 
@@ -22,7 +22,7 @@ type SortMode = 'weakest' | 'newest';
 function roomSortWeight(cards: Flashcard[]): number {
   const haunted = cards.filter((c) => !isBanished(c));
   if (haunted.length === 0) return 0;
-  return haunted.reduce((s, c) => s + c.weaknessScore, 0) / haunted.length;
+  return haunted.reduce((s, c) => s + effectiveWeakness(c), 0) / haunted.length;
 }
 
 // ── ConfirmDialog ─────────────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
   const [confirmDel, setConfirmDel] = useState(false);
 
   const haunted  = cards.filter((c) => !isBanished(c))
-                        .sort((a, b) => b.weaknessScore - a.weaknessScore);
+                        .sort((a, b) => effectiveWeakness(b) - effectiveWeakness(a));
   const mastered = cards.filter((c) => isBanished(c));
   const total    = cards.length;
   const pct      = total > 0 ? Math.round((mastered.length / total) * 100) : 0;
@@ -297,14 +297,10 @@ const DashboardView: React.FC = () => {
   const setQuizNoteId  = useStore((s) => s.setQuizNoteId);
   const setQuizDueOnly = useStore((s) => s.setQuizDueOnly);
   const clearDemoData  = useStore((s) => s.clearDemoData);
-  const timeTravelDay  = useStore((s) => s.timeTravelDay);
   const resetAll       = useStore((s) => s.resetAll);
 
   const [sortMode, setSortMode]         = useState<SortMode>('weakest');
   const [confirmReset, setConfirmReset] = useState(false);
-
-  // Show dev tools only when ?dev=1 is present in the URL
-  const isDevMode = new URLSearchParams(window.location.search).get('dev') === '1';
 
   if (notes.length === 0) {
     return (
@@ -383,6 +379,9 @@ const DashboardView: React.FC = () => {
               <strong>{nextDays} day{nextDays !== 1 ? 's' : ''}</strong>
             </span>
           )}
+          <span className="stat stat--ladder" data-demo="ladder">
+            Review ladder: <strong>{LADDER_DAYS.join(', ')}</strong> days
+          </span>
         </div>
 
         <div className="summary-actions">
@@ -408,16 +407,6 @@ const DashboardView: React.FC = () => {
               aria-label="Clear demo notes"
             >
               ✕ Clear demo
-            </button>
-          )}
-          {isDevMode && (
-            <button
-              className="btn-dev"
-              onClick={timeTravelDay}
-              title="Dev tool: shift all dueAt back by 24 h"
-              aria-label="Time travel +1 day: move every ghost's return one day closer"
-            >
-              ⏩ +1 day
             </button>
           )}
           <button

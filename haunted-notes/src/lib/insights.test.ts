@@ -175,3 +175,28 @@ describe('weakestRooms with corrupt scores', () => {
     expect(out[0].noteId).toBe('b');
   });
 });
+
+describe('weakestRooms and ignored ghosts', () => {
+  const rooms = [{ id: 'a' }, { id: 'b' }];
+  const MS_DAY = 86_400_000;
+  const due = (noteId: string, weaknessScore: number, daysAgo: number) => ({
+    noteId,
+    weaknessScore,
+    ease: 2.5,
+    intervalDays: 0,
+    reps: 0,
+    dueAt: NOW - daysAgo * MS_DAY,
+  });
+
+  it('a room whose ghosts have been ignored ranks above an equal room that was just due', () => {
+    const out = weakestRooms(rooms, [due('a', 0.4, 0), due('b', 0.4, 10)], NOW);
+    expect(out.map((r) => r.noteId)).toEqual(['b', 'a']);
+    expect(out[0].weakness).toBeCloseTo(0.6, 10);
+    expect(out[1].weakness).toBeCloseTo(0.4, 10);
+  });
+
+  it('growth is capped, so a long-ignored 0.9 ghost stays at 1', () => {
+    const out = weakestRooms(rooms, [due('a', 0.9, 400)], NOW);
+    expect(out[0].weakness).toBe(1);
+  });
+});

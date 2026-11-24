@@ -126,3 +126,36 @@ describe('hauntedLevel', () => {
     );
   });
 });
+
+describe('hauntedLevel counts ignored ghosts as stronger', () => {
+  const mk = (w: number, dueDaysAgo: number) => ({
+    weaknessScore: w,
+    reps: 0,
+    ease: 2.5,
+    intervalDays: 0,
+    dueAt: NOW - dueDaysAgo * DAY,
+  });
+
+  it('the same ghost adds more load, and can raise the tier, after days of being ignored', () => {
+    const fresh = hauntedLevel([mk(0.5, 0)], NOW);
+    const ignored = hauntedLevel([mk(0.5, 10)], NOW);
+    expect(ignored.load).toBeGreaterThan(fresh.load);
+    expect(ignored.load - fresh.load).toBeCloseTo(0.2, 10);
+  });
+
+  it('a ghost just under the weak line becomes weak once it has been ignored', () => {
+    expect(hauntedLevel([mk(0.4, 0)], NOW).weakCount).toBe(0);
+    expect(hauntedLevel([mk(0.4, 10)], NOW).weakCount).toBe(1);
+  });
+
+  it('load never falls as time passes', () => {
+    fc.assert(
+      fc.property(cardsArb, fc.integer({ min: 0, max: 60 }), (cards, later) => {
+        const a = hauntedLevel(cards, NOW);
+        const b = hauntedLevel(cards, NOW + later * DAY);
+        // Cards that return from banishment can add load, and none ever removes it.
+        expect(b.load).toBeGreaterThanOrEqual(a.load - 1e-9);
+      }),
+    );
+  });
+});
