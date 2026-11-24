@@ -1,0 +1,60 @@
+{
+    "version":  1,
+    "measuredWith":  "Chromium audio.duration (Playwright MCP, dev server)",
+    "clips":  [
+                  {
+                      "chapterId":  "intro",
+                      "chapter":  1,
+                      "file":  "chapter-1.wav",
+                      "durationMs":  5040
+                  },
+                  {
+                      "chapterId":  "inputs",
+                      "chapter":  2,
+                      "file":  "chapter-2.wav",
+                      "durationMs":  20240
+                  },
+                  {
+                      "chapterId":  "rooms",
+                      "chapter":  3,
+                      "file":  "chapter-3.wav",
+                      "durationMs":  11040
+                  },
+                  {
+                      "chapterId":  "quiz",
+                      "chapter":  4,
+                      "file":  "chapter-4.wav",
+                      "durationMs":  21680
+                  },
+                  {
+                      "chapterId":  "srs",
+                      "chapter":  5,
+                      "file":  "chapter-5.wav",
+                      "durationMs":  14880
+                  },
+                  {
+                      "chapterId":  "insights",
+                      "chapter":  6,
+                      "file":  "chapter-6.wav",
+                      "durationMs":  6800
+                  },
+                  {
+                      "chapterId":  "data",
+                      "chapter":  7,
+                      "file":  "chapter-7.wav",
+                      "durationMs":  7120
+                  },
+                  {
+                      "chapterId":  "kiro",
+                      "chapter":  8,
+                      "file":  "chapter-8.wav",
+                      "durationMs":  11120
+                  },
+                  {
+                      "chapterId":  "end",
+                      "chapter":  9,
+                      "file":  "chapter-9.wav",
+                      "durationMs":  7040
+                  }
+              ]
+}
