@@ -6,13 +6,22 @@ import {
   FIT_MARGIN_MS,
   MAX_TOTAL_MS,
   NARRATION_EXT,
+  START_ALLOWANCE_MS,
   chapterWindows,
   fitReport,
   narrationFile,
   narrationSrc,
   type NarrationManifest,
 } from './demoNarration';
-import { CHAPTER_IDS, CHAPTER_TITLES, DEMO_STEPS, END_HOLD_MS, scriptTotalMs, type DemoStep } from './demoScript';
+import {
+  CHAPTER_IDS,
+  CHAPTER_TITLES,
+  DEMO_STEPS,
+  END_HOLD_MS,
+  INTRO_HOLD_MS,
+  scriptTotalMs,
+  type DemoStep,
+} from './demoScript';
 
 const dir = join(process.cwd(), 'public', 'demo-audio');
 const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as NarrationManifest;
@@ -82,6 +91,21 @@ describe('every clip fits its chapter', () => {
       expect(r.fits, `${r.chapterId}: clip ${r.clipMs} ms in a ${r.lengthMs} ms chapter`).toBe(true);
       expect(r.headroomMs).toBeGreaterThanOrEqual(FIT_MARGIN_MS);
     }
+  });
+
+  it('every clip also leaves START_ALLOWANCE_MS (1 s) for the browser to start the audio (measured: up to 0.8 s)', () => {
+    expect(START_ALLOWANCE_MS).toBe(1000);
+    for (const r of rows) {
+      expect(r.headroomMs, `${r.chapterId}: headroom ${r.headroomMs} ms`).toBeGreaterThanOrEqual(FIT_MARGIN_MS + START_ALLOWANCE_MS);
+    }
+  });
+
+  it('the intro needed its hold: without it a 0.8 s late start would cut the first clip', () => {
+    const without: DemoStep[] = DEMO_STEPS.map((s) =>
+      s.id === 'intro' ? { ...s, actions: s.actions.filter((a) => !(a.op === 'wait' && a.ms === INTRO_HOLD_MS)) } : s,
+    );
+    const intro = fitReport(manifest, without).find((r) => r.chapter === 0);
+    expect(intro?.headroomMs).toBeLessThan(FIT_MARGIN_MS + START_ALLOWANCE_MS);
   });
 
   it('the end chapter needed the hold: without it the End clip would not fit', () => {

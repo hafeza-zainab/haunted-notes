@@ -69,8 +69,13 @@ export const CHAPTER_IDS = [
   'end',
 ] as const;
 
-/** Extra time the end card is held so its narration clip fits (the clip is 7.04 s). */
-export const END_HOLD_MS = 2000;
+/**
+ * Extra time the intro is held (the clip is 5.04 s) and the end card is held (7.04 s).
+ * The first sound in a page starts up to 0.8 s late (measured), so these two clips
+ * need more room than the 0.4 s margin alone.
+ */
+export const INTRO_HOLD_MS = 1000;
+export const END_HOLD_MS = 3000;
 
 export const MAX_CAPTION_WORDS = 12;
 
@@ -102,7 +107,11 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     chapter: 0,
     caption: 'Haunted Notes: your unfinished notes come back to haunt you',
     card: { title: 'Haunted Notes', lines: ['Your unfinished notes come back to haunt you.'] },
-    actions: [{ op: 'wait', ms: 6000 }],
+    actions: [
+      { op: 'wait', ms: 6000 },
+      // Hold so the narration, which starts a moment after the card, finishes inside the chapter.
+      { op: 'wait', ms: INTRO_HOLD_MS },
+    ],
   },
 
   // 1. Four inputs

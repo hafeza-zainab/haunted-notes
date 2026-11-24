@@ -14,6 +14,13 @@ export const NARRATION_EXT = 'wav';
 /** A clip must end at least this long before its chapter ends. */
 export const FIT_MARGIN_MS = 400;
 
+/**
+ * Room a clip needs on top of FIT_MARGIN_MS for the browser to start its audio output.
+ * Measured in Chromium: the first clip started sound 0.80 s after play(), a clip after a
+ * 27 s silence 0.54 s, the rest 0.10 to 0.16 s. The data test uses this for every clip.
+ */
+export const START_ALLOWANCE_MS = 1000;
+
 /** The whole run, with narration, must stay under this length (2:55). */
 export const MAX_TOTAL_MS = 175_000;
 
