@@ -45,7 +45,10 @@ const AddNoteView: React.FC = () => {
     setInputMethod(m);
     setError('');
     // First use of the Photo tab: fetch the OCR engine now (dynamic import)
-    if (m === 'photo' && !ocrReady) {
+    if (m === 'photo' && !ocrReady && useStore.getState().demoRunning) {
+      // Run demo: show the tab without loading the OCR engine or any of its assets.
+      setOcrReady(true);
+    } else if (m === 'photo' && !ocrReady) {
       loadOcrEngine()
         .then(() => setOcrReady(true))
         .catch((e) =>
