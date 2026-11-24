@@ -11,8 +11,9 @@ services. Keep dependencies minimal and pin exact versions when adding any.
 ## Network
 Allowed network calls (see `product.md`): the one-time Whisper model download, the
 one-time Tesseract.js assets (worker, WASM core, English language data from a CDN),
-and the browser's speech service for Live mic only (Web Speech API). Nothing else
-leaves the browser. Audio files and photos are processed on-device. Demo mode, SRS
+the browser's speech service for Live mic only (Web Speech API), and same-origin
+static assets, including the /demo-audio/ narration clips (loaded only by Run demo).
+Nothing else leaves the browser. Audio files and photos are processed on-device. Demo mode, SRS
 and quizzes must work fully offline.
 
 ## Heavy libraries are lazy-loaded

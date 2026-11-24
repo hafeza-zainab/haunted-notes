@@ -11,8 +11,10 @@ mobile-first, keep dependencies minimal.
 Network calls: allowed ONLY for (1) the one-time Whisper model download
 (Xenova/whisper-tiny.en via @huggingface/transformers CDN), (2) the one-time
 Tesseract.js assets (worker, WASM core, English language data from a CDN on
-first use of the Photo tab), and (3) the browser's own speech service, for Live
-mic only (Web Speech API; in some browsers audio goes to the browser vendor).
+first use of the Photo tab), (3) the browser's own speech service, for Live
+mic only (Web Speech API; in some browsers audio goes to the browser vendor), and
+(4) same-origin static assets served with the app, including the /demo-audio/
+narration clips (loaded only by Run demo).
 Uploaded audio is transcribed on-device (Whisper in a Web Worker); photos are
 processed on-device by Tesseract.js. Notes stay in localStorage; no other
 outbound network calls.
