@@ -562,47 +562,71 @@ progress {
   .stitch-arrow--join { transform: none; }
 }
 
-/* 60-second tour coach mark: no animation or transition */
-.tour-coach {
+/* Run demo: caption bar, shield, text card, outline.
+   Motion rule: nothing here animates, so the reduced-motion block needs no extra override. */
+.btn-run-demo { min-height: 44px; min-width: 44px; }
+body.demo-running .main-content { padding-bottom: 14rem; }
+.demo-shield {
   position: fixed;
-  left: 1rem;
-  right: 1rem;
-  bottom: 1rem;
-  z-index: 150;
-  max-width: 28rem;
-  margin: 0 auto;
-  padding: 1rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  inset: 0;
+  z-index: 190;
+  background: transparent;
+  cursor: default;
+}
+.demo-card {
+  position: fixed;
+  inset: 0;
+  z-index: 180;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 12rem;
+  text-align: center;
+  background: var(--bg);
   color: var(--text);
 }
-.tour-count {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+.demo-card-title { margin: 0; font-size: 2rem; color: var(--accent); text-shadow: 0 0 16px var(--accent-glow); }
+.demo-card-line { margin: 0; max-width: 32rem; font-size: 1.25rem; }
+.demo-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--border-strong);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.5);
+  color: var(--text);
 }
-.tour-title { margin: 0.25rem 0 0.5rem; font-size: 1.1rem; }
-.tour-text { margin: 0 0 0.75rem; }
-.tour-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.tour-actions button { min-height: 44px; min-width: 44px; }
-.tour-target {
+.demo-bar-head { display: flex; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+.demo-chapter { margin: 0; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text); }
+.demo-time { margin: 0; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+.demo-caption { margin: 0; min-height: 2.75rem; font-size: 1.125rem; font-weight: 600; }
+.demo-progress { height: 0.5rem; background: var(--bg-surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; }
+.demo-progress-fill { height: 100%; background: var(--accent); }
+.demo-bar-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.demo-dots { display: flex; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.demo-dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; border: 2px solid var(--border-strong); background: transparent; }
+.demo-dot.done { background: var(--border-strong); }
+.demo-dot.current { background: var(--accent); border-color: var(--text); }
+.demo-buttons { display: flex; gap: 0.5rem; }
+.demo-btn { min-height: 44px; min-width: 44px; }
+.demo-highlight {
   outline: 3px solid var(--accent);
   outline-offset: 4px;
   border-radius: var(--radius);
+  scroll-margin-bottom: 14rem;
 }
-
-/* Keep the outlined target clear of the fixed tour panel: scroll it to just
-   below the sticky nav, and leave room at the end of the page while the tour is open. */
-.tour-target { scroll-margin-top: 7.5rem; }
-.main-content:has(~ .tour-coach) { padding-bottom: 18rem; }
-
-/* Dashboard "60-second tour" button: 44px target at every width, not only on mobile */
-.btn-tour { min-height: 44px; }
-
+@media (min-width: 768px) {
+  .demo-bar { padding: 0.75rem 2rem; }
+  body.demo-running .main-content { padding-bottom: 11rem; }
+}
 /* Sort bar */
 .sort-bar {
   display: flex;

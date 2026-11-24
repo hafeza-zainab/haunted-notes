@@ -7,7 +7,6 @@ import { buildDemoData } from '../lib/demoData';
 import { emptyReviewLog, appendReview, sanitizeReviewLog } from '../lib/reviewLog';
 import { sanitizeNotes, sanitizeFlashcards, sanitizeUi } from '../lib/persistedState';
 import { assessSavedValue, needsBackup, planBackup, BACKUP_KEY, type LoadReport } from '../lib/loadReport';
-import { TOUR_STEPS, nextTourStep } from '../lib/tour';
 import { mergeBackup, type BackupData, type ImportSummary } from '../lib/backup';
 import { snapshotPatch, type DemoSnapshot } from '../lib/demoSnapshot';
 
@@ -45,14 +44,6 @@ interface HauntedState {
   /** Set when saved data had to be dropped on load. Never persisted. */
   loadNotice: LoadReport | null;
   dismissLoadNotice: () => void;
-  /** Current 60-second tour step, or null when closed. Never persisted. */
-  tourStep: number | null;
-  /** Load the demo (if needed) and open the first tour step. */
-  startTour: () => void;
-  /** Open the first tour step with the notes already in the store; never loads the demo. */
-  replayTour: () => void;
-  advanceTour: () => void;
-  endTour: () => void;
   /** True while a Run demo script is playing. Never persisted. */
   demoRunning: boolean;
   /** Start a run: empty state; saved writes are suspended until endDemoRun. */
@@ -125,15 +116,6 @@ const safeStorage: StateStorage = {
     }
   },
 };
-
-/** View change for a tour step. The quiz step opens an unfiltered quiz. */
-function tourPatch(index: number): Partial<HauntedState> {
-  const step = TOUR_STEPS[index];
-  if (step.view === 'quiz') {
-    return { tourStep: index, currentView: 'quiz', quizNoteId: null, quizDueOnly: false };
-  }
-  return { tourStep: index, currentView: step.view };
-}
 
 export const useStore = create<HauntedState>()(
   persist(
@@ -241,17 +223,6 @@ export const useStore = create<HauntedState>()(
 
       loadNotice: null,
       dismissLoadNotice: () => set({ loadNotice: null }),
-      tourStep: null,
-      startTour: () => {
-        get().loadDemoData();
-        set(tourPatch(0));
-      },
-      replayTour: () => set(tourPatch(0)),
-      advanceTour: () => {
-        const next = nextTourStep(get().tourStep);
-        set(next === null ? { tourStep: null } : tourPatch(next));
-      },
-      endTour: () => set({ tourStep: null }),
       demoRunning: false,
       beginDemoRun: () => {
         persistSuspended = true;
@@ -294,11 +265,10 @@ export const useStore = create<HauntedState>()(
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => safeStorage),
-      // loadNotice, tourStep and demoRunning are session-only: never written to localStorage.
+      // loadNotice and demoRunning are session-only: never written to localStorage.
       partialize: (state) => {
         const rest: Partial<HauntedState> = { ...state };
         delete rest.loadNotice;
-        delete rest.tourStep;
         delete rest.demoRunning;
         return rest;
       },

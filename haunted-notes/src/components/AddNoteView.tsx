@@ -6,6 +6,7 @@ import { useWhisper, ACCEPTED_AUDIO } from '../lib/useWhisper';
 import ModelStatus from './ModelStatus';
 import type { NoteInputMethod } from '../types';
 import StitchStrip from './StitchStrip';
+import RunDemoButton from './RunDemoButton';
 
 const TABS: { id: NoteInputMethod; label: string; icon: string }[] = [
   { id: 'type',  label: 'Type',       icon: '⌨'  },
@@ -19,7 +20,6 @@ const AddNoteView: React.FC = () => {
   const setView      = useStore((s) => s.setView);
   const isDemoLoaded = useStore((s) => s.isDemoLoaded);
   const loadDemoData = useStore((s) => s.loadDemoData);
-  const startTour    = useStore((s) => s.startTour);
 
   const [inputMethod, setInputMethod] = useState<NoteInputMethod>('type');
   const [text, setText] = useState('');
@@ -453,9 +453,7 @@ const AddNoteView: React.FC = () => {
           >
             👻 Try demo →
           </button>
-          <button type="button" className="btn-ghost" onClick={startTour}>
-            <span aria-hidden="true">⏱ </span>60-second tour
-          </button>
+          <RunDemoButton />
         </aside>
       )}
     </section>

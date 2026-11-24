@@ -5,6 +5,7 @@ import EmptyState from './EmptyState';
 import StudyInsights from './StudyInsights';
 import BackupPanel from './BackupPanel';
 import LoadNotice from './LoadNotice';
+import RunDemoButton from './RunDemoButton';
 import type { Note, Flashcard } from '../types';
 import { isDue, isBanished, nextReturnInMs, daysFromMs } from '../lib/srs';
 import { normalizeBlanks } from '../lib/blank';
@@ -296,7 +297,6 @@ const DashboardView: React.FC = () => {
   const setQuizNoteId  = useStore((s) => s.setQuizNoteId);
   const setQuizDueOnly = useStore((s) => s.setQuizDueOnly);
   const clearDemoData  = useStore((s) => s.clearDemoData);
-  const replayTour     = useStore((s) => s.replayTour);
   const timeTravelDay  = useStore((s) => s.timeTravelDay);
   const resetAll       = useStore((s) => s.resetAll);
 
@@ -396,13 +396,11 @@ const DashboardView: React.FC = () => {
             </button>
           )}
           {totalHaunting > 0 && (
-            <button className="btn-primary" onClick={startQuizAll} data-tour="start-quiz" data-demo="start-quiz">
+            <button className="btn-primary" onClick={startQuizAll} data-demo="start-quiz">
               👻 Start Quiz
             </button>
           )}
-          <button className="btn-ghost btn-tour" onClick={replayTour}>
-            <span aria-hidden="true">⏱ </span>60-second tour
-          </button>
+          <RunDemoButton />
           {isDemoLoaded && (
             <button
               className="btn-ghost btn-sm"

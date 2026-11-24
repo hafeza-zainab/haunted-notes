@@ -5,7 +5,7 @@ import AddNoteView from './components/AddNoteView';
 import DashboardView from './components/DashboardView';
 import QuizView from './components/QuizView';
 import Atmosphere from './components/Atmosphere';
-import TourCoach from './components/TourCoach';
+import DemoPlayer from './components/DemoPlayer';
 import { hauntedLevel } from './lib/haunt';
 
 const App: React.FC = () => {
@@ -24,7 +24,7 @@ const App: React.FC = () => {
         {currentView === 'add' && <AddNoteView />}
         {currentView === 'quiz' && <QuizView />}
       </main>
-      <TourCoach />
+      <DemoPlayer />
     </div>
   );
 };
