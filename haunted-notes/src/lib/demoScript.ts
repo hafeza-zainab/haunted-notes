@@ -56,6 +56,22 @@ export const CHAPTER_TITLES = [
   'Try it yourself',
 ] as const;
 
+/** Stable ids for the nine chapters, in order. The narration manifest uses the same ids. */
+export const CHAPTER_IDS = [
+  'intro',
+  'inputs',
+  'rooms',
+  'quiz',
+  'srs',
+  'insights',
+  'data',
+  'kiro',
+  'end',
+] as const;
+
+/** Extra time the end card is held so its narration clip fits (the clip is 7.04 s). */
+export const END_HOLD_MS = 2000;
+
 export const MAX_CAPTION_WORDS = 12;
 
 /** Text typed into the real textarea. All of it is labelled as sample data. */
@@ -381,6 +397,8 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     actions: [
       { op: 'store', name: 'emptyState', ms: 500 },
       { op: 'highlight', target: 'try-demo', ms: 5500 },
+      // Hold the end card so the narration clip for this chapter finishes before the run ends.
+      { op: 'wait', ms: END_HOLD_MS },
     ],
   },
 ];
