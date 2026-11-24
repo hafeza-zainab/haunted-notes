@@ -1,7 +1,7 @@
 # Haunted Notes: faceless demo video (no voice, no face)
 
 Target length: 2:45 (hard limit under 3:00; judges need not watch past 3 minutes).
-Format: screen recording + short on-screen captions. No narration. No copyrighted music.
+Format: screen recording + short on-screen captions. The narrated Run demo carries spoken narration (see "Record the narrated run" below); no music. Your voice is not recorded.
 
 ## What the rules require
 - Under 3 minutes, public on YouTube, link pasted into the Devpost form.
@@ -10,17 +10,27 @@ Format: screen recording + short on-screen captions. No narration. No copyrighte
 - Scored under "Presentation": clear end-to-end demo, what problem it solves, who it is for, why it matters, easy to follow, memorable.
 
 ## Fastest route: let the app play itself
-The app has a self-playing **Run demo** (replaces the old 60-second tour). It takes 2:42 at normal speed, so it fits under 3:00 with an end card on top.
-1. Open the app at `/?demo=1` (it starts after about half a second) or press **Run demo**. Use a clean browser window, zoom 110 to 125%.
-2. Record the window with OBS or Game Bar. Do not touch the mouse or keyboard: a transparent shield ignores clicks, and Escape stops the run.
+The app has a self-playing **Run demo** (replaces the old 60-second tour). It takes 2:47 at normal speed (166.6 s, measured), narrated, so it fits under 3:00 with a short end card on top.
+1. Open the app at `/?demo=1` and click **Start with sound** (browsers only play sound after a click), or press **Run demo**. For a silent run that starts by itself use `/?demo=1&sound=0`. Use a clean browser window, zoom 110 to 125%.
+2. Record the window with OBS or Game Bar (see below). After the click do not touch the mouse or keyboard: a transparent shield ignores clicks, and Escape stops the run.
 3. The caption bar at the bottom is part of the recording. Chapters: intro, four inputs, ghost rooms, the quiz, spaced repetition, study insights, your data stays yours, built with Kiro, end card.
 4. Add an end card (live URL and GitHub repo, readable for at least 3 seconds) in Clipchamp. Keep the total under 3:00.
 5. The run uses sample data only and restores your own notes afterwards. It does not show the offline mode or the phone-width view; cut those in separately if you want them (table below).
 
+## Record the narrated run (with sound)
+1. Turn on Windows Focus Assist so no notification sound or pop-up lands in the recording. Close other apps that make sound (music, chat, mail).
+2. Keep the app's own ghost sounds off: the speaker button in the top bar should show it is muted. (The narration is separate; it is controlled by the **Sound on** button in the demo bar.)
+3. OBS Studio: add a **Window Capture** (or Display Capture) for the browser and an **Audio Output Capture** (Desktop Audio). Turn the **microphone off** (Mic/Auxiliary muted), so only the narration is recorded. Windows Game Bar: press Win+G, open the capture options and tick **Record system audio** (not the microphone).
+4. Set the system volume to a normal level and check the OBS meter moves when you play a clip.
+5. **Start the recording first**, then open `/?demo=1` and click **Start with sound** (or click **Run demo**). The click is needed once; after that leave the mouse alone.
+6. Let the run finish on the end card, then stop the recording about 3 seconds later. The run is 2:47, so the recording is about 2:50 with the click and the stop; trim the ends in Clipchamp and add the end card (live URL and repo) to stay under 3:00.
+7. Play the file back with headphones: each clip should land on its chapter and nothing should be cut off. If a clip is too long for its chapter, see `docs/DEMO_TIMING.md`.
+8. Say where the narration comes from: the README has the line `Narration: <ADD: tool used and its licence terms>`. Fill it in before you submit.
+
 ## Free tools
 - Record: OBS Studio (free) or the Windows Game Bar (Win+G). Record at 1920x1080.
 - Edit and captions: Clipchamp (free, built into Windows) or DaVinci Resolve (free). Use text overlays for captions.
-- Sound: none is fine. If you want sound, turn on the app's own ghost sounds for the banish moment only. Do not add music unless it is licensed for this use.
+- Sound: the narration comes from the app's own clips. Do not add music unless it is licensed for this use. The app's own ghost sounds stay off.
 
 ## Before you record (privacy, since you will not be on camera)
 1. Use a clean browser window (incognito, bookmarks bar hidden, no other tabs), zoom 110 to 125%.

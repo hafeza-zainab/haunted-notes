@@ -28,8 +28,10 @@ Fixed. Every dependency and devDependency was set to the version already install
 ## MANUAL items (you must do these)
 
 - [ ] GitHub repository is public.
-- [ ] Demo video is on YouTube, public, under 3 minutes, with no copyrighted music. Record it from `/?demo=1` (the "Run demo" script is 2:38) and add an end card with the live URL.
+- [ ] Demo video is on YouTube, public, under 3 minutes, with no copyrighted music. Record it from `/?demo=1` (click "Start with sound"; the narrated run is 2:47) and add an end card with the live URL.
 - [ ] Watch the whole "Run demo" run once yourself before merging `demo-autoplay` into `main`.
+- [ ] Listen to the whole narrated run with headphones (branch `demo-audio`): each clip lands on its chapter and nothing is cut off. The automated checks could not hear it.
+- [ ] Fill in the README line "Narration: <ADD: tool used and its licence terms>" and check the licence allows use in a public demo video.
 - [ ] Live app URL is reachable (README placeholder must be filled).
 - [ ] Student prize: LinkedIn profile, student email, school, year and degree.
 - [ ] Devpost form: category (Frankenstein) and the "Ghost of Kiroween Past" box with the same Devpost account as 2025, if it applies.

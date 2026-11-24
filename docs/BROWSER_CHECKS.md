@@ -182,3 +182,34 @@ The demo changed: the dashboard shows "Review ladder: 2, 3, 5, 7 days", the spac
 
 Screenshot: `demo-autoplay-ignored-390.png` (spaced repetition chapter, grown ghosts and the bar).
 Not run again after the ladder change: a 390px run with motion on, 768px, the production preview and offline mode, export and import.
+## 9. Narration in Run demo (branch `demo-audio`)
+Run with the Playwright MCP (headless Chromium, dev server `http://localhost:5173`), with one real note and card in localStorage so that restore could be compared. Status: PASS, FAIL or UNVERIFIED. **Nothing was heard**: headless Chromium has no speaker, so every audio check reads `audio.currentTime`, `paused`, `ended`, `volume`, `muted` and `src`. Screenshots: `docs/screens/demo-audio-*.png`. Per-clip numbers are in `docs/DEMO_TIMING.md`.
+
+| Check | Status | Measured |
+|---|---|---|
+| Manifest durations measured in the browser | PASS | `audio.duration` for the nine clips: 5.04, 20.24, 11.04, 21.68, 14.88, 6.80, 7.12, 11.12, 7.04 s. They also equal the WAV headers (a test checks this). |
+| (a) Each clip is started at its chapter's scheduled start | PASS | `play()` was called 2 to 23 ms after the scheduled start for all nine clips, with `currentTime` 0 each time. |
+| (a) Each clip is audible within 300 ms of the scheduled start | **FAIL for two clips** | From `currentTime` samples every 100 ms: 7 clips at 85 to 103 ms; clip 1 at 504 ms and clip 5 at 536 ms (earlier run: 804 ms for clip 1). Cause: the browser takes time to start its audio output (first sound in the page, and after a 27 s silence). A test in the same browser showed the file load costs 34 to 70 ms. I cannot remove that start-up time; holds were added so a late start never cuts a clip. May differ on your machine. |
+| All nine clips play to their end before the next chapter | PASS | `ended` / `currentTime` equals the duration for all nine; they end 1.46 s (clip 1) to 27.6 s (clip 4) before the next chapter, and clip 9 ends 1.9 s before the run closes. |
+| (b) Pause pauses the audio, Resume continues it | PASS | Real clicks on the bar. Paused at clip time 10.19 s (script 0:17, chapter start 0:07): `paused` true, `currentTime` and the bar clock frozen for 2.5 s. Resume: same clip, `play()` called at 10.19 s, 2.4 s later it was at 12.61 s (script 0:19). A finished clip is not restarted (unit test). |
+| Sound off and on during a run | PASS | Sound off: `paused` true, `src` empty, caption still shown, button reads "Sound off"; chapters 3 and 4 started silently (no `play()`). Sound on at script 0:58 inside chapter 4: the clip started at 4.73 s (expected 4.6 to 5.6 s) and kept playing; button reads "Sound on". |
+| (c) Stop stops the audio and restores my data | PASS | Real click on Stop while a clip played: `src` empty, `paused` true, `currentTime` 0, 2 s later still silent; data equal to the original; snapshot key gone; focus on `main`. |
+| (c) Escape stops the audio and restores my data | PASS | Real Escape at clip time 6.66 s: same result. |
+| (d) `?demo=1` shows one "Start with sound" button | PASS | Dialog, button 192 x 44 px with focus, text "A narrated walkthrough of 2:46" (from the script), no run and no audio element created. Screenshot `demo-audio-prompt-1280.png`. |
+| (d) Escape cancels the prompt | PASS | Prompt gone, no run, no `play()`, focus on `main`, data untouched. |
+| (d) Clicking "Start with sound" starts a run with sound | PASS | Real click: bar present, clip 2 playing at 3.31 s (`volume` 1, `muted` false), button "Sound on". |
+| (d) `?demo=1&sound=0` starts silently by itself | PASS | No prompt; the run started about 0.6 s after load; button "Sound off"; no `/demo-audio/` request after 9 s of the run; no `<audio>` element created. |
+| (e) A missing clip does not stop the run | PASS | Chapter 3's file name was rewritten to a non-existent name in the page (my files were not touched). "Narration unavailable" appeared once, at 37.95 s (chapter 3 start), in a `role="status"` element. Clips 4 to 9 still played, the run finished (166.6 s), data was restored. Screenshot `demo-audio-unavailable-390.png`. |
+| (f) No console errors | PASS | In-page recorder (`console.error`, `console.warn`, `error`, `unhandledrejection`) empty in every run; Playwright console 0 errors and 0 warnings, including the missing-clip run. |
+| (g) Measured total under 2:55 | PASS | 166.63 s (2:46.6) from the click to the bar closing, 166.63 s again in the missing-clip run at 390px. |
+| Data restored after finish, Stop, Escape | PASS | Notes, cards and review log equal the originals each time; snapshot key removed. |
+| 390px: bar layout with the third button | PASS | Bar 205 px (24% of 844 px; 235 px while "Narration unavailable" is shown); Pause 93, Sound 119, Stop 79 px wide, all 44 px high, in one row; no horizontal scroll; main content bottom padding 256 px. Screenshots `demo-audio-bar-390.png`, `demo-audio-bar-1280.png`. |
+| (h) ghost-ui-reviewer on the changed UI at 390 and 1280px | PASS after one fix | Contrast, 44 px targets, keyboard and focus ring, names equal visible text, reduced motion and layout passed. One FAIL: the empty "Narration unavailable" line used `display: none`, which removes a live region from the accessibility tree. Fixed (visually hidden but present; a test guards it), plus Tab trapped in the prompt, a token colour for the prompt backdrop and more bar padding. The hidden line was re-measured (`display: block`, 1 x 1 px, absolute) and the bar is back to 205 px. The "Narration unavailable" state itself was reviewed from source only. |
+
+### Not covered (UNVERIFIED)
+- **Hearing the audio.** Nothing was heard. Whether each clip says the right thing at the right moment of its chapter is unchecked (`NARRATION_SCRIPT.md` was not in the repository).
+- Other browsers: Firefox and Safari, and Safari/iOS autoplay rules. The design reuses one audio element and calls the first `play()` inside the click for this reason, but it was not run there.
+- A real service worker: the bypass is tested with the real `sw.js` against a fake worker scope, and the built `dist/sw.js` contains it, but the production preview and offline mode were not run on this branch.
+- Netlify: the `Cache-Control` header for `/demo-audio/*` is in `netlify.toml` and a test reads it; it was not deployed.
+- 768px, and a run with reduced motion on this branch (the bar has no animation; the reviewer checked it).
+- A start-up time on slower devices or Bluetooth audio: it may be longer than the 0.5 to 0.8 s measured here.

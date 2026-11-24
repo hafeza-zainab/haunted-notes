@@ -45,6 +45,7 @@ Specs in [.kiro/specs/](../.kiro/specs/):
 | [better-quiz.md](../.kiro/specs/better-quiz.md) | hints, reveal, typo tolerance, streak, results screen |
 | [study-insights/](../.kiro/specs/study-insights/) | requirements, design, tasks; review log and dashboard panel |
 | [data-safety-offline/](../.kiro/specs/data-safety-offline/) | requirements, design, tasks; export/import, service worker, model status |
+| [demo-audio/](../.kiro/specs/demo-audio/) | requirements, design, tasks; narration clips played in sync with Run demo. Correctness properties: at most one clip plays, Pause/Resume/Stop/Escape control the audio, a failed clip never stops the run, every clip fits its chapter |
 | [demo-autoplay/](../.kiro/specs/demo-autoplay/) | requirements, design, tasks; the self-playing "Run demo" that replaced the 60-second tour. Correctness properties: exact restore after any abort point, idempotent recovery on load, corrupt snapshot never throws |
 
 What the specs prevented or exposed:

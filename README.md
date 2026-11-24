@@ -50,9 +50,13 @@ npm install
 npm run dev
 ```
 
-Click **Run demo** for a self-playing walkthrough of about 2 minutes 40 seconds (the script is 2:42 at normal speed). It uses the real app: it clicks the navigation, types into the Add Note box, presses Hint, Skip and Reveal, and calls the store's actions, while a caption bar at the bottom explains each step. Pause, Stop and Escape end it early. Open `/?demo=1` to start it automatically after load, which is handy for screen recording.
+Click **Run demo** for a narrated, self-playing walkthrough of about 2 minutes 47 seconds (166.6 s, measured). It uses the real app: it clicks the navigation, types into the Add Note box, presses Hint, Skip and Reveal, and calls the store's actions, while a caption bar at the bottom explains each step. Pause, Stop and Escape end it early.
 
-Your own notes are safe: the run snapshots them first (in memory and under the localStorage key `haunted-notes-demo-snapshot`), works on an empty state loaded with the built-in sample data, suspends saving while it plays, and puts everything back when it finishes, stops or fails. If a tab is closed mid-run, the snapshot is restored on the next load. The run never starts a download, a file chooser, a model load, OCR, or a network call; the Photo and Audio tabs show a text labelled SAMPLE.
+**Narration.** One spoken clip per chapter plays in sync with the run. The **Sound on / Sound off** button in the bar mutes it (captions always stay visible); `?sound=0` starts muted. Browsers only allow sound after a click, so `/?demo=1` shows one **Start with sound** button (Escape cancels). For a silent run that starts by itself, open `/?demo=1&sound=0`. If a clip cannot load or play, the run goes on with captions and the bar says "Narration unavailable". Timing of every clip is in [docs/DEMO_TIMING.md](docs/DEMO_TIMING.md).
+
+Narration: <ADD: tool used and its licence terms>
+
+Your own notes are safe: the run snapshots them first (in memory and under the localStorage key `haunted-notes-demo-snapshot`), works on an empty state loaded with the built-in sample data, suspends saving while it plays, and puts everything back when it finishes, stops or fails. If a tab is closed mid-run, the snapshot is restored on the next load. The run never starts a download, a file chooser, a model load or OCR, and makes no network call except loading its own narration clips from `/demo-audio/` on this site (about 9 MB for the nine clips, each loaded as its chapter starts); the Photo and Audio tabs show a text labelled SAMPLE.
 
 Click **Try demo** to load the sample notes without the walkthrough. **Run demo** also shows spaced repetition: it jumps the clock two days so the banished ghosts return, then five more days so the ignored ones grow.
 
