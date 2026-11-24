@@ -117,7 +117,7 @@ Run with the Playwright MCP against the dev server (`http://localhost:5173`), wi
 | Check | 1280px | 390px | Measured |
 |---|---|---|---|
 | All 9 chapters and 33 steps play and the run ends by itself | PASS | PASS (twice: reduced motion on, then off) | Step starts logged by a MutationObserver on the caption. The last step starts at 152.3 s and lasts 6 s, so the measured total is **158.3 s (2:38)**, equal to the scripted total. Limit 170 s: PASS. |
-| Total shown in the bar is the real total | PASS | PASS | Bar read "0:00 / 2:38" at the start and "1:42 / 2:38" at step 28; it is computed from the script. |
+| Total shown in the bar is the real total | PASS | PASS | Bar read "0:00 / 2:38" at the start and "1:42 / 2:38" in the spaced repetition chapter; it is computed from the script. |
 | Every caption matches the screen | PASS | PASS | Each step's view was logged next to its caption (Add a new note, Ghost dashboard, Quiz mode, Quiz complete, text card over the app, empty state with Try demo). Highlighted target per step logged and visible (see 8.4). Observation: the quiz card order is random, so which ghost is skipped and which cards are missed differs per run. If the skipped card was one of the two built-in "returned" cards, one orange ghost is already on the dashboard before the time-travel step. The captions stay true either way. |
 | Data restored after finish | PASS | PASS | Notes, cards and review log equal the originals; snapshot key deleted; bar, shield and `demo-running` class gone; focus on `main#main-content`. |
 | Data restored after Stop (button, real click) | PASS | not run | Same checks. |
@@ -132,7 +132,7 @@ Run with the Playwright MCP against the dev server (`http://localhost:5173`), wi
 | No horizontal scroll while running | not run | PASS | Max `scrollWidth - clientWidth` = 0 in both 390px runs. |
 | Reduced motion: instant scrolling | not run | PASS | With `prefers-reduced-motion: reduce` every `scrollIntoView` call used `behavior: "auto"`. |
 | Highlighted targets clear of the bar | not run | PASS | Every highlighted element was fully visible above the bar at 390px (20 targets, 100% visible). |
-| Clicked targets visible above the bar | not run | PASS with a note | The first 390px run showed Reveal and Skip hidden behind the bar. Fixed (`reveal()` scrolls click and type targets into view; commit `647116f`). Second run, checked 0.8 s after each click: 23 of 25 visible, 3 gone because the view changed. Add Note and Reveal were 4 and 13 px under the bar, because the success and feedback message pushes the button down after the click; they were visible at the click. |
+| Clicked targets visible above the bar | not run | PASS with a note | The first 390px run showed Reveal and Skip hidden behind the bar. Fixed (`reveal()` scrolls click and type targets into view; commit `647116f`). Second run, checked 0.8 s after each click: of 25 clicks, 20 visible, 2 under the bar (below) and 3 gone because the view changed. Add Note and Reveal were 4 and 13 px under the bar, because the success and feedback message pushes the button down after the click; they were visible at the click. |
 
 ### 8.2 Control bar (390 and 1280px)
 | Check | Status | Measured |
