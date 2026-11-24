@@ -45,6 +45,7 @@ Specs in [.kiro/specs/](../.kiro/specs/):
 | [better-quiz.md](../.kiro/specs/better-quiz.md) | hints, reveal, typo tolerance, streak, results screen |
 | [study-insights/](../.kiro/specs/study-insights/) | requirements, design, tasks; review log and dashboard panel |
 | [data-safety-offline/](../.kiro/specs/data-safety-offline/) | requirements, design, tasks; export/import, service worker, model status |
+| [demo-autoplay/](../.kiro/specs/demo-autoplay/) | requirements, design, tasks; the self-playing "Run demo" that replaced the 60-second tour. Correctness properties: exact restore after any abort point, idempotent recovery on load, corrupt snapshot never throws |
 
 What the specs prevented or exposed:
 - **Spec edited before code:** new cards were being counted as "due". The requirement (R4/R5) was corrected first, then the code ([write-up, section 2](../KIRO_WRITEUP.md)).

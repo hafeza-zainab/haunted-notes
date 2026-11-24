@@ -20,7 +20,9 @@ Screenshots are in `docs/screens/` with names starting with `final-`.
 
 Screenshots: `final-dashboard-{390,768,1280}.png`, `final-insights-1280.png`, `final-add-note-{390,1280}.png`, `final-stitch-strip-{390,1280}.png`, `final-load-notice-390.png`, `final-quiz-{390,1280}.png`, `final-results-{390,1280}.png`.
 
-## 2. 60-second tour at 390px
+## 2. 60-second tour at 390px (REMOVED on branch `demo-autoplay`)
+
+The tour was replaced by the self-playing Run demo (section 8 below). The results in this section are kept as history and no longer describe the app.
 
 Nav ends at 104px. The panel starts at 627px (602px on the quiz step).
 

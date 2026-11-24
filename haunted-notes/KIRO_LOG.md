@@ -481,3 +481,21 @@ Playwright MCP tools called in this pass: `browser_navigate`, `browser_resize`, 
 - **Fix:** new shared setup `src/test/setup.ts`, registered as `test.setupFiles` in `vite.config.ts`. It gives the Node test environment an in-memory `window.localStorage` (cleared before each test), so the cause is gone and no real warning is hidden. It is assigned directly, not with `vi.stubGlobal`, so test files that stub their own `window` and call `vi.unstubAllGlobals()` get it back afterwards.
 - **Quota test kept:** it now spies on `console.warn` to silence the expected warning, and additionally asserts that the warning was reported with a `DOMException`. No test was removed or weakened.
 - **Result:** `npx vitest run --silent=false` prints 0 stderr blocks; `npm test` prints no error output; 342 tests in 42 files pass. `npm run lint` and `npm run build` pass.
+
+---
+## Run demo replaces the 60-second tour (branch `demo-autoplay`)
+Spec: `.kiro/specs/demo-autoplay/` (requirements, design, tasks).
+
+- **Built:** a self-playing script (`src/lib/demoScript.ts`, 9 chapters, 33 steps, 158.3 s at normal speed) drives the real app through `data-demo` attributes. Runner in `src/demo/`, control bar in `DemoBar.tsx`, "Run demo" buttons in the empty state, Add Note and the dashboard summary bar. `?demo=1` starts it after load.
+- **Data safety:** `src/lib/demoSnapshot.ts` (pure). The run snapshots notes, flashcards, review log and the demo, view and quiz flags in memory and under `haunted-notes-demo-snapshot`. While it plays, writes to the saved store are suspended (`beginDemoRun`), so a closed tab cannot replace real data with demo data. `endDemoRun` restores in one update. `main.tsx` restores a leftover snapshot before the first render.
+- **Photo tab:** while a run is active it no longer calls `loadOcrEngine()`, so no OCR module or asset is requested.
+- **Speed choice dropped:** the app's own 900 ms banish timer does not scale with speed. The brief made it optional.
+- **Property test found a bug:** `formatClock` returned `1e+21:00` for a huge input. Fixed by capping the display at 99:59; kept as a unit test. Two earlier failures were my own test generators (events must be in time order and have a non-empty room id, as the store guarantees), not module bugs.
+- **Another catch:** a template-literal mistake (`"tab-${id}"` as a plain string) was caught by the target-exists test.
+- **Tests removed, because the feature was removed:**
+  - `src/components/TourCoach.test.tsx` (4): renders nothing when closed; dialog with Next and Skip tour; last step says Finish; no step shows a demo answer.
+  - `src/lib/tour.test.ts` (7, one fast-check property): five steps in order; unique ids and short text; only the hint and reveal step opens the quiz; no demo answer; walk 0 to 4; invalid input ends the tour; next step is always the following index or null.
+  - `src/store/useStore.tour.test.ts` (7): starts closed; startTour loads the demo; no double load; walk and close; replayTour without a reload; replayTour with own notes; tourStep never persisted.
+  - Migrated, not deleted: the two "60-second tour button" tests in `DashboardView.test.tsx` now check the "Run demo" button. The "never persisted" idea moved to `useStore.demo.test.ts` (`demoRunning`).
+- **Tests added:** `demoSnapshot.test.ts` (26, four property tests), `demoScript.test.ts` (19, four properties), `demoTargets.test.tsx` (4), `demoSource.test.ts` (source scan), `useStore.demo.test.ts` (5), `DemoBar.test.tsx` (9), and one render test each for `DemoCard`, `RunDemoButton` and `DemoPlayer`.
+- **Not unit-testable here:** the runner and the timing (no DOM library installed). They are checked in the browser (see `docs/BROWSER_CHECKS.md`, section 8).

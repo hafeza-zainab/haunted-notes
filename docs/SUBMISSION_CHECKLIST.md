@@ -28,7 +28,8 @@ Fixed. Every dependency and devDependency was set to the version already install
 ## MANUAL items (you must do these)
 
 - [ ] GitHub repository is public.
-- [ ] Demo video is on YouTube, public, under 3 minutes, with no copyrighted music.
+- [ ] Demo video is on YouTube, public, under 3 minutes, with no copyrighted music. Record it from `/?demo=1` (the "Run demo" script is 2:38) and add an end card with the live URL.
+- [ ] Watch the whole "Run demo" run once yourself before merging `demo-autoplay` into `main`.
 - [ ] Live app URL is reachable (README placeholder must be filled).
 - [ ] Student prize: LinkedIn profile, student email, school, year and degree.
 - [ ] Devpost form: category (Frankenstein) and the "Ghost of Kiroween Past" box with the same Devpost account as 2025, if it applies.

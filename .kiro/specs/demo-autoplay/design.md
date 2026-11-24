@@ -6,7 +6,7 @@
 | `src/lib/demoScript.ts` | pure | Script as data: chapters, steps, actions with `ms`. `scriptTotalMs`, `locate(elapsed)`, `formatClock`. |
 | `src/lib/demoSnapshot.ts` | pure | `takeSnapshot`, `serializeSnapshot`, `parseSnapshot` (never throws), `writeSnapshot`, `recoverSnapshot(storage, apply)`. |
 | `src/demo/domActions.ts` | DOM | Looks up `[data-demo]`, types into inputs with the native value setter, clicks, highlights, scrolls. |
-| `src/demo/runner.ts` | DOM | Executes the script, owns pause, speed, abort, the clock and cleanup. External store for the UI. |
+| `src/demo/runner.ts` | DOM | Executes the script, owns pause, abort, the clock and cleanup. External store for the UI. |
 | `src/components/DemoBar.tsx` | view | Bottom bar, from props only. |
 | `src/components/DemoCard.tsx` | view | Text-only overlay for the intro and Built with Kiro cards. |
 | `src/components/DemoPlayer.tsx` | view | Subscribes to the runner; renders shield, card and bar; Escape; `?demo=1`. |
@@ -26,7 +26,7 @@ type DemoAction =
   | { op: 'quiz'; name: 'hint' | 'wrong' | 'right' | 'reveal' | 'next' | 'skip'; ms: number };
 interface DemoStep { id: string; chapter: number; caption: string; card?: DemoCardText; actions: DemoAction[] }
 ```
-A step lasts the sum of its action `ms`. The runner keeps an absolute schedule: action n ends at `start + Σms(0..n)`. A slow lookup shortens the next sleep instead of delaying the whole run, so the real total equals the scripted total. Pause stops the clock; speed divides every wait.
+A step lasts the sum of its action `ms`. The runner keeps an absolute schedule: action n ends at `start + Σms(0..n)`. A slow lookup shortens the next sleep instead of delaying the whole run, so the real total equals the scripted total. Pause stops the clock. There is no speed control: the app's own 900 ms banish timer would not scale with it.
 
 ## Runner
 `startDemo()`: guard against a second run, snapshot (memory and localStorage), `beginDemoRun()` (store: empty state, `demoRunning = true`, persisted writes suspended), play steps, then in `finally`: remove highlights, `endDemoRun(snapshot)` (single `set` that restores the data and clears the flag), delete the key, focus `#main-content`. Abort (Stop, Escape) throws `DemoAbort` from the next `sleepUntil`. A missing target throws `DemoMissingTarget`, which logs `console.warn`.
@@ -41,7 +41,7 @@ Photo tab: `switchTab` skips `loadOcrEngine()` and marks the engine as ready whi
 `main.tsx` calls `recoverSnapshot(localStorage, apply)` before rendering. `apply` calls `useStore.setState` with the restored fields. The key is removed after a successful apply, or when the value is corrupt.
 
 ## Controls and accessibility
-Bar: `role="region"` `aria-label="Demo controls"`; caption `role="status"` `aria-live="polite"`; chapter dots are a non-interactive `ol` with `aria-current="step"`. Buttons: Pause/Resume, Stop, Speed; each min 44 by 44px, visible focus ring from the global rule. The shield is `position: fixed; inset: 0` below the bar. Outside the bar, keydown, keypress and keyup are cancelled except Escape and Tab. `prefers-reduced-motion`: `scrollIntoView({behavior:'auto'})`, highlight pulse and card fade disabled.
+Bar: `role="region"` `aria-label="Demo controls"`; caption `role="status"` `aria-live="polite"`; chapter dots are a non-interactive `ol` with `aria-current="step"`. Buttons: Pause/Resume and Stop; each min 44 by 44px, visible focus ring from the global rule. The shield is `position: fixed; inset: 0` below the bar. Outside the bar, keydown, keypress and keyup are cancelled except Escape and Tab. `prefers-reduced-motion`: `scrollIntoView({behavior:'auto'})`, highlight pulse and card fade disabled.
 
 Layout: the bar is fixed at the bottom; while it is shown `.main-content` gets bottom padding equal to the bar height so nothing hides under it. At 390px the bar wraps into two rows.
 

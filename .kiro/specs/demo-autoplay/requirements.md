@@ -26,12 +26,13 @@ Glossary: **run** = one play of the script. **script** = the ordered chapters an
 4. If a target element is missing, the run stops cleanly: data restored, bar closed, a `console.warn` logged.
 
 ### R4 Controls
-1. The bar is visible for the whole run and holds: chapter title, caption (`role="status"`, `aria-live="polite"`), elapsed / total time, progress strip, Pause/Resume, Stop, Speed (1x or 1.5x) and one dot per chapter.
-2. Every button is at least 44px high and wide, keyboard reachable, and its accessible name contains its visible text.
-3. Escape stops the run.
-4. The shield blocks user pointer and keyboard input on the app. The script's own programmatic clicks still work.
-5. With `prefers-reduced-motion: reduce` the script scrolls instantly and no smooth effects play.
-6. The total shown is computed from the script (`total / speed`), never a typed-in number.
+1. The bar is visible for the whole run and holds: chapter title, caption (`role="status"`, `aria-live="polite"`), elapsed / total time, progress strip, Pause/Resume, Stop and one dot per chapter.
+2. Speed choice: not included. The brief made it optional, and the app's own 900 ms banish timer does not scale with speed, so a faster run could type into the wrong card.
+3. Every button is at least 44px high and wide, keyboard reachable, and its accessible name contains its visible text.
+4. Escape stops the run.
+5. The shield blocks user pointer and keyboard input on the app. The script's own programmatic clicks still work.
+6. With `prefers-reduced-motion: reduce` the script scrolls instantly and no smooth effects play.
+7. The total shown is computed from the script (the sum of the step durations), never a typed-in number.
 
 ### R5 Data safety
 1. On start the snapshot is held in memory and written to localStorage key `haunted-notes-demo-snapshot`. The run then starts on an empty state.

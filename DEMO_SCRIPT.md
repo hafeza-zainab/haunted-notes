@@ -9,6 +9,14 @@ Format: screen recording + short on-screen captions. No narration. No copyrighte
 - No third-party trademarks or copyrighted music or other material.
 - Scored under "Presentation": clear end-to-end demo, what problem it solves, who it is for, why it matters, easy to follow, memorable.
 
+## Fastest route: let the app play itself
+The app has a self-playing **Run demo** (replaces the old 60-second tour). It takes 2:38 at normal speed, so it fits under 3:00 with an end card on top.
+1. Open the app at `/?demo=1` (it starts after about half a second) or press **Run demo**. Use a clean browser window, zoom 110 to 125%.
+2. Record the window with OBS or Game Bar. Do not touch the mouse or keyboard: a transparent shield ignores clicks, and Escape stops the run.
+3. The caption bar at the bottom is part of the recording. Chapters: intro, four inputs, ghost rooms, the quiz, spaced repetition, study insights, your data stays yours, built with Kiro, end card.
+4. Add an end card (live URL and GitHub repo, readable for at least 3 seconds) in Clipchamp. Keep the total under 3:00.
+5. The run uses sample data only and restores your own notes afterwards. It does not show the offline mode or the phone-width view; cut those in separately if you want them (table below).
+
 ## Free tools
 - Record: OBS Studio (free) or the Windows Game Bar (Win+G). Record at 1920x1080.
 - Edit and captions: Clipchamp (free, built into Windows) or DaVinci Resolve (free). Use text overlays for captions.
@@ -33,7 +41,7 @@ Format: screen recording + short on-screen captions. No narration. No copyrighte
 | 1:35-1:50 | Dashboard "Next ghost returns in 1 day", then open ?dev=1 and press +1 day so an orange ghost returns | "Spaced repetition brings ghosts back" |
 | 1:50-2:00 | Study insights panel: streak, accuracy, chart | "Track your streak and weak rooms" |
 | 2:00-2:10 | Turn on offline in DevTools, reload, Try demo works; show Export backup | "Works offline. Your notes stay in your browser" |
-| 2:10-2:20 | Phone-width view (390px), then the 60-second tour button | "Built for phones, keyboards and reduced motion" |
+| 2:10-2:20 | Phone-width view (390px), then the Run demo button | "Built for phones, keyboards and reduced motion" |
 | 2:20-2:38 | Quick cuts: the .kiro folder (specs, steering, hooks, agent), test run showing all tests passing, a Playwright screenshot | "Built with Kiro: specs, steering, hooks, a custom agent, MCP and property-based tests" |
 | 2:38-2:45 | End card with the live URL and the GitHub repo | "Frankenstein category, Kiroween 2026" |
 
