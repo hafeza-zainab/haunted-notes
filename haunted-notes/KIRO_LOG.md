@@ -499,3 +499,8 @@ Spec: `.kiro/specs/demo-autoplay/` (requirements, design, tasks).
   - Migrated, not deleted: the two "60-second tour button" tests in `DashboardView.test.tsx` now check the "Run demo" button. The "never persisted" idea moved to `useStore.demo.test.ts` (`demoRunning`).
 - **Tests added:** `demoSnapshot.test.ts` (26, four property tests), `demoScript.test.ts` (19, four properties), `demoTargets.test.tsx` (4), `demoSource.test.ts` (source scan), `useStore.demo.test.ts` (5), `DemoBar.test.tsx` (9), and one render test each for `DemoCard`, `RunDemoButton` and `DemoPlayer`.
 - **Not unit-testable here:** the runner and the timing (no DOM library installed). They are checked in the browser (see `docs/BROWSER_CHECKS.md`, section 8).
+### Browser verification of Run demo (Playwright MCP, dev server)
+- Full runs at 1280px and 390px (twice): 33 of 33 steps, measured total 158.3 s, 0 console errors, no resource requests, data restored after finish, Stop, Escape and a reload in the middle. Details in `docs/BROWSER_CHECKS.md`, section 8.
+- **Found by the 390px run:** Reveal and Skip sat behind the bar while the script pressed them. Fix: `reveal()` in `domActions.ts`, plus a scroll margin for `[data-demo]` while a run is active.
+- **Found by ghost-ui-reviewer:** chapter dots showed done and upcoming by fill only. Fix: a longer shape for the current dot and "(done)" in the screen reader text.
+- My own mistake: two tool calls sent in parallel (Escape while an 8 s wait was running) made one run look like it never started. Not a bug in the app; re-run in sequence.

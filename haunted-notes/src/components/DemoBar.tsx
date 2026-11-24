@@ -62,7 +62,7 @@ const DemoBar: React.FC<Props> = ({
               className={`demo-dot ${i < chapter ? 'done' : ''} ${i === chapter ? 'current' : ''}`}
               aria-current={i === chapter ? 'step' : undefined}
             >
-              <span className="sr-only">{title}</span>
+              <span className="sr-only">{i < chapter ? `${title} (done)` : title}</span>
             </li>
           ))}
         </ol>

@@ -109,3 +109,57 @@ Run on the dev server at 390x844 (dashboard also at 1280x900). It can only use T
 5. **Focus lost after Dismiss and after the import dialog** (`LoadNotice.tsx`, `BackupPanel.tsx`): Dismiss now focuses the main region. The import dialog returned focus while the modal was still open (the page behind it is inert), so it now waits one frame and falls back to the main region if the panel was replaced.
 6. **Offline start failed** (`public/sw.js`): the module script and crossorigin stylesheet are requested with an `Origin` header, while precache stored them without one. Vite preview sends `Vary: Origin`, so `caches.match` missed and fell through to the offline network. The asset lookup now uses `caches.match(request, { ignoreVary: true })`. Regression check added in `swStamp.test.ts`.
 7. **Hidden file inputs in the tab order** (`AddNoteView.tsx`): see section 7.
+
+## 8. Run demo (branch `demo-autoplay`)
+Run with the Playwright MCP against the dev server (`http://localhost:5173`), with one real note and one real card in localStorage so that restore could be compared with `JSON.stringify` (notes, flashcards, review log). Status: PASS, FAIL or UNVERIFIED.
+
+### 8.1 Full runs
+| Check | 1280px | 390px | Measured |
+|---|---|---|---|
+| All 9 chapters and 33 steps play and the run ends by itself | PASS | PASS (twice: reduced motion on, then off) | Step starts logged by a MutationObserver on the caption. The last step starts at 152.3 s and lasts 6 s, so the measured total is **158.3 s (2:38)**, equal to the scripted total. Limit 170 s: PASS. |
+| Total shown in the bar is the real total | PASS | PASS | Bar read "0:00 / 2:38" at the start and "1:42 / 2:38" at step 28; it is computed from the script. |
+| Every caption matches the screen | PASS | PASS | Each step's view was logged next to its caption (Add a new note, Ghost dashboard, Quiz mode, Quiz complete, text card over the app, empty state with Try demo). Highlighted target per step logged and visible (see 8.4). Observation: the quiz card order is random, so which ghost is skipped and which cards are missed differs per run. If the skipped card was one of the two built-in "returned" cards, one orange ghost is already on the dashboard before the time-travel step. The captions stay true either way. |
+| Data restored after finish | PASS | PASS | Notes, cards and review log equal the originals; snapshot key deleted; bar, shield and `demo-running` class gone; focus on `main#main-content`. |
+| Data restored after Stop (button, real click) | PASS | not run | Same checks. |
+| Data restored after Escape (real key) | PASS | not run | Same checks. Escape pressed in the intro and in the mic step. |
+| Data restored after a reload in the middle | PASS | not run | Reloaded at about 24 s. The saved store still held the real note during the run (writes are suspended); the leftover snapshot was deleted on the next load. |
+| Recovery on load applies a snapshot over demo-looking data | PASS | not run | Saved store set to a fake demo note, a valid snapshot written, page reloaded: the real note was back and the snapshot key was gone. |
+| `?demo=1` starts the run by itself | PASS | not run | Bar present about 1 s after load. |
+| Shield blocks pointer input | not run | PASS | Playwright could not click the Quiz nav button: "`div.demo-shield` intercepts pointer events". |
+| Shield blocks keyboard input | PASS | not run | Focus on the Quiz nav button, Enter pressed: 0 trusted clicks, view unchanged. |
+| No console errors or warnings | PASS | PASS | In-page recorder of `console.error`, `console.warn`, `error` and `unhandledrejection`: empty. Playwright console: 0 errors, 0 warnings. |
+| No network, file or model requests during a run | PASS | not run | `performance.getEntriesByType('resource')` was empty after clearing it before the run: no module, worker, model or OCR asset, no external URL. No file chooser or download was opened (the script never clicks those; source scan test covers it). |
+| No horizontal scroll while running | not run | PASS | Max `scrollWidth - clientWidth` = 0 in both 390px runs. |
+| Reduced motion: instant scrolling | not run | PASS | With `prefers-reduced-motion: reduce` every `scrollIntoView` call used `behavior: "auto"`. |
+| Highlighted targets clear of the bar | not run | PASS | Every highlighted element was fully visible above the bar at 390px (20 targets, 100% visible). |
+| Clicked targets visible above the bar | not run | PASS with a note | The first 390px run showed Reveal and Skip hidden behind the bar. Fixed (`reveal()` scrolls click and type targets into view; commit `647116f`). Second run, checked 0.8 s after each click: 23 of 25 visible, 3 gone because the view changed. Add Note and Reveal were 4 and 13 px under the bar, because the success and feedback message pushes the button down after the click; they were visible at the click. |
+
+### 8.2 Control bar (390 and 1280px)
+| Check | Status | Measured |
+|---|---|---|
+| Pause and Stop at least 44px | PASS | 93 x 44 and 79 x 44 at both widths (min button size in the 390px run: 44). |
+| Bar height | PASS | 205 px at 390px (24% of 844), 167 px at 1280px; main content bottom padding 224 px and 176 px, so nothing is hidden at the end of a page. |
+| Keyboard | PASS | Focus starts on Pause; Tab goes Pause, Stop; focus ring is the global 2px accent ring (4.2:1). Tab can still leave the bar to the skip link behind the shield (cosmetic, other keys are blocked). |
+| Names equal visible text | PASS | No `aria-label`; icons `aria-hidden`; caption `role="status"` `aria-live="polite"`. |
+| Contrast | PASS after fix | Text 13.7:1, Stop 5.3:1, borders and dots 3.6:1. |
+| State not by colour alone | FIXED | ghost-ui-reviewer: done and upcoming dots differed only by fill. Now the current dot is a longer pill and finished chapters read "(done)" to screen readers. Chapter text "Chapter N of 9" was already there. Re-measured: UNVERIFIED (the CSS change was not re-viewed in the browser; unit test covers the "(done)" text). |
+| Reduced motion | PASS | No animation or transition on the bar, card or highlight. |
+
+### 8.3 Items from sections 1 to 7 above, after this branch
+| Section | Status on `demo-autoplay` | Why |
+|---|---|---|
+| 1 Layout, no horizontal scroll (dashboard, Add Note, quiz, results) at 390px | PASS | 0 px overflow while the demo showed all four views. |
+| 1 Layout at 768px, insights panel height and chart size, chart label size, stitch strip, load notice | UNVERIFIED | Not measured again. Only the insights panel look at 1280px was seen in a screenshot. |
+| 2 60-second tour | REMOVED | Feature replaced by Run demo. |
+| 3 Quiz round: correct, hint, wrong, reveal, skip, results, review missed, dashboard and chart update | PASS | All were driven by the script at 1280 and 390px. Final dashboard: streak 1, reviewed today 10, accuracy 80% (8 of 10) after the script's 10 reviews; the review log gains one event per answered or revealed card. |
+| 3 Answer not in the page before answering | UNVERIFIED in the browser | Covered by `demoTargets.test.tsx` (rendered markup) only. |
+| 4 Export and import | UNVERIFIED | Not re-run. The run only outlines the buttons; the privacy line was added to the same panel. |
+| 5 Offline on the production preview | UNVERIFIED | Production preview not started on this branch. |
+| 6 Console | PASS | 0 errors and 0 warnings across all runs. |
+| 7 ghost-ui-reviewer on the live app | PASS for the new bar | See 8.2. The rest of the app was not reviewed again. |
+
+### 8.4 Screenshots (`docs/screens/`)
+`demo-autoplay-intro-1280.png`, `demo-autoplay-mic-1280.png` (Add Note step), `demo-autoplay-results-1280.png` (Review missed step), `demo-autoplay-returned-1280.png` (spaced repetition step, bar and returned ghost), `demo-autoplay-restored-after-finish-1280.png` (the real note back after a run), `demo-autoplay-bar-390.png`, `demo-autoplay-reveal-390.png`.
+
+### 8.5 Not covered
+No test clicks a real file chooser or the export button during a run: the script never does, and the source scan test enforces it. Not run: a 768px run, Firefox and Safari, a run with the demo already loaded as the user's own data (the snapshot logic is unit-tested), and a real tab close (a reload was used instead).

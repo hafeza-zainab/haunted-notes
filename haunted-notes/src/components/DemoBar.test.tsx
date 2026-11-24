@@ -64,6 +64,14 @@ describe('DemoBar', () => {
     expect(html).toContain('aria-label="Chapters"');
   });
 
+  it('names finished chapters "(done)" for screen readers, not by colour alone', () => {
+    const html = render({ chapter: 2 });
+    expect(html).toContain(`${CHAPTER_TITLES[0]} (done)`);
+    expect(html).toContain(`${CHAPTER_TITLES[1]} (done)`);
+    expect(html).not.toContain(`${CHAPTER_TITLES[2]} (done)`);
+    expect(html).not.toContain(`${CHAPTER_TITLES[5]} (done)`);
+  });
+
   it('has Pause and Stop buttons whose names equal their visible text', () => {
     const html = render();
     const buttons = [...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)];

@@ -614,7 +614,7 @@ body.demo-running .main-content { padding-bottom: 14rem; }
 .demo-dots { display: flex; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
 .demo-dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; border: 2px solid var(--border-strong); background: transparent; }
 .demo-dot.done { background: var(--border-strong); }
-.demo-dot.current { background: var(--accent); border-color: var(--text); }
+.demo-dot.current { width: 1.5rem; border-radius: 6px; background: var(--accent); border-color: var(--text); } /* longer shape, so state is not colour alone */
 .demo-buttons { display: flex; gap: 0.5rem; }
 .demo-btn { min-height: 44px; min-width: 44px; }
 body.demo-running [data-demo] { scroll-margin-top: 7.5rem; scroll-margin-bottom: 14rem; }

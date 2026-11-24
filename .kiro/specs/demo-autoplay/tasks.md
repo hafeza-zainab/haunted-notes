@@ -24,4 +24,4 @@ Run `npm run lint`, `npm test` and `npm run build` before each commit. Commit af
   - [x] 6.2 Replace the three tour buttons; delete `TourCoach`, `tour.ts` and their tests and CSS
   - [x] 6.3 Control bar tests
 - [x] 7. Docs (R6): README, KIRO_EVIDENCE, SUBMISSION_CHECKLIST, DEMO_SCRIPT, BROWSER_CHECKS, KIRO_LOG
-- [ ] 8. Browser verification (R7): 1280px and 390px full runs, Stop, finish, reload mid-run, console, measured total, ghost-ui-reviewer on the bar, screenshots `demo-autoplay-*`
+- [x] 8. Browser verification (R7): 1280px and 390px full runs, Stop, finish, reload mid-run, console, measured total, ghost-ui-reviewer on the bar, screenshots `demo-autoplay-*`
