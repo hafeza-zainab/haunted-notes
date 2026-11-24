@@ -6,7 +6,7 @@ Run `npm run lint`, `npm test` and `npm run build` before each commit. Commit af
   - [ ] 1.1 `src/lib/demoSnapshot.ts`: take, serialize, parse, write, recover
   - [ ] 1.2 Unit tests and fast-check property tests (exact restore, round trip, idempotent recovery, corrupt input)
 - [ ] 2. Store changes (R5, R6)
-  - [ ] 2.1 Remove tour state; add `demoRunning`, `beginDemoRun`, `endDemoRun`; pause persisted writes; exclude `demoRunning` from persistence
+  - [ ] 2.1 Add `demoRunning`, `beginDemoRun`, `endDemoRun`; pause persisted writes; exclude `demoRunning` from persistence (tour state is removed in part 6, with its component)
   - [ ] 2.2 Recover a leftover snapshot in `main.tsx` before render
   - [ ] 2.3 Store tests (replace `useStore.tour.test.ts`)
 - [ ] 3. Script data (R2)

@@ -9,6 +9,7 @@ import { sanitizeNotes, sanitizeFlashcards, sanitizeUi } from '../lib/persistedS
 import { assessSavedValue, needsBackup, planBackup, BACKUP_KEY, type LoadReport } from '../lib/loadReport';
 import { TOUR_STEPS, nextTourStep } from '../lib/tour';
 import { mergeBackup, type BackupData, type ImportSummary } from '../lib/backup';
+import { snapshotPatch, type DemoSnapshot } from '../lib/demoSnapshot';
 
 interface HauntedState {
   notes: Note[];
@@ -52,6 +53,12 @@ interface HauntedState {
   replayTour: () => void;
   advanceTour: () => void;
   endTour: () => void;
+  /** True while a Run demo script is playing. Never persisted. */
+  demoRunning: boolean;
+  /** Start a run: empty state; saved writes are suspended until endDemoRun. */
+  beginDemoRun: () => void;
+  /** End a run: put the snapshot back in one update and resume saving. */
+  endDemoRun: (snapshot: DemoSnapshot) => void;
 }
 
 /**
@@ -82,6 +89,12 @@ function backupBeforeLoad(raw: string | null): LoadReport | null {
   }
 }
 
+/**
+ * While a Run demo script plays, writes to the saved store are skipped so a closed tab
+ * can never leave demo data in place of the user's. Set only by eginDemoRun/endDemoRun.
+ */
+let persistSuspended = false;
+
 const safeStorage: StateStorage = {
   getItem: (name) => {
     try {
@@ -97,6 +110,7 @@ const safeStorage: StateStorage = {
     }
   },
   setItem: (name, value) => {
+    if (persistSuspended) return;
     try {
       window.localStorage.setItem(name, value);
     } catch (err) {
@@ -238,6 +252,25 @@ export const useStore = create<HauntedState>()(
         set(next === null ? { tourStep: null } : tourPatch(next));
       },
       endTour: () => set({ tourStep: null }),
+      demoRunning: false,
+      beginDemoRun: () => {
+        persistSuspended = true;
+        set({
+          notes: [],
+          flashcards: [],
+          reviewLog: emptyReviewLog(),
+          isDemoLoaded: false,
+          currentView: 'dashboard',
+          quizNoteId: null,
+          quizDueOnly: false,
+          demoRunning: true,
+        });
+      },
+      endDemoRun: (snapshot) => {
+        // Resume saving first so this single update writes the restored data.
+        persistSuspended = false;
+        set({ ...snapshotPatch(snapshot), demoRunning: false });
+      },
       importBackup: (data) => {
         const { notes, flashcards, reviewLog } = get();
         const { data: merged, summary } = mergeBackup({ notes, flashcards, reviewLog }, data);
@@ -261,11 +294,12 @@ export const useStore = create<HauntedState>()(
     {
       name: STORAGE_KEY,
       storage: createJSONStorage(() => safeStorage),
-      // loadNotice and tourStep are session-only: never written to localStorage.
+      // loadNotice, tourStep and demoRunning are session-only: never written to localStorage.
       partialize: (state) => {
         const rest: Partial<HauntedState> = { ...state };
         delete rest.loadNotice;
         delete rest.tourStep;
+        delete rest.demoRunning;
         return rest;
       },
       merge: (persisted, current) => {
