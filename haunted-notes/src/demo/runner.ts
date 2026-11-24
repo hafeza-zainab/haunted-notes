@@ -125,7 +125,7 @@ async function waitForTarget(name: string, timeoutMs = 4000): Promise<HTMLElemen
 /** Share of an action's time spent typing; the rest is a pause to read. */
 const TYPING_SHARE = 0.85;
 
-function runStoreAction(name: DemoStoreAction): void {
+function runStoreAction(name: DemoStoreAction, times = 1): void {
   const s = useStore.getState();
   switch (name) {
     case 'emptyState':
@@ -153,7 +153,7 @@ function runStoreAction(name: DemoStoreAction): void {
       useStore.getState().loadDemoData();
       return;
     case 'timeTravelDay':
-      s.timeTravelDay();
+      for (let i = 0; i < times; i++) s.timeTravelDay();
       return;
   }
 }
@@ -211,7 +211,7 @@ async function runAction(action: DemoAction, start: number): Promise<void> {
       clearHighlights();
       return;
     case 'store':
-      runStoreAction(action.name);
+      runStoreAction(action.name, action.times);
       return;
   }
 }

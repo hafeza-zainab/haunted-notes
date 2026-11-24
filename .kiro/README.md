@@ -6,14 +6,14 @@ Built for **Kiroween 2026** (category: Frankenstein). Haunted Notes stitches tog
 
 - **Live app:** <ADD NETLIFY URL>
 - **Demo video:** <ADD YOUTUBE URL>
-- **Try spaced repetition quickly:** open the app, click **Try demo**, then add `?dev=1` to the URL for a **+1 day** time-travel button.
+- **Try spaced repetition quickly:** open the app, click **Try demo**, then add `?dev=1` to the URL for a **+1 day** time-travel button (press it twice for the first return).
 
 ## What it does
 
 1. **Add a note** by typing, speaking (live mic), uploading a photo of printed text (OCR), or uploading an audio file (transcribed locally with Whisper, up to 3 minutes).
 2. **Notes become ghosts.** Each note is split into fill-in-the-blank flashcards. Every unmastered card is a ghost haunting your dashboard, grouped into one "haunted room" per note.
 3. **Quiz to banish.** Answer correctly and the ghost is banished. Answer wrong and it gets louder.
-4. **Ghosts come back.** Spaced repetition (SM-2 lite) schedules each banished ghost to return when it is due for review.
+4. **Ghosts come back.** Spaced repetition on the 2-3-5-7 ladder schedules each banished ghost: it returns after 2 days, then 3, then 5, then 7.
 
 ## The Frankenstein stitch
 
@@ -23,7 +23,7 @@ Built for **Kiroween 2026** (category: Frankenstein). Haunted Notes stitches tog
 | Live mic | Web Speech API |
 | Photo to text | Tesseract.js with canvas preprocessing |
 | Notes to flashcards | Rule-based cloze generation (no LLM) |
-| Review scheduling | SM-2 lite in a pure module (`src/lib/srs.ts`) |
+| Review scheduling | 2-3-5-7 ladder in a pure module (`src/lib/srs.ts`) |
 | UI | React, Vite, TypeScript, Zustand, hand-built SVG ghosts |
 
 ## Run locally

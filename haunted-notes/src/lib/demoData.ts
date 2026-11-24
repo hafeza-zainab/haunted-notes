@@ -111,7 +111,7 @@ export function buildDemoData(): { notes: Note[]; flashcards: Flashcard[] } {
       {
         weaknessScore: 0.7,
         reps: 1,
-        intervalDays: 1,
+        intervalDays: 2,
         ease: 2.5,
         dueAt: PAST,   // ← ghost is back
         lastReviewed: now - 2 * 86_400_000,
@@ -142,7 +142,7 @@ export function buildDemoData(): { notes: Note[]; flashcards: Flashcard[] } {
       {
         weaknessScore: 0.6,
         reps: 1,
-        intervalDays: 1,
+        intervalDays: 2,
         ease: 2.5,
         dueAt: PAST,   // ← ghost is back
         lastReviewed: now - 4 * 86_400_000,

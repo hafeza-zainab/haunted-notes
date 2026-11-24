@@ -25,8 +25,8 @@ export type DemoAction =
   | { op: 'highlight'; target: string; ms: number }
   /** Remove all outlines now. */
   | { op: 'clearHighlights'; ms: number }
-  /** Call a real store action. */
-  | { op: 'store'; name: DemoStoreAction; ms: number };
+  /** Call a real store action (	imes repeats it, for example two one-day jumps). */
+  | { op: 'store'; name: DemoStoreAction; ms: number; times?: number };
 
 /** A text-only card shown over the app (intro and Built with Kiro). */
 export interface DemoCardText {
@@ -279,10 +279,10 @@ export const DEMO_STEPS: readonly DemoStep[] = [
   {
     id: 'srs-travel',
     chapter: 4,
-    caption: 'Sample time travel: the store jumps one day ahead.',
+    caption: 'Sample time travel: the store jumps two days ahead.',
     actions: [
       { op: 'highlight', target: 'next-return', ms: 1500 },
-      { op: 'store', name: 'timeTravelDay', ms: 2500 },
+      { op: 'store', name: 'timeTravelDay', times: 2, ms: 2500 },
     ],
   },
   {

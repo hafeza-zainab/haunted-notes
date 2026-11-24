@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import GhostSvg from './GhostSvg';
 import BanishParticles from './BanishParticles';
 import type { Flashcard } from '../types';
-import { isDue, isReturned, isBanished } from '../lib/srs';
+import { isDue, isReturned, isBanished, effectiveWeakness } from '../lib/srs';
 import { normalizeBlanks } from '../lib/blank';
 import { judgeAnswer, hintFor, type HintLevel } from '../lib/answer';
 import { nextStreak, addMissed } from '../lib/quizRound';
@@ -335,7 +335,7 @@ const QuizView: React.FC = () => {
       <div className="quiz-ghost-area">
         {banishing && <BanishParticles />}
         <GhostSvg
-          weakness={currentCard.weaknessScore}
+          weakness={effectiveWeakness(currentCard)}
           banishing={banishing}
           shaking={shaking}
           size={120}

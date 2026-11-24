@@ -504,3 +504,14 @@ Spec: `.kiro/specs/demo-autoplay/` (requirements, design, tasks).
 - **Found by the 390px run:** Reveal and Skip sat behind the bar while the script pressed them. Fix: `reveal()` in `domActions.ts`, plus a scroll margin for `[data-demo]` while a run is active.
 - **Found by ghost-ui-reviewer:** chapter dots showed done and upcoming by fill only. Fix: a longer shape for the current dot and "(done)" in the screen reader text.
 - My own mistake: two tool calls sent in parallel (Escape while an 8 s wait was running) made one run look like it never started. Not a bug in the app; re-run in sequence.
+---
+## 2-3-5-7 revision ladder (branch `ladder-2357`, from `demo-autoplay`)
+Spec: `.kiro/specs/ladder-2357/`.
+
+- **Scheduling:** a correct answer waits 2, 3, 5, then 7 days (stays at 7); review days 0, 2, 5, 10, 17. A wrong answer or Reveal restarts the ladder. A hint still halves the wait. `ease` stays on the card but is never read or changed.
+- **Missed days, rule 1:** an ignored ghost is drawn stronger: +0.05 per full day after 1 day of grace, capped at +0.2, derived when drawing (`effectiveWeakness`), never saved.
+- **Missed days, rule 2:** a correct answer later than the card's own wait keeps its rung (reps and wait do not move up).
+- **Correction to my own proposal:** I first proposed a +0.25 cap and "at most one ghost type". Ghost type is `floor(weakness x 5)`, so +0.25 can move two types. The cap is 0.2, and a property test pins "at most one type".
+- **Tests:** `srs.test.ts` rewritten for the ladder (39 tests, properties for the ladder, late answers and `effectiveWeakness`); the old "ease never below 1.3" checks became "ease is never changed". New `demoLadder.test.ts` (4). Total 416 tests. One of my new tests used a fixed clock about 58 days after the demo cards were built, so the late rule (correctly) kept them on rung 1; fixed to use the real clock.
+- **Demo:** returned cards on the 2-day rung; the time-travel step calls the store's `timeTravelDay` twice and its caption says two days. Browser run at 1280px (dev server): 33 of 33 steps, last step starts at 152.3 s (total still 158.3 s), 0 console errors, data restored. Before the jump the dashboard read "Next ghost returns in 2 days" with 1 ghost returned; after it, 8 ghosts returned and "Next ghost returns in 1 day".
+- **Not covered:** the haunt meter, insights and room sort still use the stored weakness. The 390px run was not repeated for this change.

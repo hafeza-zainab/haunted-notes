@@ -7,7 +7,7 @@ import BackupPanel from './BackupPanel';
 import LoadNotice from './LoadNotice';
 import RunDemoButton from './RunDemoButton';
 import type { Note, Flashcard } from '../types';
-import { isDue, isBanished, nextReturnInMs, daysFromMs } from '../lib/srs';
+import { isDue, isBanished, nextReturnInMs, daysFromMs, effectiveWeakness } from '../lib/srs';
 import { normalizeBlanks } from '../lib/blank';
 import { noteTitle } from '../lib/noteTitle';
 
@@ -229,7 +229,7 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
                 title={normalizeBlanks(card.prompt)}
               >
                 <GhostSvg
-                  weakness={card.weaknessScore}
+                  weakness={effectiveWeakness(card)}
                   size={80}
                   label={`Ghost: ${normalizeBlanks(card.prompt)}`}
                   className={isDue(card) && card.reps > 0 ? 'ghost--returned' : undefined}
@@ -415,7 +415,7 @@ const DashboardView: React.FC = () => {
               className="btn-dev"
               onClick={timeTravelDay}
               title="Dev tool: shift all dueAt back by 24 h"
-              aria-label="Time travel +1 day: make all scheduled ghosts due now"
+              aria-label="Time travel +1 day: move every ghost's return one day closer"
             >
               ⏩ +1 day
             </button>

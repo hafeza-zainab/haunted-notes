@@ -17,7 +17,7 @@ Applies when working on files in `src/lib/`.
   when reproducing a failure.
 
 ## Invariants worth encoding
-- `srs.ts`: ease never below 1.3; interval never decreases over consecutive correct
+- `srs.ts` (2-3-5-7 ladder): `ease` is never changed; the wait is 2, 3, 5 or 7 days (half after a hint); interval never decreases over consecutive correct
   answers; a wrong answer sets `reps` to 0 and `dueAt` to now; `isDue` is false when
   `reps` is 0; `dueAt` moves forward after a correct answer.
 - `cloze.ts`: the blank is never a stopword or a number; the prompt never contains the

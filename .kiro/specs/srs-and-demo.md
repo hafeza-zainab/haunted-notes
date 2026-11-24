@@ -1,3 +1,5 @@
+> Superseded in part: the scheduling ramp below (1 day, 3 days, interval x ease) was replaced by the 2-3-5-7 ladder. See `ladder-2357/`.
+
 # Spaced Repetition & Demo Mode — Spec
 
 ## Requirements

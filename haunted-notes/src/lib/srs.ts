@@ -1,20 +1,32 @@
 /**
  * src/lib/srs.ts
  *
- * SM-2 lite spaced-repetition scheduling — pure functions only.
+ * Spaced-repetition scheduling on the 2-3-5-7 ladder: pure functions only.
  * No React, no Zustand, no DOM. Safe to unit-test in isolation.
+ *
+ * A correct answer returns the ghost after 2 days, then 3, then 5, then 7 days
+ * (and stays at 7). A wrong answer sends it back to the start of the ladder.
+ * `ease` is kept on every card so saved data and backups stay valid, but the
+ * ladder does not use it and nothing changes it.
  */
 
 import type { SrsFields } from '../types';
 
-// ── Constants ────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+/** Days to wait after the 1st, 2nd, 3rd and later correct answers. */
+export const LADDER_DAYS = [2, 3, 5, 7] as const;
 
 const DEFAULT_EASE = 2.5;
-const MIN_EASE     = 1.3;
-const EASE_PENALTY = 0.2;
 const MS_PER_DAY   = 86_400_000;
+
 /** A hinted correct answer gets this share of the normal next interval. */
 const HINT_INTERVAL_FACTOR = 0.5;
+
+/** An ignored ghost grows after this many full days overdue, by this much per day, up to the cap (0.2 is one ghost type). */
+export const GRACE_DAYS = 1;
+export const GROWTH_PER_DAY = 0.05;
+export const GROWTH_CAP = 0.2;
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -31,58 +43,78 @@ export function defaultSrsFields(now = Date.now()): SrsFields {
   };
 }
 
+/** Days to wait on ladder step `index` (0 is the first correct answer). Steps past the end stay at 7. */
+export function ladderDays(index: number): number {
+  const i = Number.isFinite(index) ? Math.min(LADDER_DAYS.length - 1, Math.max(0, Math.floor(index))) : 0;
+  return LADDER_DAYS[i];
+}
+
+/**
+ * True when a scheduled card (reps > 0) is answered later than its own wait
+ * past its due time, for example a 3-day wait answered more than 3 days late.
+ * Early, on-time and new cards are never overdue.
+ */
+export function isLate(card: SrsFields, now = Date.now()): boolean {
+  return card.reps > 0 && now - card.dueAt > card.intervalDays * MS_PER_DAY;
+}
+
 /**
  * Advance scheduling after a correct answer.
  *
- * Interval ramp:
- *   reps === 0  →  1 day
- *   reps === 1  →  3 days
- *   reps ≥  2  →  round(intervalDays × ease)
+ *   reps 0 → 2 days, reps 1 → 3 days, reps 2 → 5 days, reps 3 or more → 7 days
  *
- * ease is unchanged on correct answers.
+ * A card answered later than its own wait stays on the rung it was on (reps and
+ * wait do not move up), so a long absence does not earn a longer gap.
+ * A hinted answer still banishes the ghost, but it returns in half the time.
+ * `ease` is not touched.
  */
 export function scheduleCorrect(
   card: SrsFields,
   now = Date.now(),
   hinted = false,
 ): SrsFields {
-  let newInterval: number;
-
-  if (card.reps === 0) {
-    newInterval = 1;
-  } else if (card.reps === 1) {
-    newInterval = 3;
-  } else {
-    newInterval = Math.round(card.intervalDays * card.ease);
-  }
-
-  // A hinted correct answer still banishes the ghost, but it returns sooner
+  const late = isLate(card, now);
+  const reps = late ? card.reps : card.reps + 1;
+  let newInterval = ladderDays(reps - 1);
   if (hinted) newInterval = newInterval * HINT_INTERVAL_FACTOR;
 
   return {
     ease: card.ease,
     intervalDays: newInterval,
     dueAt: now + newInterval * MS_PER_DAY,
-    reps: card.reps + 1,
+    reps,
   };
 }
 
 /**
- * Reset scheduling after a wrong answer.
- *
- * - interval resets to 0 (due immediately)
- * - reps resets to 0
- * - ease decreases by EASE_PENALTY, floored at MIN_EASE
+ * Reset scheduling after a wrong answer or Reveal: back to the start of the
+ * ladder, due immediately. `ease` is not touched.
  */
 export function scheduleWrong(card: SrsFields, now = Date.now()): SrsFields {
   return {
-    ease: Math.max(MIN_EASE, card.ease - EASE_PENALTY),
+    ease: card.ease,
     intervalDays: 0,
     dueAt: now,
     reps: 0,
   };
 }
 
+/**
+ * The weakness to draw: the stored score plus growth for a ghost that has been
+ * ignored. After GRACE_DAYS full days overdue it gains GROWTH_PER_DAY for each
+ * further day, up to GROWTH_CAP (exactly one ghost type wide, so at most one type up), and never above 1.
+ * Derived on the fly and never saved; answering the card clears it.
+ */
+export function effectiveWeakness(
+  card: { weaknessScore: number; dueAt: number },
+  now = Date.now(),
+): number {
+  const base = Number.isFinite(card.weaknessScore) ? Math.min(1, Math.max(0, card.weaknessScore)) : 0;
+  if (!Number.isFinite(card.dueAt) || !Number.isFinite(now)) return base;
+  const daysOverdue = Math.floor((now - card.dueAt) / MS_PER_DAY);
+  const growth = Math.min(GROWTH_CAP, GROWTH_PER_DAY * Math.max(0, daysOverdue - GRACE_DAYS));
+  return Math.min(1, base + growth);
+}
 /**
  * Returns true when the card is due for review AND has been reviewed at
  * least once before (reps > 0).

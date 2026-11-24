@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import {
+  GROWTH_CAP,
+  LADDER_DAYS,
   defaultSrsFields,
+  effectiveWeakness,
+  isLate,
+  ladderDays,
   scheduleCorrect,
   scheduleWrong,
   isDue,
@@ -12,6 +17,7 @@ import {
   daysFromMs,
 } from './srs';
 import type { SrsFields } from '../types';
+import { GHOST_TYPES, ghostTypeFor } from './haunt';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -84,14 +90,153 @@ describe('scheduleCorrect', () => {
     );
   });
 
-  it('follows the 1 day, 3 days, interval x ease ramp', () => {
-    const t = 1_000_000;
-    const first = scheduleCorrect(defaultSrsFields(t), t);
-    const second = scheduleCorrect(first, t);
-    const third = scheduleCorrect(second, t);
-    expect(first.intervalDays).toBe(1);
-    expect(second.intervalDays).toBe(3);
-    expect(third.intervalDays).toBe(Math.round(3 * 2.5));
+  it('follows the 2-3-5-7 ladder when answered on time, and stays at 7', () => {
+    let card = defaultSrsFields(0);
+    let t = 0;
+    const waits: number[] = [];
+    for (let i = 0; i < 7; i++) {
+      card = scheduleCorrect(card, t);
+      waits.push(card.intervalDays);
+      t = card.dueAt; // answered exactly when it returns
+    }
+    expect(waits).toEqual([2, 3, 5, 7, 7, 7, 7]);
+  });
+
+  it('day numbers on the ladder: 0, 2, 5, 10, 17', () => {
+    let card = defaultSrsFields(0);
+    const days: number[] = [0];
+    for (let i = 0; i < 4; i++) {
+      card = scheduleCorrect(card, card.dueAt);
+      days.push(card.dueAt / MS_PER_DAY);
+    }
+    expect(days).toEqual([0, 2, 5, 10, 17]);
+  });
+
+  it('on any reachable card the wait is one of 2, 3, 5, 7 (or half of one after a hint)', () => {
+    fc.assert(
+      fc.property(reachableArb, fc.boolean(), ({ card, now }, hinted) => {
+        const next = scheduleCorrect(card, now, hinted);
+        const allowed = hinted ? LADDER_DAYS.map((d) => d / 2) : [...LADDER_DAYS];
+        expect(allowed).toContain(next.intervalDays);
+      }),
+    );
+  });
+});
+
+describe('late answers stay on their rung', () => {
+  const t0 = 1_000_000_000_000;
+  const onRung2 = (): SrsFields => ({ ease: 2.5, intervalDays: 3, dueAt: t0, reps: 2 });
+
+  it('a card answered more than its own wait late keeps reps and its wait', () => {
+    const next = scheduleCorrect(onRung2(), t0 + 3 * MS_PER_DAY + 1);
+    expect(next.reps).toBe(2);
+    expect(next.intervalDays).toBe(3);
+    expect(next.dueAt).toBe(t0 + 3 * MS_PER_DAY + 1 + 3 * MS_PER_DAY);
+  });
+
+  it('exactly one wait late still counts as on time and moves up', () => {
+    const next = scheduleCorrect(onRung2(), t0 + 3 * MS_PER_DAY);
+    expect(next.reps).toBe(3);
+    expect(next.intervalDays).toBe(5);
+  });
+
+  it('answering early or on time moves up', () => {
+    expect(scheduleCorrect(onRung2(), t0 - MS_PER_DAY).reps).toBe(3);
+    expect(scheduleCorrect(onRung2(), t0).reps).toBe(3);
+  });
+
+  it('a new or wrong card is never late', () => {
+    expect(isLate(defaultSrsFields(0), 10 * 365 * MS_PER_DAY)).toBe(false);
+    expect(isLate(scheduleWrong(onRung2(), t0), t0 + 400 * MS_PER_DAY)).toBe(false);
+  });
+
+  it('a late answer never moves a card up and always returns it later than now', () => {
+    fc.assert(
+      fc.property(reachableArb, fc.integer({ min: 0, max: 400 }), ({ card, now }, extraDays) => {
+        fc.pre(card.reps > 0);
+        const t = card.dueAt + (card.intervalDays + extraDays) * MS_PER_DAY + 1;
+        const next = scheduleCorrect(card, t);
+        expect(next.reps).toBe(card.reps);
+        expect(next.dueAt).toBeGreaterThan(t);
+        expect(now).toBeGreaterThanOrEqual(0);
+      }),
+    );
+  });
+});
+
+describe('ladderDays', () => {
+  it('maps steps to 2, 3, 5, 7 and clamps outside the ladder', () => {
+    expect([0, 1, 2, 3, 4, 99].map(ladderDays)).toEqual([2, 3, 5, 7, 7, 7]);
+    expect(ladderDays(-5)).toBe(2);
+    expect(ladderDays(NaN)).toBe(2);
+    expect(ladderDays(Infinity)).toBe(2);
+  });
+
+  it('is non-decreasing and always on the ladder', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: -10, max: 1000 }), (i) => {
+        expect(LADDER_DAYS).toContain(ladderDays(i));
+        expect(ladderDays(i + 1)).toBeGreaterThanOrEqual(ladderDays(i));
+      }),
+    );
+  });
+});
+
+describe('effectiveWeakness', () => {
+  const due = 5_000_000_000;
+  const card = (w: number) => ({ weaknessScore: w, dueAt: due });
+
+  it('adds nothing before the due time, on the due day and after one full day', () => {
+    expect(effectiveWeakness(card(0.4), due - 5 * MS_PER_DAY)).toBe(0.4);
+    expect(effectiveWeakness(card(0.4), due)).toBe(0.4);
+    expect(effectiveWeakness(card(0.4), due + 2 * MS_PER_DAY - 1)).toBe(0.4);
+  });
+
+  it('adds 0.05 per further full day, capped at 0.2', () => {
+    expect(effectiveWeakness(card(0.4), due + 2 * MS_PER_DAY)).toBeCloseTo(0.45, 10);
+    expect(effectiveWeakness(card(0.4), due + 4 * MS_PER_DAY)).toBeCloseTo(0.55, 10);
+    expect(effectiveWeakness(card(0.4), due + 5 * MS_PER_DAY)).toBeCloseTo(0.6, 10);
+    expect(effectiveWeakness(card(0.4), due + 400 * MS_PER_DAY)).toBeCloseTo(0.6, 10);
+  });
+
+  it('never goes above 1 and handles bad numbers', () => {
+    expect(effectiveWeakness(card(0.95), due + 50 * MS_PER_DAY)).toBe(1);
+    expect(effectiveWeakness(card(NaN), due + 50 * MS_PER_DAY)).toBeCloseTo(0.2, 10);
+    expect(effectiveWeakness({ weaknessScore: 0.3, dueAt: NaN }, 1)).toBe(0.3);
+    expect(effectiveWeakness(card(0.3), NaN)).toBe(0.3);
+  });
+
+  it('is between the stored score and stored + 0.2, within [0, 1], and never falls as time passes', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: -1, max: 2, noNaN: true }),
+        fc.integer({ min: 0, max: 8_000_000_000_000 }),
+        fc.integer({ min: 0, max: 8_000_000_000_000 }),
+        fc.integer({ min: 0, max: 100 * MS_PER_DAY }),
+        (w, dueAt, now, later) => {
+          const stored = Math.min(1, Math.max(0, w));
+          const a = effectiveWeakness({ weaknessScore: w, dueAt }, now);
+          const b = effectiveWeakness({ weaknessScore: w, dueAt }, now + later);
+          expect(a).toBeGreaterThanOrEqual(stored);
+          expect(a).toBeLessThanOrEqual(Math.min(1, stored + GROWTH_CAP) + 1e-12);
+          expect(a).toBeGreaterThanOrEqual(0);
+          expect(a).toBeLessThanOrEqual(1);
+          expect(b).toBeGreaterThanOrEqual(a - 1e-12);
+        },
+      ),
+    );
+  });
+
+  it('an ignored ghost grows at most one ghost type', () => {
+    fc.assert(
+      fc.property(fc.double({ min: 0, max: 1, noNaN: true }), fc.integer({ min: 0, max: 1000 }), (w, days) => {
+        const grown = effectiveWeakness({ weaknessScore: w, dueAt: 0 }, days * MS_PER_DAY);
+        const up = GHOST_TYPES.indexOf(ghostTypeFor(grown)) - GHOST_TYPES.indexOf(ghostTypeFor(w));
+        expect(up).toBeGreaterThanOrEqual(0);
+        expect(up).toBeLessThanOrEqual(1);
+        expect(grown - w).toBeLessThanOrEqual(GROWTH_CAP + 1e-12);
+      }),
+    );
   });
 });
 
@@ -107,7 +252,7 @@ describe('scheduleWrong', () => {
     );
   });
 
-  it('ease never drops below 1.3, even after many wrong answers', () => {
+  it('leaves ease unchanged, however many wrong answers', () => {
     fc.assert(
       fc.property(reachableArb, fc.integer({ min: 1, max: 30 }), ({ card, now }, n) => {
         let c = card;
