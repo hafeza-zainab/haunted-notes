@@ -44,7 +44,7 @@ const DemoBar: React.FC<Props> = ({
       <div className="demo-bar-head">
         <p className="demo-chapter">
           Chapter {chapter + 1} of {CHAPTER_TITLES.length}: {CHAPTER_TITLES[chapter]}
-          {sampleNote ? ` · ${sampleNote}` : ''}
+          {sampleNote && <span className="demo-sample">{sampleNote}</span>}
         </p>
         <p className="demo-time">
           {formatClock(elapsedMs)} / {formatClock(totalMs)}

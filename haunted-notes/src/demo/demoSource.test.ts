@@ -111,3 +111,25 @@ describe('narration plays only same-origin /demo-audio/ clips', () => {
     }
   });
 });
+
+describe('the first clip starts inside the click and the run waits for its sound', () => {
+  const runner = code(read('./runner.ts'));
+
+  it('starts chapter 1 before any await, then waits a bounded time for the sound', () => {
+    const start = runner.indexOf('narrator.chapterStarted(0, 0, 0)');
+    const wait = runner.indexOf('await waitForFirstSound(FIRST_SOUND_WAIT_MS)');
+    expect(start).toBeGreaterThan(-1);
+    expect(wait).toBeGreaterThan(start);
+    // Nothing is awaited between the start of startDemo and the first play(): it stays inside the click.
+    const head = runner.slice(runner.indexOf('export async function startDemo'), start);
+    expect(head).not.toMatch(/\bawait\b/);
+    const limit = Number(runner.match(/FIRST_SOUND_WAIT_MS\s*=\s*(\d+)/)?.[1]);
+    expect(limit).toBeGreaterThan(0);
+    expect(limit).toBeLessThanOrEqual(2000);
+  });
+
+  it('stops waiting when the audio plays or fails, so a missing clip never holds the run', () => {
+    expect(runner).toMatch(/addEventListener\('playing', done\)/);
+    expect(runner).toMatch(/addEventListener\('error', done\)/);
+  });
+});

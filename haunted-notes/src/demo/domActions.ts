@@ -55,7 +55,8 @@ export function highlight(el: HTMLElement): void {
 
 /** Bring an element the script is about to use into view, clear of the nav and the bar. */
 export function reveal(el: HTMLElement): void {
-  el.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  // Instant, not smooth: the click or the typing follows at once, so the target must already be there.
+  el.scrollIntoView({ block: 'nearest', behavior: 'instant' });
 }
 
 export function clearHighlights(): void {

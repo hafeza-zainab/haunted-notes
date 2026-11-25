@@ -110,6 +110,11 @@ export function demoUrlParams(): { demo: boolean; silent: boolean } {
 let soundOn: boolean | null = null;
 /** The narrator for the run in progress. */
 let narrator: Narrator | null = null;
+/** The one audio element of the run in progress, kept so the run can wait for the first sound. */
+let narrationAudio: HTMLAudioElement | null = null;
+
+/** The longest the run waits for the first clip to start making sound. */
+export const FIRST_SOUND_WAIT_MS = 1500;
 
 function currentSound(): boolean {
   if (soundOn === null) soundOn = !demoUrlParams().silent;
@@ -121,6 +126,7 @@ function createRunNarrator(sound: boolean): Narrator | null {
   try {
     const audio = new Audio();
     audio.preload = 'auto';
+    narrationAudio = audio;
     return createNarrator({
       audio,
       srcFor: narrationSrc,
@@ -131,6 +137,28 @@ function createRunNarrator(sound: boolean): Narrator | null {
     publish({ narration: 'unavailable' });
     return null;
   }
+}
+
+/**
+ * Resolve when the narration audio is playing, or when it fails, or after ms.
+ * The first sound in a page can start a second after play() is called, because the
+ * browser has to open the audio output. Waiting for it keeps the first captions in step
+ * with the speech whatever the device. Resolves at once if there is nothing to wait for.
+ */
+function waitForFirstSound(ms: number): Promise<void> {
+  const audio = narrationAudio;
+  if (!audio || (!audio.paused && audio.currentTime > 0)) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => {
+      clearTimeout(timer);
+      audio.removeEventListener('playing', done);
+      audio.removeEventListener('error', done);
+      resolve();
+    };
+    const timer = setTimeout(done, ms);
+    audio.addEventListener('playing', done);
+    audio.addEventListener('error', done);
+  });
 }
 
 // ── Clock and waiting ────────────────────────────────────────────────────────
@@ -319,6 +347,13 @@ export async function startDemo(options: { sound?: boolean } = {}): Promise<void
   // The right and wrong answer sounds follow the same Sound button as the narration.
   useStore.getState().setDemoSound(currentSound());
 
+  // Start the first clip now, inside the click, and hold the script clock until its sound
+  // really starts. Chapters 2 to 9 start their clips on the clock and are only ~0.1 s late.
+  if (narrator && currentSound()) {
+    narrator.chapterStarted(0, 0, 0);
+    await waitForFirstSound(FIRST_SOUND_WAIT_MS);
+  }
+
   let lastTick = performance.now();
   let lastPublish = 0;
   const clock = setInterval(() => {
@@ -347,6 +382,7 @@ export async function startDemo(options: { sound?: boolean } = {}): Promise<void
       console.warn('Haunted Notes demo: could not stop the narration', err);
     }
     narrator = null;
+    narrationAudio = null;
     try {
       useStore.getState().endDemoRun(snapshot);
     } catch (err) {

@@ -132,7 +132,7 @@ describe('DemoBar', () => {
 
   it('says "sample" in the chapter line while the screen holds sample data, and only then', () => {
     const withNote = render({ sampleNote: 'sample data' });
-    expect(withNote).toContain(' · sample data');
+    expect(withNote).toContain('<span class="demo-sample">sample data</span>');
     expect(render({ sampleNote: null })).not.toContain('sample');
   });
 
