@@ -11,6 +11,8 @@ interface Props {
   soundOn: boolean;
   /** A narration clip could not load or play. */
   narrationUnavailable: boolean;
+  /** Set while the screen holds sample data or a simulated clock jump. */
+  sampleNote: string | null;
   onTogglePause: () => void;
   onToggleSound: () => void;
   onStop: () => void;
@@ -30,6 +32,7 @@ const DemoBar: React.FC<Props> = ({
   totalMs,
   soundOn,
   narrationUnavailable,
+  sampleNote,
   onTogglePause,
   onToggleSound,
   onStop,
@@ -41,6 +44,7 @@ const DemoBar: React.FC<Props> = ({
       <div className="demo-bar-head">
         <p className="demo-chapter">
           Chapter {chapter + 1} of {CHAPTER_TITLES.length}: {CHAPTER_TITLES[chapter]}
+          {sampleNote ? ` · ${sampleNote}` : ''}
         </p>
         <p className="demo-time">
           {formatClock(elapsedMs)} / {formatClock(totalMs)}

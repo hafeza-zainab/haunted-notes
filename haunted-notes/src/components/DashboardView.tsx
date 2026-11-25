@@ -262,7 +262,7 @@ const HauntedRoom: React.FC<HauntedRoomProps> = ({ note, cards, onQuiz, onDelete
       {/* ── Room actions ── */}
       <div className="room-actions">
         {haunted.length > 0 && (
-          <button className="btn-primary btn-sm" onClick={onQuiz}>
+          <button className="btn-primary btn-sm" onClick={onQuiz} data-demo={`quiz-room-${note.id}`}>
             👻 Quiz this room
           </button>
         )}

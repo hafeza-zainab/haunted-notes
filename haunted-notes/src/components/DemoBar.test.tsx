@@ -17,6 +17,7 @@ function render(over: Partial<React.ComponentProps<typeof DemoBar>> = {}) {
       totalMs={scriptTotalMs()}
       soundOn={true}
       narrationUnavailable={false}
+      sampleNote={null}
       onTogglePause={noop}
       onToggleSound={noop}
       onStop={noop}
@@ -127,6 +128,12 @@ describe('DemoBar', () => {
     for (const over of [{ soundOn: false }, { narrationUnavailable: true }, { soundOn: false, narrationUnavailable: true }]) {
       expect(render(over)).toContain('Hint shows the first letter, then the length.');
     }
+  });
+
+  it('says "sample" in the chapter line while the screen holds sample data, and only then', () => {
+    const withNote = render({ sampleNote: 'sample data' });
+    expect(withNote).toContain(' · sample data');
+    expect(render({ sampleNote: null })).not.toContain('sample');
   });
 
   it('the button shows Resume while paused', () => {

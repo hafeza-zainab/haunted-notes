@@ -5,6 +5,15 @@ import { isDue, isLate, scheduleCorrect, nextReturnInMs, daysFromMs, effectiveWe
 
 const DAY = 86_400_000;
 
+/** The step whose actions jump the clock 
+ days (by calling the store's timeTravelDay 
+ times). */
+function jumpStep(n: number) {
+  return DEMO_STEPS.find((s) =>
+    s.actions.some((a) => a.op === 'store' && a.name === 'timeTravelDay' && a.times === n),
+  );
+}
+
 /** What the Run demo does to the cards, on the 2-3-5-7 ladder. */
 describe('Run demo on the 2-3-5-7 ladder', () => {
   const answerAll = (t0: number) => {
@@ -36,10 +45,10 @@ describe('Run demo on the 2-3-5-7 ladder', () => {
     const t0 = Date.now(); // the demo cards are built from the real clock
     const one = answerAll(t0).map((c) => ({ ...c, dueAt: c.dueAt - DAY }));
     expect(one.filter((c) => isDue(c, t0))).toHaveLength(0);
-    const step = DEMO_STEPS.find((s) => s.id === 'srs-travel');
-    const jump = step?.actions.find((a) => a.op === 'store' && a.name === 'timeTravelDay');
-    expect(jump && jump.op === 'store' ? jump.times : undefined).toBe(2);
-    expect(step?.caption).toContain('two days');
+    const step = jumpStep(2);
+    expect(step, 'a step jumps the clock two days').toBeDefined();
+    expect(step?.caption).toBe('Jump ahead, and the ghosts that are due return, glowing orange.');
+    expect(step?.sample?.toLowerCase()).toContain('sample');
   });
 
   it('the dashboard would say the next ghost returns in 2 days right after the quiz', () => {
@@ -64,9 +73,9 @@ describe('Run demo on the 2-3-5-7 ladder', () => {
       const stored = c.weaknessScore;
       expect(effectiveWeakness(c, t0)).toBeCloseTo(Math.min(1, stored + GROWTH_CAP), 10);
     }
-    const step = DEMO_STEPS.find((s) => s.id === 'srs-ignore');
-    const act = step?.actions.find((a) => a.op === 'store');
-    expect(act && act.op === 'store' ? act.times : undefined).toBe(5);
-    expect(step?.caption.toLowerCase()).toContain('sample');
+    const step = jumpStep(5);
+    expect(step, 'a step jumps the clock five more days').toBeDefined();
+    expect(step?.caption).toBe('Ignore them longer, and they look stronger.');
+    expect(step?.sample?.toLowerCase()).toContain('sample');
   });
 });

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   CHAPTER_TITLES,
   DEMO_STEPS,
@@ -20,10 +21,22 @@ import { buildDemoData } from './demoData';
 import { generateFlashcards } from './cloze';
 
 describe('script length', () => {
-  it('lasts between 140 and 170 seconds at normal speed', () => {
+  it('lasts between 115 and 170 seconds at normal speed', () => {
+    // The floor was 140 s when the captions were written freehand. The captions are now the
+    // subtitles of nine narration clips (105 s of speech in total), each chapter is only as
+    // long as its clip plus room to read the screen, so the run is about 2:05. The next test
+    // requires the run to cover all of the narration.
     const s = scriptTotalMs() / 1000;
-    expect(s).toBeGreaterThanOrEqual(140);
+    expect(s).toBeGreaterThanOrEqual(115);
     expect(s).toBeLessThanOrEqual(170);
+  });
+
+  it('is at least as long as all nine narration clips together', () => {
+    const manifest = JSON.parse(
+      readFileSync(join(process.cwd(), 'public', 'demo-audio', 'manifest.json'), 'utf8'),
+    ) as { clips: { durationMs: number }[] };
+    const speech = manifest.clips.reduce((sum, c) => sum + c.durationMs, 0);
+    expect(scriptTotalMs()).toBeGreaterThanOrEqual(speech);
   });
 
   it('every action has a non-negative whole-millisecond duration', () => {
@@ -53,15 +66,13 @@ describe('captions', () => {
     }
   });
 
-  it('steps shown with sample data say "sample"', () => {
-    const typed = DEMO_STEPS.filter((s) => s.actions.some((a) => a.op === 'type' && a.target === 'note-text'));
-    const labelled = typed.filter((s) => s.id !== 'inputs-type');
-    for (const s of labelled) expect(s.caption.toLowerCase(), s.id).toContain('sample');
-    expect(typed.find((s) => s.id === 'inputs-type')?.caption.toLowerCase()).toContain('sample');
+  it('the sample texts are labelled "sample" on screen', () => {
+    // Captions are now the narration, so the word "sample" is said by the bar instead:
+    // every step that types sample text or jumps the clock has a "sample" label (tested in
+    // demoSubtitles.test.ts). The typed texts say it themselves.
     for (const t of [SAMPLE_PHOTO_TEXT, SAMPLE_AUDIO_TEXT, SAMPLE_NOTE]) {
       expect(t.toLowerCase()).toContain('sample');
     }
-    expect(DEMO_STEPS.find((s) => s.id === 'srs-travel')?.caption.toLowerCase()).toContain('sample');
   });
 
   it('no caption, card or typed text reveals a demo quiz answer', () => {

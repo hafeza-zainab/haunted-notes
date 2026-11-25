@@ -38,7 +38,7 @@ const StudyInsights: React.FC = () => {
   return (
     <section className="insights" aria-labelledby={headingId} data-demo="insights">
       <h2 id={headingId}>Study insights</h2>
-      <dl className="insights-stats">
+      <dl className="insights-stats" data-demo="insights-stats">
         <div className="insights-stat">
           <dt>{streakLabel(insights.streak)}</dt>
           <dd>{insights.streak}</dd>
@@ -58,9 +58,9 @@ const StudyInsights: React.FC = () => {
       </dl>
       <h3>Weakest rooms</h3>
       {insights.weakest.length === 0 ? (
-        <p>No weak rooms. All ghosts are banished or none exist yet.</p>
+        <p data-demo="insights-weak">No weak rooms. All ghosts are banished or none exist yet.</p>
       ) : (
-        <ol className="insights-weak">
+        <ol className="insights-weak" data-demo="insights-weak">
           {insights.weakest.map((r) => (
             <li key={r.noteId}>
               <span>{titleById.get(r.noteId) ?? ''}</span>{' '}

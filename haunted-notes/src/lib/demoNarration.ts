@@ -36,11 +36,18 @@ export function narrationSrc(chapter: number): string {
   return `/demo-audio/${narrationFile(chapter)}`;
 }
 
-export interface ManifestClip {
+/** One subtitle: the words spoken from startMs (clip time) until the next cue. */ interface ManifestCue {
+  startMs: number;
+  text: string;
+  /** Split inside a phrase with no quiet gap, placed by word count. */
+  estimated?: boolean;
+}
+ interface ManifestClip {
   chapterId: string;
   chapter: number;
   file: string;
   durationMs: number;
+  cues: ManifestCue[];
 }
 
 export interface NarrationManifest {

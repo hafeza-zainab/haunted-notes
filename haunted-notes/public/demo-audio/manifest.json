@@ -1,60 +1,225 @@
 {
-    "version":  1,
-    "measuredWith":  "Chromium audio.duration (Playwright MCP, dev server)",
-    "clips":  [
-                  {
-                      "chapterId":  "intro",
-                      "chapter":  1,
-                      "file":  "chapter-1.wav",
-                      "durationMs":  5040
-                  },
-                  {
-                      "chapterId":  "inputs",
-                      "chapter":  2,
-                      "file":  "chapter-2.wav",
-                      "durationMs":  20240
-                  },
-                  {
-                      "chapterId":  "rooms",
-                      "chapter":  3,
-                      "file":  "chapter-3.wav",
-                      "durationMs":  11040
-                  },
-                  {
-                      "chapterId":  "quiz",
-                      "chapter":  4,
-                      "file":  "chapter-4.wav",
-                      "durationMs":  21680
-                  },
-                  {
-                      "chapterId":  "srs",
-                      "chapter":  5,
-                      "file":  "chapter-5.wav",
-                      "durationMs":  14880
-                  },
-                  {
-                      "chapterId":  "insights",
-                      "chapter":  6,
-                      "file":  "chapter-6.wav",
-                      "durationMs":  6800
-                  },
-                  {
-                      "chapterId":  "data",
-                      "chapter":  7,
-                      "file":  "chapter-7.wav",
-                      "durationMs":  7120
-                  },
-                  {
-                      "chapterId":  "kiro",
-                      "chapter":  8,
-                      "file":  "chapter-8.wav",
-                      "durationMs":  11120
-                  },
-                  {
-                      "chapterId":  "end",
-                      "chapter":  9,
-                      "file":  "chapter-9.wav",
-                      "durationMs":  7040
-                  }
-              ]
+  "version": 1,
+  "measuredWith": "Chromium audio.duration (Playwright MCP, dev server)",
+  "clips": [
+    {
+      "chapterId": "intro",
+      "chapter": 1,
+      "file": "chapter-1.wav",
+      "durationMs": 5040,
+      "cues": [
+        {
+          "startMs": 0,
+          "text": "Haunted Notes turns your unfinished notes into ghosts"
+        },
+        {
+          "startMs": 3200,
+          "text": "that haunt you until you master them."
+        }
+      ]
+    },
+    {
+      "chapterId": "inputs",
+      "chapter": 2,
+      "file": "chapter-2.wav",
+      "durationMs": 20240,
+      "cues": [
+        {
+          "startMs": 0,
+          "text": "Add notes four ways."
+        },
+        {
+          "startMs": 1850,
+          "text": "Type them, speak with your microphone,"
+        },
+        {
+          "startMs": 4200,
+          "text": "snap a photo of printed text, or upload an audio recording."
+        },
+        {
+          "startMs": 8100,
+          "text": "Audio files and photos are processed on your own device,"
+        },
+        {
+          "startMs": 11250,
+          "text": "and the live microphone uses your browser's speech service."
+        },
+        {
+          "startMs": 14500,
+          "text": "Each note is split into fill-in-the-blank flashcards,"
+        },
+        {
+          "startMs": 17400,
+          "text": "so even a long lecture becomes a short set of questions."
+        }
+      ]
+    },
+    {
+      "chapterId": "rooms",
+      "chapter": 3,
+      "file": "chapter-3.wav",
+      "durationMs": 11040,
+      "cues": [
+        {
+          "startMs": 0,
+          "text": "Every note becomes a haunted room."
+        },
+        {
+          "startMs": 2300,
+          "text": "Each flashcard you have not mastered is a ghost,"
+        },
+        {
+          "startMs": 5250,
+          "text": "and the weaker your memory of it, the more menacing it looks."
+        },
+        {
+          "startMs": 8450,
+          "text": "The meter at the top shows how crowded your haunting is."
+        }
+      ]
+    },
+    {
+      "chapterId": "quiz",
+      "chapter": 4,
+      "file": "chapter-4.wav",
+      "durationMs": 21680,
+      "cues": [
+        {
+          "startMs": 0,
+          "text": "Start a quiz and fill in each blank."
+        },
+        {
+          "startMs": 2750,
+          "text": "Stuck? Ask for a hint, or reveal the answer."
+        },
+        {
+          "startMs": 6100,
+          "text": "A wrong answer breaks your quiz streak and sends the ghost"
+        },
+        {
+          "startMs": 8700,
+          "text": "back to the start of its review ladder.",
+          "estimated": true
+        },
+        {
+          "startMs": 11200,
+          "text": "A right answer banishes it. Small typos on long words are forgiven,"
+        },
+        {
+          "startMs": 15600,
+          "text": "and the answer is never hidden in the page before you respond."
+        },
+        {
+          "startMs": 18800,
+          "text": "When the round ends, review only the cards you missed."
+        }
+      ]
+    },
+    {
+      "chapterId": "srs",
+      "chapter": 5,
+      "file": "chapter-5.wav",
+      "durationMs": 14880,
+      "cues": [
+        {
+          "startMs": 0,
+          "text": "Banished ghosts do not stay gone."
+        },
+        {
+          "startMs": 2550,
+          "text": "A review ladder brings each one back after two days,"
+        },
+        {
+          "startMs": 5650,
+          "text": "then three, five, and seven."
+        },
+        {
+          "startMs": 8500,
+          "text": "Jump ahead, and the ghosts that are due return, glowing orange."
+        },
+        {
+          "startMs": 12350,
+          "text": "Ignore them longer, and they look stronger."
+        }
+      ]
+    },
+    {
+      "chapterId": "insights",
+      "chapter": 6,
+      "file": "chapter-6.wav",
+      "durationMs": 6800,
+      "cues": [
+        {
+          "startMs": 0,
+          "text": "Your study insights show your day streak,"
+        },
+        {
+          "startMs": 2500,
+          "text": "what you reviewed today, your accuracy this week,"
+        },
+        {
+          "startMs": 5650,
+          "text": "and your weakest rooms."
+        }
+      ]
+    },
+    {
+      "chapterId": "data",
+      "chapter": 7,
+      "file": "chapter-7.wav",
+      "durationMs": 7120,
+      "cues": [
+        {
+          "startMs": 0,
+          "text": "Your notes live in your browser."
+        },
+        {
+          "startMs": 2050,
+          "text": "Export a backup any time, and import it back"
+        },
+        {
+          "startMs": 4400,
+          "text": "with a safety check before anything is merged.",
+          "estimated": true
+        }
+      ]
+    },
+    {
+      "chapterId": "kiro",
+      "chapter": 8,
+      "file": "chapter-8.wav",
+      "durationMs": 11120,
+      "cues": [
+        {
+          "startMs": 0,
+          "text": "Haunted Notes was built with Kiro, using specs, steering files, hooks,"
+        },
+        {
+          "startMs": 4850,
+          "text": "a custom UI reviewer agent, a Playwright MCP server,"
+        },
+        {
+          "startMs": 8650,
+          "text": "and property-based tests that caught real bugs."
+        }
+      ]
+    },
+    {
+      "chapterId": "end",
+      "chapter": 9,
+      "file": "chapter-9.wav",
+      "durationMs": 7040,
+      "cues": [
+        {
+          "startMs": 0,
+          "text": "Try it yourself. The live link and the source code are below."
+        },
+        {
+          "startMs": 3500,
+          "text": "Built for Kiroween 2026, in the Frankenstein category."
+        }
+      ]
+    }
+  ],
+  "cuesMeasuredWith": "startMs = end of the quiet gap before the phrase in the WAV (50 ms windows, rms < 350); the first cue of a clip is 0. estimated = split inside a phrase with no gap, placed by word count."
 }

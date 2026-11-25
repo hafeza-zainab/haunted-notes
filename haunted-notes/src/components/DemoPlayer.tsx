@@ -102,6 +102,7 @@ const DemoPlayer: React.FC = () => {
           totalMs={run.totalMs}
           soundOn={run.sound}
           narrationUnavailable={run.narration === 'unavailable'}
+          sampleNote={run.sample}
           onTogglePause={togglePause}
           onToggleSound={toggleSound}
           onStop={stopDemo}

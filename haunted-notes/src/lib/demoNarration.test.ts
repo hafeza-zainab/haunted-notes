@@ -102,7 +102,7 @@ describe('every clip fits its chapter', () => {
 
   it('the intro needed its hold: without it a 0.8 s late start would cut the first clip', () => {
     const without: DemoStep[] = DEMO_STEPS.map((s) =>
-      s.id === 'intro' ? { ...s, actions: s.actions.filter((a) => !(a.op === 'wait' && a.ms === INTRO_HOLD_MS)) } : s,
+      s.chapter === 0 ? { ...s, actions: s.actions.filter((a) => !(a.op === 'wait' && a.ms === INTRO_HOLD_MS)) } : s,
     );
     const intro = fitReport(manifest, without).find((r) => r.chapter === 0);
     expect(intro?.headroomMs).toBeLessThan(FIT_MARGIN_MS + START_ALLOWANCE_MS);
@@ -110,7 +110,7 @@ describe('every clip fits its chapter', () => {
 
   it('the end chapter needed the hold: without it the End clip would not fit', () => {
     const without: DemoStep[] = DEMO_STEPS.map((s) =>
-      s.id === 'end' ? { ...s, actions: s.actions.filter((a) => !(a.op === 'wait' && a.ms === END_HOLD_MS)) } : s,
+      s.chapter === 8 ? { ...s, actions: s.actions.filter((a) => !(a.op === 'wait' && a.ms === END_HOLD_MS)) } : s,
     );
     const end = fitReport(manifest, without).find((r) => r.chapter === 8);
     expect(end?.fits).toBe(false);
@@ -179,6 +179,7 @@ describe('fitReport properties', () => {
             chapter: i + 1,
             file: narrationFile(i),
             durationMs: clip,
+            cues: [],
           })),
         };
         for (const r of fitReport(m, sorted, margin)) {

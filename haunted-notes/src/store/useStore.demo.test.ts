@@ -95,3 +95,92 @@ describe('demo run in the store', () => {
     expect(snapshot.notes).toHaveLength(1);
   });
 });
+
+describe('answer sounds during a run', () => {
+  /** Records the volume of every tone the store starts. */
+  function fakeAudio() {
+    const volumes: number[] = [];
+    class FakeContext {
+      currentTime = 0;
+      state = 'running';
+      destination = {};
+      createOscillator() {
+        return { connect() {}, type: 'sine', frequency: { value: 0 }, start() {}, stop() {} };
+      }
+      createGain() {
+        return {
+          connect() {},
+          gain: { setValueAtTime: (v: number) => void volumes.push(v), exponentialRampToValueAtTime() {} },
+        };
+      }
+      resume() {
+        return Promise.resolve();
+      }
+    }
+    vi.stubGlobal('AudioContext', FakeContext);
+    return volumes;
+  }
+
+  async function withDemoCards() {
+    const loaded = await load();
+    const mod = await import('./useStore');
+    loaded.useStore.getState().beginDemoRun();
+    loaded.useStore.getState().loadDemoData();
+    return { ...loaded, scale: mod.DEMO_SOUND_SCALE };
+  }
+
+  it('are silent when neither the app sound nor the demo Sound button is on', async () => {
+    const volumes = fakeAudio();
+    const { useStore } = await withDemoCards();
+    useStore.getState().answerCard('demo-card-bio-1', false);
+    expect(volumes).toEqual([]);
+  });
+
+  it('play when the demo Sound button is on, at the lower demo volume', async () => {
+    const volumes = fakeAudio();
+    const { useStore, scale } = await withDemoCards();
+    useStore.getState().setDemoSound(true);
+    useStore.getState().answerCard('demo-card-bio-1', false); // wrong: a buzz at 0.3
+    useStore.getState().answerCard('demo-card-bio-2', true); // right: a chime at 0.08
+    expect(volumes[0]).toBeCloseTo(0.3 * scale, 10);
+    expect(volumes).toContainEqual(expect.closeTo(0.08 * scale, 10));
+    expect(scale).toBeLessThan(1);
+  });
+
+  it('Reveal counts as wrong and buzzes too', async () => {
+    const volumes = fakeAudio();
+    const { useStore, scale } = await withDemoCards();
+    useStore.getState().setDemoSound(true);
+    useStore.getState().answerCard('demo-card-bio-3', false); // Reveal calls answerCard(id, false)
+    expect(volumes[0]).toBeCloseTo(0.3 * scale, 10);
+  });
+
+  it('stay silent after the Sound button is turned off again', async () => {
+    const volumes = fakeAudio();
+    const { useStore } = await withDemoCards();
+    useStore.getState().setDemoSound(true);
+    useStore.getState().setDemoSound(false);
+    useStore.getState().answerCard('demo-card-bio-1', false);
+    expect(volumes).toEqual([]);
+  });
+
+  it('the app sound setting still plays at full volume outside a run', async () => {
+    const volumes = fakeAudio();
+    const { useStore } = await load();
+    useStore.getState().loadDemoData();
+    useStore.getState().toggleSound();
+    useStore.getState().answerCard('demo-card-bio-1', false);
+    expect(volumes[0]).toBeCloseTo(0.3, 10);
+  });
+
+  it('are reset when the run ends, and the demo sound flag is never saved', async () => {
+    fakeAudio();
+    const { useStore, takeSnapshot, data } = await load();
+    const snapshot = takeSnapshot(useStore.getState());
+    useStore.getState().beginDemoRun();
+    useStore.getState().setDemoSound(true);
+    useStore.getState().endDemoRun(snapshot);
+    expect(useStore.getState().demoSound).toBe(false);
+    expect(data.get(KEY) ?? '').not.toContain('demoSound');
+  });
+});

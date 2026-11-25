@@ -4,8 +4,13 @@
  * The "Run demo" script as plain data: nine chapters, each a list of steps, each
  * step a caption plus the actions the runner performs on the real app. No React,
  * Zustand or DOM. Every element is named by its `data-demo` attribute, never by
- * position or text. No quiz answer appears here: `typeAnswer` tells the runner to
- * read the answer from the store at run time.
+ * position or text. No quiz answer appears here: `typeAnswer` and `typeAnswerTypo`
+ * tell the runner to read the answer from the store at run time.
+ *
+ * CAPTIONS ARE SUBTITLES. Each caption is a piece of the narration text (see
+ * NARRATION_SCRIPT.md and `cues` in public/demo-audio/manifest.json), shown when
+ * those words are spoken. A step therefore starts at its cue's time in the clip,
+ * plus about 100 ms for the sound to begin. Tests check the words and the times.
  */
 
 export type DemoStoreAction = 'emptyState' | 'loadDemoOnly' | 'timeTravelDay';
@@ -19,13 +24,15 @@ export type DemoAction =
   | { op: 'type'; target: string; text: string; ms: number }
   /** Type the current quiz card's answer (read from the store) into the input. */
   | { op: 'typeAnswer'; target: string; ms: number }
+  /** Like typeAnswer, but with one wrong letter when the answer is long enough to forgive it. */
+  | { op: 'typeAnswerTypo'; target: string; ms: number }
   /** Empty a text field. */
   | { op: 'clear'; target: string; ms: number }
   /** Outline the element and scroll it into view until the step ends. */
   | { op: 'highlight'; target: string; ms: number }
   /** Remove all outlines now. */
   | { op: 'clearHighlights'; ms: number }
-  /** Call a real store action (	imes repeats it, for example two one-day jumps). */
+  /** Call a real store action (`times` repeats it, for example two one-day jumps). */
   | { op: 'store'; name: DemoStoreAction; ms: number; times?: number };
 
 /** A text-only card shown over the app (intro and Built with Kiro). */
@@ -38,8 +45,10 @@ export interface DemoStep {
   id: string;
   /** Index into CHAPTER_TITLES. */
   chapter: number;
-  /** At most 12 words; describes only what is on screen during the step. */
+  /** At most 12 words: the narration spoken while this step is on screen. */
   caption: string;
+  /** Set when the screen shows sample data or a simulated clock jump; the bar says so. */
+  sample?: string;
   card?: DemoCardText;
   actions: DemoAction[];
 }
@@ -79,6 +88,10 @@ export const END_HOLD_MS = 3000;
 
 export const MAX_CAPTION_WORDS = 12;
 
+/** Labels shown in the bar while the screen holds sample data or a simulated clock jump. */
+export const SAMPLE_DATA_LABEL = 'sample data';
+export const SAMPLE_TIME_LABEL = 'sample: simulated time jump';
+
 /** Text typed into the real textarea. All of it is labelled as sample data. */
 export const SAMPLE_NOTE =
   'Sample note: Mitochondria are the powerhouse of the cell and make most of its energy.';
@@ -89,326 +102,407 @@ export const SAMPLE_AUDIO_TEXT =
 
 const GHOST_TYPES = ['wisp', 'ghoul', 'banshee', 'phantom', 'poltergeist'] as const;
 
-const ghostTour: DemoAction[] = GHOST_TYPES.flatMap((type): DemoAction[] => [
-  { op: 'clearHighlights', ms: 0 },
-  { op: 'highlight', target: `ghost-${type}`, ms: 1000 },
-]);
+/** The built-in room the quiz chapter uses (three cards, so a round fits the narration). */
+export const QUIZ_ROOM_TARGET = 'quiz-room-demo-note-biology';
 
-/** Answer the current card correctly: type the answer, press Submit, wait out the banish. */
-const answerRight: DemoAction[] = [
-  { op: 'typeAnswer', target: 'quiz-input', ms: 700 },
-  { op: 'click', target: 'quiz-submit', ms: 1100 },
+// ── Building blocks ──────────────────────────────────────────────────────────
+
+/** Lengths of consecutive steps, from their start times and the end of the chapter. */
+function lens(starts: readonly number[], end: number): number[] {
+  return starts.map((s, i) => (starts[i + 1] ?? end) - s);
+}
+
+/** The actions, padded with a wait so that they last exactly `len` ms. Throws if they are too long. */
+function fit(len: number, actions: DemoAction[]): DemoAction[] {
+  const used = actions.reduce((sum, a) => sum + a.ms, 0);
+  if (used > len) throw new Error(`demo step needs ${used} ms but has ${len} ms`);
+  return used === len ? actions : [...actions, { op: 'wait', ms: len - used }];
+}
+
+/** Highlight each ghost type in turn, weakest memory (wisp) to most menacing (poltergeist). */
+function ghostWalk(totalMs: number): DemoAction[] {
+  const each = Math.floor(totalMs / GHOST_TYPES.length);
+  return GHOST_TYPES.flatMap((type): DemoAction[] => [
+    { op: 'clearHighlights', ms: 0 },
+    { op: 'highlight', target: `ghost-${type}`, ms: each },
+  ]);
+}
+
+/**
+ * Chapter-relative start of every step, in ms, and the chapter's end. A start is the
+ * cue time of its subtitle in the clip plus about 100 ms. Chapter lengths are the clip
+ * length plus room for the sound to start and for the last screen to be read.
+ */
+const T = {
+  intro: { starts: [0, 3300], end: 7000 },
+  inputs: { starts: [0, 2000, 4300, 8200, 11350, 14600, 17500], end: 23000 },
+  rooms: { starts: [0, 2400, 5350, 8550], end: 12600 },
+  quiz: { starts: [0, 2850, 6200, 8800, 11300, 15700, 18900], end: 26500 },
+  srs: { starts: [0, 2650, 5750, 8600, 12450], end: 17000 },
+  insights: { starts: [0, 2600, 5750], end: 8400 },
+  data: { starts: [0, 2150, 4500], end: 8800 },
+  kiro: { starts: [0, 4950, 8750], end: 12800 },
+  end: { starts: [0, 3600], end: 9000 },
+} as const;
+
+const L = {
+  intro: lens(T.intro.starts, T.intro.end),
+  inputs: lens(T.inputs.starts, T.inputs.end),
+  rooms: lens(T.rooms.starts, T.rooms.end),
+  quiz: lens(T.quiz.starts, T.quiz.end),
+  srs: lens(T.srs.starts, T.srs.end),
+  insights: lens(T.insights.starts, T.insights.end),
+  data: lens(T.data.starts, T.data.end),
+  kiro: lens(T.kiro.starts, T.kiro.end),
+  end: lens(T.end.starts, T.end.end),
+};
+
+const INTRO_CARD: DemoCardText = {
+  title: 'Haunted Notes',
+  lines: ['Turns your unfinished notes into ghosts that haunt you until you master them.'],
+};
+
+const KIRO_CARDS: DemoCardText[] = [
+  {
+    title: 'Built with Kiro',
+    lines: [
+      'Specs: requirements, design and tasks, written before code.',
+      'Steering files: product, tech, design and testing rules.',
+      'Hooks: lint, tests and a reduced-motion check on save.',
+    ],
+  },
+  {
+    title: 'Built with Kiro',
+    lines: [
+      'Custom agent: ghost-ui-reviewer, a report-only UI reviewer.',
+      'MCP: the Playwright server runs the browser checks.',
+    ],
+  },
+  {
+    title: 'Built with Kiro',
+    lines: [
+      'Property-based tests (fast-check) found six bugs.',
+      'Examples: a number became the blank, and a prompt leaked the answer.',
+    ],
+  },
 ];
 
 export const DEMO_STEPS: readonly DemoStep[] = [
-  // 0. Intro
+  // 0. Intro: "Haunted Notes turns your unfinished notes into ghosts that haunt you until you master them."
   {
-    id: 'intro',
+    id: 'intro-1',
     chapter: 0,
-    caption: 'Haunted Notes: your unfinished notes come back to haunt you',
-    card: { title: 'Haunted Notes', lines: ['Your unfinished notes come back to haunt you.'] },
-    actions: [
-      { op: 'wait', ms: 6000 },
-      // Hold so the narration, which starts a moment after the card, finishes inside the chapter.
+    caption: 'Haunted Notes turns your unfinished notes into ghosts',
+    card: INTRO_CARD,
+    actions: fit(L.intro[0], []),
+  },
+  {
+    id: 'intro-2',
+    chapter: 0,
+    caption: 'that haunt you until you master them.',
+    card: INTRO_CARD,
+    // The last second is a hold: the first sound in a page starts late, so the clip needs room.
+    actions: fit(L.intro[1], [
+      { op: 'wait', ms: L.intro[1] - INTRO_HOLD_MS },
       { op: 'wait', ms: INTRO_HOLD_MS },
-    ],
+    ]),
   },
 
   // 1. Four inputs
   {
-    id: 'inputs-strip',
+    id: 'inputs-1',
     chapter: 1,
-    caption: 'Four inputs feed one ghost pipeline.',
-    actions: [
+    caption: 'Add notes four ways.',
+    actions: fit(L.inputs[0], [
       { op: 'click', target: 'nav-add', ms: 700 },
-      { op: 'highlight', target: 'stitch-strip', ms: 2800 },
-    ],
+      { op: 'highlight', target: 'stitch-strip', ms: 1300 },
+    ]),
   },
   {
-    id: 'inputs-type',
+    id: 'inputs-2',
     chapter: 1,
-    caption: 'Type: a sample note, one character at a time.',
-    actions: [
-      { op: 'type', target: 'note-text', text: SAMPLE_NOTE, ms: 4300 },
+    caption: 'Type them, speak with your microphone,',
+    actions: fit(L.inputs[1], [
       { op: 'wait', ms: 900 },
-    ],
+      { op: 'click', target: 'tab-mic', ms: 800 },
+    ]),
   },
   {
-    id: 'inputs-add',
+    id: 'inputs-3',
     chapter: 1,
-    caption: 'Add Note turns the sample note into a room of ghosts.',
-    actions: [
-      { op: 'click', target: 'add-note-submit', ms: 600 },
-      { op: 'wait', ms: 3400 },
-    ],
-  },
-  {
-    id: 'inputs-mic',
-    chapter: 1,
-    caption: "Live mic uses your browser's speech service.",
-    actions: [
-      { op: 'click', target: 'nav-add', ms: 700 },
-      { op: 'click', target: 'tab-mic', ms: 700 },
-      { op: 'highlight', target: 'mic-hint', ms: 4100 },
-    ],
-  },
-  {
-    id: 'inputs-photo',
-    chapter: 1,
-    caption: 'Photo: text recognition runs on your device. Sample text shown.',
-    actions: [
-      { op: 'click', target: 'tab-photo', ms: 600 },
-      { op: 'type', target: 'note-text', text: SAMPLE_PHOTO_TEXT, ms: 2800 },
-      { op: 'wait', ms: 2800 },
-    ],
-  },
-  {
-    id: 'inputs-audio',
-    chapter: 1,
-    caption: 'Audio file: Whisper runs on your device. Sample transcript shown.',
-    actions: [
+    caption: 'snap a photo of printed text, or upload an audio recording.',
+    sample: SAMPLE_DATA_LABEL,
+    actions: fit(L.inputs[2], [
+      { op: 'click', target: 'tab-photo', ms: 400 },
+      { op: 'type', target: 'note-text', text: SAMPLE_PHOTO_TEXT, ms: 1500 },
       { op: 'click', target: 'tab-audio', ms: 600 },
-      { op: 'clear', target: 'note-text', ms: 300 },
-      { op: 'type', target: 'note-text', text: SAMPLE_AUDIO_TEXT, ms: 2800 },
-      { op: 'highlight', target: 'audio-hint', ms: 2800 },
-    ],
+      { op: 'type', target: 'note-text', text: SAMPLE_AUDIO_TEXT, ms: 1400 },
+    ]),
+  },
+  {
+    id: 'inputs-4',
+    chapter: 1,
+    caption: 'Audio files and photos are processed on your own device,',
+    sample: SAMPLE_DATA_LABEL,
+    actions: fit(L.inputs[3], [{ op: 'highlight', target: 'audio-hint', ms: L.inputs[3] }]),
+  },
+  {
+    id: 'inputs-5',
+    chapter: 1,
+    caption: "and the live microphone uses your browser's speech service.",
+    sample: SAMPLE_DATA_LABEL,
+    actions: fit(L.inputs[4], [
+      { op: 'click', target: 'tab-mic', ms: 500 },
+      { op: 'highlight', target: 'mic-hint', ms: L.inputs[4] - 500 },
+    ]),
+  },
+  {
+    id: 'inputs-6',
+    chapter: 1,
+    caption: 'Each note is split into fill-in-the-blank flashcards,',
+    sample: SAMPLE_DATA_LABEL,
+    actions: fit(L.inputs[5], [
+      { op: 'click', target: 'tab-type', ms: 400 },
+      { op: 'type', target: 'note-text', text: SAMPLE_NOTE, ms: 2500 },
+    ]),
+  },
+  {
+    id: 'inputs-7',
+    chapter: 1,
+    caption: 'so even a long lecture becomes a short set of questions.',
+    sample: SAMPLE_DATA_LABEL,
+    actions: fit(L.inputs[6], [{ op: 'click', target: 'add-note-submit', ms: 600 }]),
   },
 
   // 2. Ghost rooms
   {
-    id: 'rooms-load',
+    id: 'rooms-1',
     chapter: 2,
-    caption: 'Now the built-in sample notes: each note becomes a room.',
-    actions: [
-      { op: 'click', target: 'nav-dashboard', ms: 500 },
-      { op: 'store', name: 'loadDemoOnly', ms: 500 },
-      { op: 'highlight', target: 'rooms-grid', ms: 4000 },
-    ],
+    caption: 'Every note becomes a haunted room.',
+    actions: fit(L.rooms[0], [
+      { op: 'click', target: 'nav-dashboard', ms: 300 },
+      { op: 'store', name: 'loadDemoOnly', ms: 400 },
+      { op: 'highlight', target: 'rooms-grid', ms: L.rooms[0] - 700 },
+    ]),
   },
   {
-    id: 'rooms-ghosts',
+    id: 'rooms-2',
     chapter: 2,
-    caption: 'Five ghost types show how weak each fact is.',
-    actions: [...ghostTour, { op: 'clearHighlights', ms: 500 }],
+    caption: 'Each flashcard you have not mastered is a ghost,',
+    actions: fit(L.rooms[1], [{ op: 'highlight', target: 'ghost-banshee', ms: L.rooms[1] }]),
   },
   {
-    id: 'rooms-meter',
+    id: 'rooms-3',
     chapter: 2,
-    caption: 'The haunt meter shows how haunted all your notes are.',
-    actions: [{ op: 'highlight', target: 'haunt-meter', ms: 5000 }],
+    caption: 'and the weaker your memory of it, the more menacing it looks.',
+    actions: fit(L.rooms[2], ghostWalk(L.rooms[2])),
+  },
+  {
+    id: 'rooms-4',
+    chapter: 2,
+    caption: 'The meter at the top shows how crowded your haunting is.',
+    actions: fit(L.rooms[3], [{ op: 'highlight', target: 'haunt-meter', ms: L.rooms[3] }]),
   },
 
-  // 3. The quiz
+  // 3. The quiz (a three-card room, so the round ends in time for "review only the cards you missed")
   {
-    id: 'quiz-start',
+    id: 'quiz-1',
     chapter: 3,
-    caption: 'Start Quiz turns each ghost into a fill-in-the-blank question.',
-    actions: [
-      { op: 'highlight', target: 'start-quiz', ms: 1500 },
-      { op: 'click', target: 'start-quiz', ms: 2000 },
-    ],
+    caption: 'Start a quiz and fill in each blank.',
+    actions: fit(L.quiz[0], [
+      { op: 'highlight', target: QUIZ_ROOM_TARGET, ms: 900 },
+      { op: 'click', target: QUIZ_ROOM_TARGET, ms: 600 },
+    ]),
   },
   {
-    id: 'quiz-hint',
+    id: 'quiz-2',
     chapter: 3,
-    caption: 'Hint shows the first letter, then the length.',
-    actions: [
-      { op: 'click', target: 'quiz-hint', ms: 2300 },
-      { op: 'click', target: 'quiz-hint', ms: 2700 },
-    ],
+    caption: 'Stuck? Ask for a hint, or reveal the answer.',
+    actions: fit(L.quiz[1], [
+      { op: 'wait', ms: 550 },
+      { op: 'click', target: 'quiz-hint', ms: 700 },
+      { op: 'click', target: 'quiz-hint', ms: 700 },
+      { op: 'click', target: 'quiz-reveal', ms: 800 },
+      { op: 'click', target: 'quiz-submit', ms: 600 },
+    ]),
   },
   {
-    id: 'quiz-wrong',
+    id: 'quiz-3',
     chapter: 3,
-    caption: 'A wrong answer shakes the ghost and shows the answer.',
-    actions: [
+    caption: 'A wrong answer breaks your quiz streak and sends the ghost',
+    actions: fit(L.quiz[2], [
       { op: 'type', target: 'quiz-input', text: 'not sure', ms: 1200 },
-      { op: 'click', target: 'quiz-submit', ms: 4300 },
-    ],
+      { op: 'click', target: 'quiz-submit', ms: 600 },
+    ]),
   },
   {
-    id: 'quiz-next',
+    id: 'quiz-4',
     chapter: 3,
-    caption: 'Next card: type the right answer.',
-    actions: [
+    caption: 'back to the start of its review ladder.',
+    actions: fit(L.quiz[3], [
+      { op: 'wait', ms: 1700 },
       { op: 'click', target: 'quiz-submit', ms: 800 },
-      { op: 'typeAnswer', target: 'quiz-input', ms: 1500 },
-      { op: 'wait', ms: 700 },
-    ],
+    ]),
   },
   {
-    id: 'quiz-banish',
+    id: 'quiz-5',
     chapter: 3,
-    caption: 'Right answer: the ghost fades away. Banished!',
-    actions: [{ op: 'click', target: 'quiz-submit', ms: 2000 }],
+    caption: 'A right answer banishes it. Small typos on long words are forgiven,',
+    actions: fit(L.quiz[4], [
+      { op: 'typeAnswerTypo', target: 'quiz-input', ms: 1100 },
+      { op: 'click', target: 'quiz-submit', ms: 500 },
+    ]),
   },
   {
-    id: 'quiz-reveal',
+    id: 'quiz-6',
     chapter: 3,
-    caption: 'Reveal shows the answer, but counts as wrong.',
-    actions: [
-      { op: 'click', target: 'quiz-reveal', ms: 2800 },
-      { op: 'click', target: 'quiz-submit', ms: 1000 },
-    ],
+    caption: 'and the answer is never hidden in the page before you respond.',
+    actions: fit(L.quiz[5], [{ op: 'highlight', target: 'quiz-results', ms: L.quiz[5] }]),
   },
   {
-    id: 'quiz-skip',
+    id: 'quiz-7',
     chapter: 3,
-    caption: 'Skip moves on without scoring.',
-    actions: [{ op: 'click', target: 'quiz-skip', ms: 2500 }],
-  },
-  {
-    id: 'quiz-rest',
-    chapter: 3,
-    caption: 'Answering the remaining ghosts.',
-    actions: [...answerRight, ...answerRight, ...answerRight, ...answerRight, ...answerRight],
-  },
-  {
-    id: 'quiz-results',
-    chapter: 3,
-    caption: 'Results show your score, streak and missed cards.',
-    actions: [{ op: 'highlight', target: 'quiz-results', ms: 5000 }],
-  },
-  {
-    id: 'quiz-review',
-    chapter: 3,
-    caption: 'Review missed replays only the cards you missed.',
-    actions: [
+    caption: 'When the round ends, review only the cards you missed.',
+    actions: fit(L.quiz[6], [
       { op: 'highlight', target: 'review-missed', ms: 1300 },
-      { op: 'click', target: 'review-missed', ms: 1700 },
-    ],
-  },
-  {
-    id: 'quiz-review-answers',
-    chapter: 3,
-    caption: 'Answering the two missed ghosts again.',
-    actions: [...answerRight, ...answerRight],
-  },
-  {
-    id: 'quiz-done',
-    chapter: 3,
-    caption: 'Review complete: the missed ghosts are answered.',
-    actions: [{ op: 'highlight', target: 'quiz-results', ms: 3500 }],
+      { op: 'click', target: 'review-missed', ms: 900 },
+      { op: 'typeAnswer', target: 'quiz-input', ms: 1100 },
+      { op: 'click', target: 'quiz-submit', ms: 500 },
+      { op: 'wait', ms: 1000 },
+      { op: 'typeAnswer', target: 'quiz-input', ms: 1100 },
+      { op: 'click', target: 'quiz-submit', ms: 500 },
+    ]),
   },
 
   // 4. Spaced repetition
   {
-    id: 'srs-next',
+    id: 'srs-1',
     chapter: 4,
-    caption: 'Ghosts return after 2, 3, 5, then 7 days.',
-    actions: [
-      { op: 'click', target: 'back-dashboard', ms: 700 },
-      { op: 'highlight', target: 'next-return', ms: 2000 },
-      { op: 'highlight', target: 'ladder', ms: 2100 },
-    ],
+    caption: 'Banished ghosts do not stay gone.',
+    actions: fit(L.srs[0], [
+      { op: 'click', target: 'nav-dashboard', ms: 500 },
+      { op: 'highlight', target: 'next-return', ms: L.srs[0] - 500 },
+    ]),
   },
   {
-    id: 'srs-travel',
+    id: 'srs-2',
     chapter: 4,
-    caption: 'Sample time travel: the store jumps two days ahead.',
-    actions: [
-      { op: 'highlight', target: 'next-return', ms: 1500 },
-      { op: 'store', name: 'timeTravelDay', times: 2, ms: 2500 },
-    ],
+    caption: 'A review ladder brings each one back after two days,',
+    actions: fit(L.srs[1], [{ op: 'highlight', target: 'next-return', ms: L.srs[1] }]),
   },
   {
-    id: 'srs-returned',
+    id: 'srs-3',
     chapter: 4,
-    caption: 'Orange ghosts have returned and are due for review.',
-    actions: [{ op: 'highlight', target: 'returned-ghost', ms: 4500 }],
+    caption: 'then three, five, and seven.',
+    actions: fit(L.srs[2], [{ op: 'highlight', target: 'ladder', ms: L.srs[2] }]),
   },
   {
-    id: 'srs-ignore',
+    id: 'srs-4',
     chapter: 4,
-    caption: 'Sample: five more days ignored, and the ghosts grow stronger.',
-    actions: [
-      { op: 'store', name: 'timeTravelDay', times: 5, ms: 1500 },
-      { op: 'highlight', target: 'returned-ghost', ms: 4500 },
-    ],
+    caption: 'Jump ahead, and the ghosts that are due return, glowing orange.',
+    sample: SAMPLE_TIME_LABEL,
+    actions: fit(L.srs[3], [
+      { op: 'wait', ms: 400 },
+      { op: 'store', name: 'timeTravelDay', times: 2, ms: 700 },
+      { op: 'highlight', target: 'returned-ghost', ms: L.srs[3] - 1100 },
+    ]),
   },
+  {
+    id: 'srs-5',
+    chapter: 4,
+    caption: 'Ignore them longer, and they look stronger.',
+    sample: SAMPLE_TIME_LABEL,
+    actions: fit(L.srs[4], [
+      { op: 'store', name: 'timeTravelDay', times: 5, ms: 600 },
+      { op: 'highlight', target: 'returned-ghost', ms: L.srs[4] - 600 },
+    ]),
+  },
+
   // 5. Study insights
   {
-    id: 'insights-stats',
+    id: 'insights-1',
     chapter: 5,
-    caption: 'Study insights: streak, reviews today and accuracy.',
-    actions: [{ op: 'highlight', target: 'insights', ms: 5500 }],
+    caption: 'Your study insights show your day streak,',
+    actions: fit(L.insights[0], [{ op: 'highlight', target: 'insights-stats', ms: L.insights[0] }]),
   },
   {
-    id: 'insights-chart',
+    id: 'insights-2',
     chapter: 5,
-    caption: 'The bar chart counts reviews per day.',
-    actions: [{ op: 'highlight', target: 'insights-chart', ms: 5500 }],
+    caption: 'what you reviewed today, your accuracy this week,',
+    actions: fit(L.insights[1], [{ op: 'highlight', target: 'insights-stats', ms: L.insights[1] }]),
+  },
+  {
+    id: 'insights-3',
+    chapter: 5,
+    caption: 'and your weakest rooms.',
+    actions: fit(L.insights[2], [{ op: 'highlight', target: 'insights-weak', ms: L.insights[2] }]),
   },
 
   // 6. Your data stays yours
   {
-    id: 'data-backup',
+    id: 'data-1',
     chapter: 6,
-    caption: 'Export and Import save or load your own backup file.',
-    actions: [
-      { op: 'highlight', target: 'backup-export', ms: 2800 },
-      { op: 'highlight', target: 'backup-import', ms: 2800 },
-    ],
+    caption: 'Your notes live in your browser.',
+    actions: fit(L.data[0], [{ op: 'highlight', target: 'privacy-line', ms: L.data[0] }]),
   },
   {
-    id: 'data-privacy',
+    id: 'data-2',
     chapter: 6,
-    caption: 'Your notes stay in this browser.',
-    actions: [{ op: 'highlight', target: 'privacy-line', ms: 5400 }],
+    caption: 'Export a backup any time, and import it back',
+    actions: fit(L.data[1], [
+      { op: 'highlight', target: 'backup-export', ms: 1100 },
+      { op: 'highlight', target: 'backup-import', ms: L.data[1] - 1100 },
+    ]),
+  },
+  {
+    id: 'data-3',
+    chapter: 6,
+    caption: 'with a safety check before anything is merged.',
+    actions: fit(L.data[2], [{ op: 'highlight', target: 'backup-import', ms: L.data[2] }]),
   },
 
   // 7. Built with Kiro (facts from docs/KIRO_EVIDENCE.md)
   {
-    id: 'kiro-specs',
+    id: 'kiro-1',
     chapter: 7,
-    caption: 'Built with Kiro: specs and steering files.',
-    card: {
-      title: 'Built with Kiro',
-      lines: [
-        'Specs: requirements, design and tasks, written before code.',
-        'Steering files: product, tech, design and testing rules.',
-      ],
-    },
-    actions: [{ op: 'wait', ms: 4500 }],
+    caption: 'Haunted Notes was built with Kiro, using specs, steering files, hooks,',
+    card: KIRO_CARDS[0],
+    actions: fit(L.kiro[0], []),
   },
   {
-    id: 'kiro-agent',
+    id: 'kiro-2',
     chapter: 7,
-    caption: 'A custom agent and agent hooks.',
-    card: {
-      title: 'Built with Kiro',
-      lines: [
-        'Custom agent: ghost-ui-reviewer, a report-only UI reviewer.',
-        'Hooks run lint, tests and a reduced-motion check on save.',
-      ],
-    },
-    actions: [{ op: 'wait', ms: 4500 }],
+    caption: 'a custom UI reviewer agent, a Playwright MCP server,',
+    card: KIRO_CARDS[1],
+    actions: fit(L.kiro[1], []),
   },
   {
-    id: 'kiro-mcp',
+    id: 'kiro-3',
     chapter: 7,
-    caption: 'Playwright MCP and property-based tests.',
-    card: {
-      title: 'Built with Kiro',
-      lines: [
-        'MCP: the Playwright server runs the browser checks.',
-        'Property-based tests (fast-check) found six bugs.',
-      ],
-    },
-    actions: [{ op: 'wait', ms: 4500 }],
+    caption: 'and property-based tests that caught real bugs.',
+    card: KIRO_CARDS[2],
+    actions: fit(L.kiro[2], []),
   },
 
   // 8. End card
   {
-    id: 'end',
+    id: 'end-1',
     chapter: 8,
-    caption: 'Try it yourself.',
-    actions: [
+    caption: 'Try it yourself. The live link and the source code are below.',
+    actions: fit(L.end[0], [
       { op: 'store', name: 'emptyState', ms: 500 },
-      { op: 'highlight', target: 'try-demo', ms: 5500 },
-      // Hold the end card so the narration clip for this chapter finishes before the run ends.
+      { op: 'highlight', target: 'try-demo', ms: L.end[0] - 500 },
+    ]),
+  },
+  {
+    id: 'end-2',
+    chapter: 8,
+    caption: 'Built for Kiroween 2026, in the Frankenstein category.',
+    // The last three seconds are a hold: the clip is longer than the six seconds of content.
+    actions: fit(L.end[1], [
+      { op: 'highlight', target: 'try-demo', ms: L.end[1] - END_HOLD_MS },
       { op: 'wait', ms: END_HOLD_MS },
-    ],
+    ]),
   },
 ];
 

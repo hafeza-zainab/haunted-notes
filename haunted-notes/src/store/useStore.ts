@@ -46,6 +46,9 @@ interface HauntedState {
   dismissLoadNotice: () => void;
   /** True while a Run demo script is playing. Never persisted. */
   demoRunning: boolean;
+  /** Run demo's Sound button: the right and wrong answer sounds play during a run. Never persisted. */
+  demoSound: boolean;
+  setDemoSound: (on: boolean) => void;
   /** Start a run: empty state; saved writes are suspended until endDemoRun. */
   beginDemoRun: () => void;
   /** End a run: put the snapshot back in one update and resume saving. */
@@ -178,8 +181,11 @@ export const useStore = create<HauntedState>()(
             c: correct ? 1 : 0,
           }),
         }));
-        if (get().soundEnabled) {
-          playAnswerSound(correct);
+        // The app's own sound setting, or the Sound button of a Run demo in progress.
+        // During a run the sounds are quieter so they never cover the narration.
+        const { soundEnabled, demoRunning, demoSound } = get();
+        if (soundEnabled || (demoRunning && demoSound)) {
+          playAnswerSound(correct, demoRunning ? DEMO_SOUND_SCALE : 1);
         }
       },
 
@@ -224,6 +230,8 @@ export const useStore = create<HauntedState>()(
       loadNotice: null,
       dismissLoadNotice: () => set({ loadNotice: null }),
       demoRunning: false,
+      demoSound: false,
+      setDemoSound: (on) => set({ demoSound: on }),
       beginDemoRun: () => {
         persistSuspended = true;
         set({
@@ -240,7 +248,7 @@ export const useStore = create<HauntedState>()(
       endDemoRun: (snapshot) => {
         // Resume saving first so this single update writes the restored data.
         persistSuspended = false;
-        set({ ...snapshotPatch(snapshot), demoRunning: false });
+        set({ ...snapshotPatch(snapshot), demoRunning: false, demoSound: false });
       },
       importBackup: (data) => {
         const { notes, flashcards, reviewLog } = get();
@@ -270,6 +278,7 @@ export const useStore = create<HauntedState>()(
         const rest: Partial<HauntedState> = { ...state };
         delete rest.loadNotice;
         delete rest.demoRunning;
+        delete rest.demoSound;
         return rest;
       },
       merge: (persisted, current) => {
@@ -311,8 +320,13 @@ let audioCtx: AudioContext | null = null;
 
 function getAudioCtx(): AudioContext {
   if (!audioCtx) audioCtx = new AudioContext();
+  // A context made after the page was last touched can start suspended: wake it.
+  if (audioCtx.state === 'suspended') void audioCtx.resume().catch(() => undefined);
   return audioCtx;
 }
+
+/** Answer sounds are this much quieter while Run demo narrates over them. */
+export const DEMO_SOUND_SCALE = 0.4;
 
 function playTone(
   freq: number,
@@ -337,14 +351,14 @@ function playTone(
   }
 }
 
-function playAnswerSound(correct: boolean) {
+function playAnswerSound(correct: boolean, scale = 1) {
   if (correct) {
     // Soft banish shimmer: three quiet, rising sine tones
-    playTone(392, 0.35, 'sine', 0.08);
-    setTimeout(() => playTone(523, 0.35, 'sine', 0.07), 120);
-    setTimeout(() => playTone(784, 0.55, 'sine', 0.06), 240);
+    playTone(392, 0.35, 'sine', 0.08 * scale);
+    setTimeout(() => playTone(523, 0.35, 'sine', 0.07 * scale), 120);
+    setTimeout(() => playTone(784, 0.55, 'sine', 0.06 * scale), 240);
   } else {
-    playTone(110, 0.4, 'sawtooth');
-    setTimeout(() => playTone(103, 0.4, 'sawtooth'), 60);
+    playTone(110, 0.4, 'sawtooth', 0.3 * scale);
+    setTimeout(() => playTone(103, 0.4, 'sawtooth', 0.3 * scale), 60);
   }
 }

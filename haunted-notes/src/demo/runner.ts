@@ -17,6 +17,7 @@ import { clearSnapshot, takeSnapshot, writeSnapshot } from '../lib/demoSnapshot'
 import { emptyReviewLog } from '../lib/reviewLog';
 import { createNarrator, type Narrator } from '../lib/demoNarrator';
 import { narrationSrc } from '../lib/demoNarration';
+import { typoOf } from '../lib/demoTypo';
 import { normalizeBlanks } from '../lib/blank';
 import {
   DEMO_STEPS,
@@ -55,6 +56,8 @@ export interface DemoRunState {
   sound: boolean;
   /** A narration clip could not load or play; the run goes on with captions only. */
   narration: 'ok' | 'unavailable';
+  /** Set while the screen holds sample data or a simulated clock jump; the bar says so. */
+  sample: string | null;
 }
 
 const IDLE: DemoRunState = {
@@ -67,6 +70,7 @@ const IDLE: DemoRunState = {
   totalMs: scriptTotalMs(),
   sound: true,
   narration: 'ok',
+  sample: null,
 };
 
 let state: DemoRunState = IDLE;
@@ -246,6 +250,10 @@ async function runAction(action: DemoAction, start: number): Promise<void> {
     case 'typeAnswer':
       await typeInto(action.target, currentAnswer(), start, action.ms);
       return;
+    case 'typeAnswerTypo':
+      // One wrong letter, but only on an answer long enough for the quiz to forgive it.
+      await typeInto(action.target, typoOf(currentAnswer()), start, action.ms);
+      return;
     case 'clear': {
       const el = await waitForTarget(action.target);
       if (isField(el)) setFieldValue(el, '');
@@ -268,7 +276,13 @@ async function play(): Promise<void> {
   let chapter = -1;
   for (let i = 0; i < DEMO_STEPS.length; i++) {
     const step = DEMO_STEPS[i];
-    publish({ stepIndex: i, chapter: step.chapter, caption: step.caption, card: step.card ?? null });
+    publish({
+      stepIndex: i,
+      chapter: step.chapter,
+      caption: step.caption,
+      card: step.card ?? null,
+      sample: step.sample ?? null,
+    });
     if (step.chapter !== chapter) {
       // The clip starts at the chapter's scheduled start. For the first chapter this runs
       // before any await, so the first play() is still inside the user's click.
@@ -302,6 +316,8 @@ export async function startDemo(options: { sound?: boolean } = {}): Promise<void
   useStore.getState().beginDemoRun();
   publish({ ...IDLE, status: 'running', totalMs: scriptTotalMs(), sound: currentSound() });
   narrator = createRunNarrator(currentSound());
+  // The right and wrong answer sounds follow the same Sound button as the narration.
+  useStore.getState().setDemoSound(currentSound());
 
   let lastTick = performance.now();
   let lastPublish = 0;
@@ -359,5 +375,6 @@ export function togglePause(): void {
 export function toggleSound(): void {
   soundOn = !currentSound();
   narrator?.setSound(soundOn, active);
+  useStore.getState().setDemoSound(soundOn);
   publish({ sound: soundOn });
 }
