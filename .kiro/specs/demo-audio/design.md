@@ -21,6 +21,8 @@ A play promise that rejects after a newer clip started is ignored (token). Any o
 ## Accessibility notes from ghost-ui-reviewer
 The "Narration unavailable" line is an always-present `<p role="status">`. While empty it is visually hidden and absolutely positioned (so it adds no gap), never `display: none`, so the live region exists before its text appears. The start prompt traps Tab on its one button.
 
+> Superseded in part by `.kiro/specs/demo-sync/`: the chapter lengths, holds and totals below were replaced when the captions were rebuilt from the narration.
+
 ## Autoplay and Safari
 One element is reused for all nine clips and the first `play()` runs synchronously inside the click handler (the first chapter starts before the runner's first `await`). Later `play()` calls on the same element are allowed after that. The sound toggle also calls `play()` from its own click.
 

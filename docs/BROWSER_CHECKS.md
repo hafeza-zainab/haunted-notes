@@ -213,3 +213,28 @@ Run with the Playwright MCP (headless Chromium, dev server `http://localhost:517
 - Netlify: the `Cache-Control` header for `/demo-audio/*` is in `netlify.toml` and a test reads it; it was not deployed.
 - 768px, and a run with reduced motion on this branch (the bar has no animation; the reviewer checked it).
 - A start-up time on slower devices or Bluetooth audio: it may be longer than the 0.5 to 0.8 s measured here.
+## 10. Subtitles that match the narration (branch `demo-sync`)
+Run with the Playwright MCP (headless Chromium, dev server `http://localhost:5173`), with one real note and card in localStorage so that restore could be compared. Sections 8 and 9 above describe the earlier script (158 to 167 s) and its captions; they are history. **Nothing was heard**: every audio check reads `audio.currentTime`, `paused`, `volume` and the tones the page starts. Per-caption numbers are in `docs/DEMO_TIMING.md`. Screenshots: `docs/screens/demo-sync-*.png`.
+
+| Check | Status | Measured |
+|---|---|---|
+| Captions are the narration word for word | PASS | 36 of 36 caption texts equal their cue text in the run; unit tests compare the captions of each chapter with the table in `NARRATION_SCRIPT.md`. |
+| Each caption appears when its words are spoken (1280px) | PASS, with a note | After the fix: worst 311 ms early (first intro caption), mean 57 ms, 3 captions more than 150 ms early (intro 311 and 199, chapter 5 first 168). Every offset was early, none late. Before the first-sound wait: worst 736 ms, mean 92 ms. |
+| The first clip's late sound start no longer shifts the intro | FIXED, partly | The run now waits for the first audio to play before its clock starts. The intro captions are still 0.2 to 0.3 s early in Chromium. |
+| Quiz chapter follows the words | PASS | Reveal at 47.5 s (phrase "or reveal the answer" is spoken at about 47.3 s), wrong answer at 50.0 s, banish with "Close enough!" at 55.0 s (phrase "A right answer banishes it" at about 54.0 to 55.2 s), results at 58.3 s, review answers at 64.8 and 67.4 s. Hint shows first letter, then length. |
+| Quiz sentences about typos and the page are said over the results screen | KNOWN GAP | A three-card round ends before those phrases. |
+| Answer sounds play during the run | PASS (measured, not heard) | 5 answers gave 13 tones: reveal and wrong answer at volume 0.12 (0.3 x 0.4), right answers 0.032, 0.028, 0.024 (0.08, 0.07, 0.06 x 0.4). `AudioContext` state `running`. |
+| Answer sounds follow the Sound button, and are not saved | PASS | Store tests with a fake `AudioContext`; `demoSound` absent from the saved store after a run. |
+| Measured total | PASS | 125.52 s and 125.48 s (script 125.1 s plus the first-sound wait). My first reading of 111.0 s was an arithmetic slip (a relative time minus the click time twice). |
+| Data restored after finish; snapshot key gone; focus on `main` | PASS | Notes, cards and review log equal the originals in all four runs. |
+| No console errors or warnings | PASS | In-page recorder empty in every run. |
+| Missing clip (chapter 3 renamed in the page) at 390px | PASS | "Narration unavailable" shown once at 30.4 s, the other eight clips played, the run finished at 125.5 s, data restored. Chapter 1 missing was not run. |
+| 390px bar with the sample label | FIXED | First version put the label in the chapter line: bar 285 px (34% of 844). Now its own line: 205 px normally, 225 px (27%) with a label, 253 px if "Narration unavailable" also shows (main content padding is 256 px). Buttons 44 px, one row, no horizontal scroll. |
+| 390px clicks and highlights visible | PASS | 17 of 17 content clicks visible; the 3 "hidden" clicks were the navbar's own buttons. 21 of 21 content highlights fully visible after 400 ms; the haunt-meter highlight is inside the nav (an earlier screenshot shows it outlined). Clicks needed instant scrolling: with smooth scrolling two targets were still off-screen at the moment of the click, so `reveal()` is now instant. |
+| ghost-ui-reviewer on the bar change | UNVERIFIED | Not re-run. The change is one extra line of 12 px text in the existing text colour (13.7:1) under the chapter. |
+| Stop or Escape during the first-sound wait | UNVERIFIED | Not run. By reading the code, the wait is at most 1.5 s and Stop is checked as soon as it ends. |
+
+Screenshots: `demo-sync-quiz-wrong-answer-390.png` (subtitle "back to the start of its review ladder." with the wrong-answer message), `demo-sync-insights-weakest-rooms-390.png` (subtitle "and your weakest rooms." with the list outlined). The sample-label frame was not captured as an image (screenshots ran behind my other calls); it was measured: chapter line "CHAPTER 2 OF 9: FOUR INPUTS" plus "sample data", and "CHAPTER 5 OF 9: SPACED REPETITION" plus "sample: simulated time jump".
+
+### Not covered (UNVERIFIED)
+Hearing the audio; whether the speech really matches the words (the cues come from silence gaps, the words from the script, and two splits are estimated); other browsers; a real audio device (the first-sound start-up differs per device); the production preview, offline mode and the service worker on this branch; 768px.

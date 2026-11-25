@@ -1,60 +1,106 @@
-# Demo timing: narration clips against the script
+# Demo timing: subtitles and narration clips
 
-Branch `demo-audio`. All numbers below come from the script data (`src/lib/demoScript.ts`), the manifest (`public/demo-audio/manifest.json`, durations measured with `audio.duration` in Chromium) and one full run in Chromium through the Playwright MCP at 1280px (dev server). Nothing here was heard: headless Chromium has no speaker. Times are in seconds at normal speed.
+Branch `demo-sync`. Numbers come from the script data (`src/lib/demoScript.ts`), the manifest (`public/demo-audio/manifest.json`: clip lengths measured with `audio.duration` in Chromium, and the cue time of every phrase measured from the quiet gaps in the WAV files), and full runs in Chromium through the Playwright MCP (dev server). Nothing here was heard: headless Chromium has no speaker. Times are in seconds at normal speed.
+
+## What was wrong before
+
+The captions were my own wording, not the narration ("Four inputs feed one ghost pipeline." while the voice said "Add notes four ways."), and the quiz chapter was 49.4 s long while its narration lasted 21.7 s, so the answers from about 75 s to 102 s were given in silence. Now each caption is a piece of the narration, shown when those words are spoken, and each chapter is only as long as its clip plus room to read the last screen.
 
 ## Chapters and clips
 
-| Ch | Chapter | Your file before rename | Start | Chapter length | Clip | Headroom | Fits (0.4 s margin) | Headroom left after 1 s start-up allowance |
-|---|---|---|---|---|---|---|---|---|
-| 1 | Intro | 1 Intro.wav | 0.00 s | 7.00 s | 5.04 s | 1.96 s | yes | 0.56 s |
-| 2 | Four inputs | 2 Four inputs.wav | 7.00 s | 30.90 s | 20.24 s | 10.66 s | yes | 9.26 s |
-| 3 | Ghost rooms | 3 Ghost rooms.wav | 37.90 s | 15.50 s | 11.04 s | 4.46 s | yes | 3.06 s |
-| 4 | The quiz | 4 The quiz.wav | 53.40 s | 49.40 s | 21.68 s | 27.72 s | yes | 26.32 s |
-| 5 | Spaced repetition | 5 Spaced repetition.wav | 102.80 s | 19.30 s | 14.88 s | 4.42 s | yes | 3.02 s |
-| 6 | Study insights | 6 Insights.wav | 122.10 s | 11.00 s | 6.80 s | 4.20 s | yes | 2.80 s |
-| 7 | Your data stays yours | 7 Your data.wav | 133.10 s | 11.00 s | 7.12 s | 3.88 s | yes | 2.48 s |
-| 8 | Built with Kiro | 8 Built with Kiro.wav | 144.10 s | 13.50 s | 11.12 s | 2.38 s | yes | 0.98 s |
-| 9 | Try it yourself | 9 End.wav | 157.60 s | 9.00 s | 7.04 s | 1.96 s | yes | 0.56 s |
+| Ch | Chapter | Start | Chapter length | Clip | Headroom | Subtitles |
+|---|---|---|---|---|---|---|
+| 1 | Intro | 0.00 s | 7.00 s | 5.04 s | 1.96 s | 2 |
+| 2 | Four inputs | 7.00 s | 23.00 s | 20.24 s | 2.76 s | 7 |
+| 3 | Ghost rooms | 30.00 s | 12.60 s | 11.04 s | 1.56 s | 4 |
+| 4 | The quiz | 42.60 s | 26.50 s | 21.68 s | 4.82 s | 7 |
+| 5 | Spaced repetition | 69.10 s | 17.00 s | 14.88 s | 2.12 s | 5 |
+| 6 | Study insights | 86.10 s | 8.40 s | 6.80 s | 1.60 s | 3 |
+| 7 | Your data stays yours | 94.50 s | 8.80 s | 7.12 s | 1.68 s | 3 |
+| 8 | Built with Kiro | 103.30 s | 12.80 s | 11.12 s | 1.68 s | 3 |
+| 9 | Try it yourself | 116.10 s | 9.00 s | 7.04 s | 1.96 s | 2 |
 
-Script total: **166.6 s (2:46.6)**. Measured in the browser: 166.63 s from the click on Run demo to the bar closing. The limit is 2:55 (175 s) for the run and 3:00 for the video. Clips total 104.96 s.
+Script total: **125.1 s (2:05)**, 36 steps. Measured: 125.5 s from the click to the bar closing (the extra 0.4 s is the wait for the first sound, below). The clips total 104.96 s. The earlier script was 166.6 s; it is 41.5 s shorter because the chapters no longer wait in silence after the voice has finished. A test requires the run to be at least as long as all clips together, and every clip to end at least 0.4 s plus a 1 s start-up allowance before its chapter ends.
 
-The files were renamed from `N Title.wav` to `chapter-N.wav` (content unchanged; SHA-256 of every file was the same before and after, and the committed blobs are byte-identical).
+## Every subtitle, with its start
 
-## What did not fit, and what was done
+`Cue` is the start of the phrase inside the clip (measured). `Shown` is when the caption appears, counted from the chapter start. A caption appears up to 0.2 s after its cue; a test checks this against the manifest. Cues marked (est.) are splits inside one phrase with no quiet gap, placed by word count.
 
-- **Chapter 9 (End):** the clip is 7.04 s and the chapter was 6.0 s. It would have been cut by the end of the run. Fix: a 3 s hold in the end step (`END_HOLD_MS`). Nothing in the audio was changed.
-- **Chapter 1 (Intro):** it fitted (5.04 s in 6.0 s) but with only 0.96 s of room, and the first sound in a page started 0.5 to 0.8 s after `play()` (see below). Fix: a 1 s hold in the intro step (`INTRO_HOLD_MS`).
-- A data test now requires every clip to end at least 0.4 s before its chapter does, and a second test requires a further 1 s for the browser to start the audio.
-
-## When the sound really starts
-
-The script calls `play()` on time. The browser then needs time to start its audio output, so the sound begins a little later. Measured from `audio.currentTime` sampled every 100 ms in the full run:
-
-| Ch | play() called after scheduled start | Sound audible after scheduled start | Clip ended before the next chapter by |
+| Ch | Cue | Shown | Subtitle (exactly the narration) |
 |---|---|---|---|
-| 1 | 2 ms | **504 ms** (first sound in the page) | 1.46 s |
-| 2 | 16 ms | 91 ms | 10.57 s |
-| 3 | 18 ms | 103 ms | 4.36 s |
-| 4 | 10 ms | 91 ms | 27.63 s |
-| 5 | 22 ms | **536 ms** (27 s of silence before it) | 3.88 s |
-| 6 | 12 ms | 89 ms | 4.11 s |
-| 7 | 17 ms | 95 ms | 3.79 s |
-| 8 | 6 ms | 85 ms | 2.30 s |
-| 9 | 23 ms | 89 ms | 1.90 s before the run ended |
+| 1 | 0.00 | 0.00 | Haunted Notes turns your unfinished notes into ghosts |
+| 1 | 3.20 | 3.30 | that haunt you until you master them. |
+| 2 | 0.00 | 0.00 | Add notes four ways. |
+| 2 | 1.85 | 2.00 | Type them, speak with your microphone, |
+| 2 | 4.20 | 4.30 | snap a photo of printed text, or upload an audio recording. |
+| 2 | 8.10 | 8.20 | Audio files and photos are processed on your own device, |
+| 2 | 11.25 | 11.35 | and the live microphone uses your browser's speech service. |
+| 2 | 14.50 | 14.60 | Each note is split into fill-in-the-blank flashcards, |
+| 2 | 17.40 | 17.50 | so even a long lecture becomes a short set of questions. |
+| 3 | 0.00 | 0.00 | Every note becomes a haunted room. |
+| 3 | 2.30 | 2.40 | Each flashcard you have not mastered is a ghost, |
+| 3 | 5.25 | 5.35 | and the weaker your memory of it, the more menacing it looks. |
+| 3 | 8.45 | 8.55 | The meter at the top shows how crowded your haunting is. |
+| 4 | 0.00 | 0.00 | Start a quiz and fill in each blank. |
+| 4 | 2.75 | 2.85 | Stuck? Ask for a hint, or reveal the answer. |
+| 4 | 6.10 | 6.20 | A wrong answer breaks your quiz streak and sends the ghost |
+| 4 | 8.70 (est.) | 8.80 | back to the start of its review ladder. |
+| 4 | 11.20 | 11.30 | A right answer banishes it. Small typos on long words are forgiven, |
+| 4 | 15.60 | 15.70 | and the answer is never hidden in the page before you respond. |
+| 4 | 18.80 | 18.90 | When the round ends, review only the cards you missed. |
+| 5 | 0.00 | 0.00 | Banished ghosts do not stay gone. |
+| 5 | 2.55 | 2.65 | A review ladder brings each one back after two days, |
+| 5 | 5.65 | 5.75 | then three, five, and seven. |
+| 5 | 8.50 | 8.60 | Jump ahead, and the ghosts that are due return, glowing orange. |
+| 5 | 12.35 | 12.45 | Ignore them longer, and they look stronger. |
+| 6 | 0.00 | 0.00 | Your study insights show your day streak, |
+| 6 | 2.50 | 2.60 | what you reviewed today, your accuracy this week, |
+| 6 | 5.65 | 5.75 | and your weakest rooms. |
+| 7 | 0.00 | 0.00 | Your notes live in your browser. |
+| 7 | 2.05 | 2.15 | Export a backup any time, and import it back |
+| 7 | 4.40 (est.) | 4.50 | with a safety check before anything is merged. |
+| 8 | 0.00 | 0.00 | Haunted Notes was built with Kiro, using specs, steering files, hooks, |
+| 8 | 4.85 | 4.95 | a custom UI reviewer agent, a Playwright MCP server, |
+| 8 | 8.65 | 8.75 | and property-based tests that caught real bugs. |
+| 9 | 0.00 | 0.00 | Try it yourself. The live link and the source code are below. |
+| 9 | 3.50 | 3.60 | Built for Kiroween 2026, in the Frankenstein category. |
 
-- Every clip reached its end (`ended`) before the next chapter began.
-- Seven clips become audible within about 100 ms of their chapter start. Clips 1 and 5 take 0.5 s, because the audio output has to start (first sound) or restart (after a long silence). An earlier run of the same page measured 0.80 s for clip 1.
-- A clean test in the same browser showed the file load itself costs only 34 to 70 ms. The start-up time depends on the machine and the audio device, so it can be longer on yours.
+## Measured in a full run (1280px)
 
-## Things to check by ear
+For every caption: the time it appeared minus the time its words became audible (from `audio.currentTime` sampled every 50 ms). Negative means the caption came first.
 
-- **What is said when.** Each clip starts with its chapter and plays once; it is not tied to individual steps. The quiz clip is 21.7 s long but the quiz chapter lasts 49.4 s, so the results screen and "Review missed" come about 25 s after the narration ends. Chapter 2 has about 10 s of captions-only time at the end. If your narration mentions something that appears later in its chapter, it will be said before it shows. `NARRATION_SCRIPT.md` was not in the repository, so this was not checked.
-- **Clip 1 and clip 5 start a little late** (see above). If the intro sounds late, tell me and I can lengthen the hold.
-- **A too-long clip.** If you replace a clip with a longer one: shorten the text in `NARRATION_SCRIPT.md` and regenerate that one clip, or ask me to add a hold step to that chapter. Then re-measure (`audio.duration` in the browser), update `manifest.json`, and run `npm test`: the fit test fails if a clip no longer fits.
+| | First run | After the first-sound wait |
+|---|---|---|
+| Captions compared | 36 | 36 |
+| Caption text equals the cue text | 36 of 36 | 36 of 36 |
+| Worst offset | 736 ms early (intro) | 311 ms early (intro) |
+| Mean offset | 92 ms | 57 ms |
+| Captions more than 150 ms early | 3 (intro 736 and 637 ms, chapter 5 first caption 195 ms) | 3 (intro 311 and 199 ms, chapter 5 first caption 168 ms) |
+
+All offsets were early, never late, which is how subtitles normally behave. The two intro captions were early by 0.64 to 0.74 s because the first sound in a page starts 0.5 to 0.8 s after `play()`. The run now starts the first clip inside the click and waits (at most 1.5 s) until that audio is really playing before its clock starts, so this no longer depends on the device. A missing or blocked first clip ends the wait at once (a test checks the code path; the missing-clip case was run for chapter 3, not chapter 1).
+
+## What the quiz chapter does now
+
+A three-card room (Biology), so a round ends in time for "review only the cards you missed". Times are from the start of the chapter, with the narration phrase on the same row.
+
+| Time | Narration | On screen |
+|---|---|---|
+| 0.9 to 2.8 | Start a quiz and fill in each blank. | The room's Quiz button is outlined and pressed. |
+| 3.4 to 5.6 | Stuck? Ask for a hint, or reveal the answer. | Hint twice (first letter, then length), then Reveal and Next. |
+| 6.2 to 8.8 | A wrong answer breaks your quiz streak and sends the ghost | "not sure" is typed and submitted; the ghost shakes; the answer shows. |
+| 8.8 to 11.3 | back to the start of its review ladder. | The wrong-answer message stays; then Next. |
+| 11.3 to 15.7 | A right answer banishes it. Small typos on long words are forgiven, | The answer is typed with one wrong letter (if it has 6+ letters) and submitted: "Close enough! Banished!" |
+| 15.7 to 18.9 | and the answer is never hidden in the page before you respond. | The results screen. |
+| 18.9 to 26.5 | When the round ends, review only the cards you missed. | Review missed is outlined and pressed, and the two missed ghosts are answered. |
+
+Two honest gaps: the narration about typos and about the answer not being in the page is said while the results screen is up (the round has only three cards), and the last 5 s of the chapter (the two review answers) have no new narration, only the answer sounds. If the card that is answered with a typo has fewer than 6 letters (DNA), it is answered exactly instead, because the quiz would mark a typo on a short word wrong. The cards come in random order, so this happens in about a third of runs.
+
+## Answer sounds
+
+The right (three-tone chime) and wrong (low buzz) sounds now play during Run demo, at 40% of their normal volume, and follow the Sound on / Sound off button of the bar. In a run they sounded 5 times (13 tones): Reveal, the wrong answer, the typo'd answer and the two review answers. Not heard; measured as tones started and their volumes.
 
 ## How to re-measure
 
-1. Start `npm run dev`. Open the app, then in the browser console run
-   `for (let n = 1; n <= 9; n++) { const a = new Audio('/demo-audio/chapter-' + n + '.wav'); a.addEventListener('loadedmetadata', () => console.log(n, Math.round(a.duration * 1000))) }`
-2. Put the numbers in `public/demo-audio/manifest.json` (`durationMs`).
-3. `npm test` checks that the manifest matches the script and the WAV headers, and that every clip fits.
+1. `npm run dev`, then open the app. Measure clip lengths with `new Audio('/demo-audio/chapter-N.wav')` and `loadedmetadata`.
+2. Update `durationMs` and the `cues` in `public/demo-audio/manifest.json`. A cue is the end of the quiet gap before the phrase in the WAV.
+3. `npm test`: the tests check the captions against `NARRATION_SCRIPT.md`, the cues against the audio, and that every clip fits.
