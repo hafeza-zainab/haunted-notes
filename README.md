@@ -2,6 +2,10 @@
 
 A Vite + React + TypeScript study app. Turn typed notes, audio files, live speech and photos into fill-in-the-blank flashcards, then review them as ghosts that fade when you know the answer.
 
+## Why Haunted Notes
+
+Taking notes is easy. Knowing what to revise, and when, across many subjects, is the hard part. Haunted Notes turns your notes into flashcard ghosts and schedules each review on a fixed 2-3-5-7 day ladder, so you only have to remember the answers.
+
 **Live app:** <URL>  
 **Demo video:** <YouTube URL>
 

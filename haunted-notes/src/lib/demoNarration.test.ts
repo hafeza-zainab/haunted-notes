@@ -17,8 +17,6 @@ import {
   CHAPTER_IDS,
   CHAPTER_TITLES,
   DEMO_STEPS,
-  END_HOLD_MS,
-  INTRO_HOLD_MS,
   scriptTotalMs,
   type DemoStep,
 } from './demoScript';
@@ -100,23 +98,27 @@ describe('every clip fits its chapter', () => {
     }
   });
 
-  it('the intro needed its hold: without it a 0.8 s late start would cut the first clip', () => {
-    const without: DemoStep[] = DEMO_STEPS.map((s) =>
-      s.chapter === 0 ? { ...s, actions: s.actions.filter((a) => !(a.op === 'wait' && a.ms === INTRO_HOLD_MS)) } : s,
-    );
-    const intro = fitReport(manifest, without).find((r) => r.chapter === 0);
-    expect(intro?.headroomMs).toBeLessThan(FIT_MARGIN_MS + START_ALLOWANCE_MS);
+  it('no chapter idles: all but the quiz and spaced repetition end within 150 ms of the minimum length', () => {
+    // A chapter is its clip plus the margin and the start-up allowance and nothing more, so
+    // no silent time is left at its end. The quiz (the review answers) and spaced repetition
+    // (the clock jumps) need longer because their actions do.
+    const NEEDS_ACTION_TIME = new Set([3, 4]);
+    for (const r of rows) {
+      const slack = r.headroomMs - (FIT_MARGIN_MS + START_ALLOWANCE_MS);
+      if (NEEDS_ACTION_TIME.has(r.chapter)) {
+        expect(slack, `${r.chapterId} slack ${slack} ms`).toBeLessThanOrEqual(3200);
+      } else {
+        expect(slack, `${r.chapterId} slack ${slack} ms`).toBeLessThanOrEqual(150);
+      }
+    }
   });
 
-  it('the end chapter needed the hold: without it the End clip would not fit', () => {
-    const without: DemoStep[] = DEMO_STEPS.map((s) =>
-      s.chapter === 8 ? { ...s, actions: s.actions.filter((a) => !(a.op === 'wait' && a.ms === END_HOLD_MS)) } : s,
-    );
-    const end = fitReport(manifest, without).find((r) => r.chapter === 8);
-    expect(end?.fits).toBe(false);
+  it('the new chapter 1 clip (about 14 s) fits: the intro grew from 7 s to hold it', () => {
+    const intro = rows.find((r) => r.chapter === 0);
+    expect(intro?.clipMs).toBeGreaterThan(13_000);
+    expect(intro?.lengthMs).toBeGreaterThanOrEqual((intro?.clipMs ?? 0) + FIT_MARGIN_MS + START_ALLOWANCE_MS);
   });
-
-  it('the total stays under 2:55 with the hold', () => {
+  it('the total stays under 2:55', () => {
     expect(scriptTotalMs()).toBeLessThan(MAX_TOTAL_MS);
   });
 

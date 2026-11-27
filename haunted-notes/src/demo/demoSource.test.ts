@@ -128,8 +128,13 @@ describe('the first clip starts inside the click and the run waits for its sound
     expect(limit).toBeLessThanOrEqual(2000);
   });
 
-  it('stops waiting when the audio plays or fails, so a missing clip never holds the run', () => {
-    expect(runner).toMatch(/addEventListener\('playing', done\)/);
+  it('waits for the audio clock to move, and stops at once on an error or after a limit, so a missing clip never holds the run', () => {
+    // The playing event comes 0.2 to 0.3 s before sound; the clock (currentTime) is what moves with it.
+    expect(runner).toMatch(/audio\.currentTime\s*>\s*FIRST_SOUND_CLOCK_S/);
+    expect(runner).toMatch(/performance\.now\(\)\s*-\s*started\s*>=\s*ms/);
     expect(runner).toMatch(/addEventListener\('error', done\)/);
+    const clock = Number(runner.match(/FIRST_SOUND_CLOCK_S\s*=\s*([0-9.]+)/)?.[1]);
+    expect(clock).toBeGreaterThan(0);
+    expect(clock).toBeLessThan(0.2);
   });
 });

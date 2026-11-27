@@ -22,6 +22,8 @@ export type DemoAction =
   | { op: 'click'; target: string; ms: number }
   /** Type `text` one character at a time, spread over `ms`. */
   | { op: 'type'; target: string; text: string; ms: number }
+  /** Put `text` into the field at once (an instant paste), then hold for the rest of `ms`. */
+  | { op: 'fill'; target: string; text: string; ms: number }
   /** Type the current quiz card's answer (read from the store) into the input. */
   | { op: 'typeAnswer'; target: string; ms: number }
   /** Like typeAnswer, but with one wrong letter when the answer is long enough to forgive it. */
@@ -78,14 +80,6 @@ export const CHAPTER_IDS = [
   'end',
 ] as const;
 
-/**
- * Extra time the intro is held (the clip is 5.04 s) and the end card is held (7.04 s).
- * The first sound in a page starts up to 0.8 s late (measured), so these two clips
- * need more room than the 0.4 s margin alone.
- */
-export const INTRO_HOLD_MS = 1000;
-export const END_HOLD_MS = 3000;
-
 export const MAX_CAPTION_WORDS = 12;
 
 /** Labels shown in the bar while the screen holds sample data or a simulated clock jump. */
@@ -112,11 +106,23 @@ function lens(starts: readonly number[], end: number): number[] {
   return starts.map((s, i) => (starts[i + 1] ?? end) - s);
 }
 
-/** The actions, padded with a wait so that they last exactly `len` ms. Throws if they are too long. */
+/**
+ * The actions, made to last exactly `len` ms. Throws if they are too long.
+ *
+ * There is no silent padding: a step that has time left makes its last highlight, click or
+ * fill last longer, so the screen keeps showing what it shows. A wait is added only to a
+ * step that has no actions at all, and such a step shows a text card.
+ */
 function fit(len: number, actions: DemoAction[]): DemoAction[] {
   const used = actions.reduce((sum, a) => sum + a.ms, 0);
   if (used > len) throw new Error(`demo step needs ${used} ms but has ${len} ms`);
-  return used === len ? actions : [...actions, { op: 'wait', ms: len - used }];
+  if (used === len) return actions;
+  const rest = len - used;
+  const last = actions[actions.length - 1];
+  if (last && (last.op === 'highlight' || last.op === 'click' || last.op === 'fill')) {
+    return [...actions.slice(0, -1), { ...last, ms: last.ms + rest }];
+  }
+  return [...actions, { op: 'wait', ms: rest }];
 }
 
 /** Highlight each ghost type in turn, weakest memory (wisp) to most menacing (poltergeist). */
@@ -129,20 +135,21 @@ function ghostWalk(totalMs: number): DemoAction[] {
 }
 
 /**
- * Chapter-relative start of every step, in ms, and the chapter's end. A start is the
- * cue time of its subtitle in the clip plus about 100 ms. Chapter lengths are the clip
- * length plus room for the sound to start and for the last screen to be read.
+ * Chapter-relative start of every step, in ms, and the chapter's end. A start is the cue time
+ * of its subtitle in the clip plus about 100 ms (the first step starts at 0). A chapter ends
+ * 1.4 s after its clip does (0.4 s margin plus 1 s for the sound to start), unless its actions
+ * need longer (the quiz and the spaced repetition chapters). Cues: public/demo-audio/manifest.json.
  */
 const T = {
-  intro: { starts: [0, 3300], end: 7000 },
-  inputs: { starts: [0, 2000, 4300, 8200, 11350, 14600, 17500], end: 23000 },
-  rooms: { starts: [0, 2400, 5350, 8550], end: 12600 },
-  quiz: { starts: [0, 2850, 6200, 8800, 11300, 15700, 18900], end: 26500 },
-  srs: { starts: [0, 2650, 5750, 8600, 12450], end: 17000 },
-  insights: { starts: [0, 2600, 5750], end: 8400 },
-  data: { starts: [0, 2150, 4500], end: 8800 },
-  kiro: { starts: [0, 4950, 8750], end: 12800 },
-  end: { starts: [0, 3600], end: 9000 },
+  intro: { starts: [0, 1950, 3550, 7350, 9600, 12250], end: 15300 },
+  inputs: { starts: [0, 2000, 4300, 8200, 11350, 14600, 17500], end: 21700 },
+  rooms: { starts: [0, 2400, 5350, 8550], end: 12500 },
+  quiz: { starts: [0, 2850, 6200, 8800, 11300, 15700, 18900], end: 25400 },
+  srs: { starts: [0, 2500, 5000, 8750, 10800], end: 17600 },
+  insights: { starts: [0, 2600, 5750], end: 8200 },
+  data: { starts: [0, 2150, 4500], end: 8600 },
+  kiro: { starts: [0, 4950, 8750], end: 12600 },
+  end: { starts: [0, 1700, 3450, 5500], end: 9400 },
 } as const;
 
 const L = {
@@ -155,11 +162,6 @@ const L = {
   data: lens(T.data.starts, T.data.end),
   kiro: lens(T.kiro.starts, T.kiro.end),
   end: lens(T.end.starts, T.end.end),
-};
-
-const INTRO_CARD: DemoCardText = {
-  title: 'Haunted Notes',
-  lines: ['Turns your unfinished notes into ghosts that haunt you until you master them.'],
 };
 
 const KIRO_CARDS: DemoCardText[] = [
@@ -188,34 +190,53 @@ const KIRO_CARDS: DemoCardText[] = [
 ];
 
 export const DEMO_STEPS: readonly DemoStep[] = [
-  // 0. Intro: "Haunted Notes turns your unfinished notes into ghosts that haunt you until you master them."
+  // 0. The problem. No title card: the run starts on the real dashboard, already loaded with the
+  // built-in demo data (the runner loads it before the first sound), so the project works from second 0.
   {
-    id: 'intro-1',
+    id: 'pitch-1',
     chapter: 0,
-    caption: 'Haunted Notes turns your unfinished notes into ghosts',
-    card: INTRO_CARD,
-    actions: fit(L.intro[0], []),
+    caption: 'Taking notes is easy.',
+    actions: fit(L.intro[0], [{ op: 'highlight', target: 'rooms-grid', ms: L.intro[0] }]),
   },
   {
-    id: 'intro-2',
+    id: 'pitch-2',
     chapter: 0,
-    caption: 'that haunt you until you master them.',
-    card: INTRO_CARD,
-    // The last second is a hold: the first sound in a page starts late, so the clip needs room.
-    actions: fit(L.intro[1], [
-      { op: 'wait', ms: L.intro[1] - INTRO_HOLD_MS },
-      { op: 'wait', ms: INTRO_HOLD_MS },
-    ]),
+    caption: 'Knowing what to revise,',
+    actions: fit(L.intro[1], [{ op: 'highlight', target: 'rooms-grid', ms: L.intro[1] }]),
+  },
+  {
+    id: 'pitch-3',
+    chapter: 0,
+    caption: 'and when, across many subjects, is the hard part.',
+    actions: fit(L.intro[2], [{ op: 'highlight', target: 'rooms-grid', ms: L.intro[2] }]),
+  },
+  {
+    id: 'pitch-4',
+    chapter: 0,
+    caption: 'Haunted Notes turns your notes into ghosts',
+    actions: fit(L.intro[3], [{ op: 'highlight', target: 'ghost-banshee', ms: L.intro[3] }]),
+  },
+  {
+    id: 'pitch-5',
+    chapter: 0,
+    caption: 'and remembers the revision schedule for you.',
+    actions: fit(L.intro[4], [{ op: 'highlight', target: 'ladder', ms: L.intro[4] }]),
+  },
+  {
+    id: 'pitch-6',
+    chapter: 0,
+    caption: 'You only have to remember the answers.',
+    actions: fit(L.intro[5], [{ op: 'highlight', target: 'start-quiz', ms: L.intro[5] }]),
   },
 
-  // 1. Four inputs
+  // 1. Four inputs. The sample texts are filled in at once (not typed live).
   {
     id: 'inputs-1',
     chapter: 1,
     caption: 'Add notes four ways.',
     actions: fit(L.inputs[0], [
       { op: 'click', target: 'nav-add', ms: 700 },
-      { op: 'highlight', target: 'stitch-strip', ms: 1300 },
+      { op: 'highlight', target: 'stitch-strip', ms: L.inputs[0] - 700 },
     ]),
   },
   {
@@ -223,8 +244,8 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     chapter: 1,
     caption: 'Type them, speak with your microphone,',
     actions: fit(L.inputs[1], [
-      { op: 'wait', ms: 900 },
-      { op: 'click', target: 'tab-mic', ms: 800 },
+      { op: 'highlight', target: 'stitch-strip', ms: 1200 },
+      { op: 'click', target: 'tab-mic', ms: L.inputs[1] - 1200 },
     ]),
   },
   {
@@ -233,10 +254,10 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     caption: 'snap a photo of printed text, or upload an audio recording.',
     sample: SAMPLE_DATA_LABEL,
     actions: fit(L.inputs[2], [
-      { op: 'click', target: 'tab-photo', ms: 400 },
-      { op: 'type', target: 'note-text', text: SAMPLE_PHOTO_TEXT, ms: 1500 },
+      { op: 'click', target: 'tab-photo', ms: 500 },
+      { op: 'fill', target: 'note-text', text: SAMPLE_PHOTO_TEXT, ms: 1300 },
       { op: 'click', target: 'tab-audio', ms: 600 },
-      { op: 'type', target: 'note-text', text: SAMPLE_AUDIO_TEXT, ms: 1400 },
+      { op: 'fill', target: 'note-text', text: SAMPLE_AUDIO_TEXT, ms: 1500 },
     ]),
   },
   {
@@ -263,7 +284,7 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     sample: SAMPLE_DATA_LABEL,
     actions: fit(L.inputs[5], [
       { op: 'click', target: 'tab-type', ms: 400 },
-      { op: 'type', target: 'note-text', text: SAMPLE_NOTE, ms: 2500 },
+      { op: 'fill', target: 'note-text', text: SAMPLE_NOTE, ms: L.inputs[5] - 400 },
     ]),
   },
   {
@@ -271,7 +292,10 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     chapter: 1,
     caption: 'so even a long lecture becomes a short set of questions.',
     sample: SAMPLE_DATA_LABEL,
-    actions: fit(L.inputs[6], [{ op: 'click', target: 'add-note-submit', ms: 600 }]),
+    actions: fit(L.inputs[6], [
+      { op: 'click', target: 'add-note-submit', ms: 1300 },
+      { op: 'highlight', target: 'rooms-grid', ms: L.inputs[6] - 1300 },
+    ]),
   },
 
   // 2. Ghost rooms
@@ -311,7 +335,7 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     caption: 'Start a quiz and fill in each blank.',
     actions: fit(L.quiz[0], [
       { op: 'highlight', target: QUIZ_ROOM_TARGET, ms: 900 },
-      { op: 'click', target: QUIZ_ROOM_TARGET, ms: 600 },
+      { op: 'click', target: QUIZ_ROOM_TARGET, ms: L.quiz[0] - 900 },
     ]),
   },
   {
@@ -319,7 +343,7 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     chapter: 3,
     caption: 'Stuck? Ask for a hint, or reveal the answer.',
     actions: fit(L.quiz[1], [
-      { op: 'wait', ms: 550 },
+      { op: 'highlight', target: 'quiz-prompt', ms: 550 },
       { op: 'click', target: 'quiz-hint', ms: 700 },
       { op: 'click', target: 'quiz-hint', ms: 700 },
       { op: 'click', target: 'quiz-reveal', ms: 800 },
@@ -340,7 +364,7 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     chapter: 3,
     caption: 'back to the start of its review ladder.',
     actions: fit(L.quiz[3], [
-      { op: 'wait', ms: 1700 },
+      { op: 'highlight', target: 'quiz-feedback', ms: 1700 },
       { op: 'click', target: 'quiz-submit', ms: 800 },
     ]),
   },
@@ -368,13 +392,14 @@ export const DEMO_STEPS: readonly DemoStep[] = [
       { op: 'click', target: 'review-missed', ms: 900 },
       { op: 'typeAnswer', target: 'quiz-input', ms: 1100 },
       { op: 'click', target: 'quiz-submit', ms: 500 },
-      { op: 'wait', ms: 1000 },
+      { op: 'highlight', target: 'quiz-feedback', ms: 1000 },
       { op: 'typeAnswer', target: 'quiz-input', ms: 1100 },
-      { op: 'click', target: 'quiz-submit', ms: 500 },
+      { op: 'click', target: 'quiz-submit', ms: 600 },
     ]),
   },
 
-  // 4. Spaced repetition
+  // 4. Spaced repetition. The new narration no longer says "ignore them longer, and they look
+  // stronger", so the five-day jump stays as a silent visual at the end of the last step.
   {
     id: 'srs-1',
     chapter: 4,
@@ -387,34 +412,32 @@ export const DEMO_STEPS: readonly DemoStep[] = [
   {
     id: 'srs-2',
     chapter: 4,
-    caption: 'A review ladder brings each one back after two days,',
+    caption: 'A fixed ladder brings each one back after',
     actions: fit(L.srs[1], [{ op: 'highlight', target: 'next-return', ms: L.srs[1] }]),
   },
   {
     id: 'srs-3',
     chapter: 4,
-    caption: 'then three, five, and seven.',
+    caption: 'two, three, five, then seven days,',
     actions: fit(L.srs[2], [{ op: 'highlight', target: 'ladder', ms: L.srs[2] }]),
   },
   {
     id: 'srs-4',
     chapter: 4,
-    caption: 'Jump ahead, and the ghosts that are due return, glowing orange.',
-    sample: SAMPLE_TIME_LABEL,
-    actions: fit(L.srs[3], [
-      { op: 'wait', ms: 400 },
-      { op: 'store', name: 'timeTravelDay', times: 2, ms: 700 },
-      { op: 'highlight', target: 'returned-ghost', ms: L.srs[3] - 1100 },
-    ]),
+    caption: 'so you never track dates yourself.',
+    actions: fit(L.srs[3], [{ op: 'highlight', target: 'next-return', ms: L.srs[3] }]),
   },
   {
     id: 'srs-5',
     chapter: 4,
-    caption: 'Ignore them longer, and they look stronger.',
+    caption: 'Skip ahead, and the ghosts that are due return, glowing orange.',
     sample: SAMPLE_TIME_LABEL,
     actions: fit(L.srs[4], [
+      { op: 'highlight', target: 'next-return', ms: 400 },
+      { op: 'store', name: 'timeTravelDay', times: 2, ms: 700 },
+      { op: 'highlight', target: 'returned-ghost', ms: 2500 },
       { op: 'store', name: 'timeTravelDay', times: 5, ms: 600 },
-      { op: 'highlight', target: 'returned-ghost', ms: L.srs[4] - 600 },
+      { op: 'highlight', target: 'returned-ghost', ms: 2600 },
     ]),
   },
 
@@ -461,7 +484,7 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     actions: fit(L.data[2], [{ op: 'highlight', target: 'backup-import', ms: L.data[2] }]),
   },
 
-  // 7. Built with Kiro (facts from docs/KIRO_EVIDENCE.md)
+  // 7. Built with Kiro (facts from docs/KIRO_EVIDENCE.md). Text cards: the wait shows a card.
   {
     id: 'kiro-1',
     chapter: 7,
@@ -484,11 +507,11 @@ export const DEMO_STEPS: readonly DemoStep[] = [
     actions: fit(L.kiro[2], []),
   },
 
-  // 8. End card
+  // 8. The close, over the home screen with the Try demo button.
   {
     id: 'end-1',
     chapter: 8,
-    caption: 'Try it yourself. The live link and the source code are below.',
+    caption: 'You remember the answers.',
     actions: fit(L.end[0], [
       { op: 'store', name: 'emptyState', ms: 500 },
       { op: 'highlight', target: 'try-demo', ms: L.end[0] - 500 },
@@ -497,15 +520,22 @@ export const DEMO_STEPS: readonly DemoStep[] = [
   {
     id: 'end-2',
     chapter: 8,
-    caption: 'Built for Kiroween 2026, in the Frankenstein category.',
-    // The last three seconds are a hold: the clip is longer than the six seconds of content.
-    actions: fit(L.end[1], [
-      { op: 'highlight', target: 'try-demo', ms: L.end[1] - END_HOLD_MS },
-      { op: 'wait', ms: END_HOLD_MS },
-    ]),
+    caption: 'Haunted Notes remembers when.',
+    actions: fit(L.end[1], [{ op: 'highlight', target: 'try-demo', ms: L.end[1] }]),
+  },
+  {
+    id: 'end-3',
+    chapter: 8,
+    caption: 'The link and source code are below.',
+    actions: fit(L.end[2], [{ op: 'highlight', target: 'try-demo', ms: L.end[2] }]),
+  },
+  {
+    id: 'end-4',
+    chapter: 8,
+    caption: 'Kiroween 2026, Frankenstein.',
+    actions: fit(L.end[3], [{ op: 'highlight', target: 'try-demo', ms: L.end[3] }]),
   },
 ];
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 export function stepMs(step: DemoStep): number {

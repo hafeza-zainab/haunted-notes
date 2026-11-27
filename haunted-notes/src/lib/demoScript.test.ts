@@ -47,11 +47,12 @@ describe('script length', () => {
     }
   });
 
-  it('every step lasts at least 3 and at most 12 seconds, except the long quiz round', () => {
+  it('every step lasts 1.5 to 13.5 seconds', () => {
+    // A step is one subtitle, so it lasts as long as its words are spoken (the shortest, chapter 1
+    // "Knowing what to revise,", is 1.6 s). The old floor of 2 s fitted freehand captions.
     for (const step of DEMO_STEPS) {
-      if (step.id === 'quiz-rest') continue;
       const s = stepMs(step) / 1000;
-      expect(s, step.id).toBeGreaterThanOrEqual(2);
+      expect(s, step.id).toBeGreaterThanOrEqual(1.5);
       expect(s, step.id).toBeLessThanOrEqual(13.5);
     }
   });

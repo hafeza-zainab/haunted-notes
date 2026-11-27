@@ -115,6 +115,8 @@ let narrationAudio: HTMLAudioElement | null = null;
 
 /** The longest the run waits for the first clip to start making sound. */
 export const FIRST_SOUND_WAIT_MS = 1500;
+/** The audio clock must pass this many seconds before the first sound counts as started. */
+export const FIRST_SOUND_CLOCK_S = 0.03;
 
 function currentSound(): boolean {
   if (soundOn === null) soundOn = !demoUrlParams().silent;
@@ -140,27 +142,28 @@ function createRunNarrator(sound: boolean): Narrator | null {
 }
 
 /**
- * Resolve when the narration audio is playing, or when it fails, or after ms.
- * The first sound in a page can start a second after play() is called, because the
- * browser has to open the audio output. Waiting for it keeps the first captions in step
- * with the speech whatever the device. Resolves at once if there is nothing to wait for.
+ * Resolve when the narration audio clock really moves (currentTime above FIRST_SOUND_CLOCK_S),
+ * or when it fails, or after `ms`. The first sound in a page starts later than play() and
+ * later than the `playing` event, because the browser has to open the audio output; waiting
+ * for the clock keeps the first captions in step with the speech whatever the device.
+ * Resolves at once if there is nothing to wait for.
  */
 function waitForFirstSound(ms: number): Promise<void> {
   const audio = narrationAudio;
-  if (!audio || (!audio.paused && audio.currentTime > 0)) return Promise.resolve();
+  if (!audio) return Promise.resolve();
   return new Promise((resolve) => {
+    const started = performance.now();
     const done = () => {
-      clearTimeout(timer);
-      audio.removeEventListener('playing', done);
+      clearInterval(poll);
       audio.removeEventListener('error', done);
       resolve();
     };
-    const timer = setTimeout(done, ms);
-    audio.addEventListener('playing', done);
+    const poll = setInterval(() => {
+      if (audio.currentTime > FIRST_SOUND_CLOCK_S || performance.now() - started >= ms) done();
+    }, 15);
     audio.addEventListener('error', done);
   });
 }
-
 // ── Clock and waiting ────────────────────────────────────────────────────────
 
 const TICK_MS = 25;
@@ -275,6 +278,14 @@ async function runAction(action: DemoAction, start: number): Promise<void> {
     case 'type':
       await typeInto(action.target, action.text, start, action.ms);
       return;
+    case 'fill': {
+      // An instant paste: the whole sample text at once, never typed live.
+      const el = await waitForTarget(action.target);
+      reveal(el);
+      if (!isField(el)) throw new DemoMissingTarget(`${action.target} (not a text field)`);
+      setFieldValue(el, action.text);
+      return;
+    }
     case 'typeAnswer':
       await typeInto(action.target, currentAnswer(), start, action.ms);
       return;
@@ -342,6 +353,9 @@ export async function startDemo(options: { sound?: boolean } = {}): Promise<void
     console.warn('Haunted Notes demo: could not save the recovery snapshot');
   }
   useStore.getState().beginDemoRun();
+  // The project works from second 0: the real dashboard, loaded with the built-in demo data,
+  // is on screen before the first sound starts (there is no title card).
+  runStoreAction('loadDemoOnly');
   publish({ ...IDLE, status: 'running', totalMs: scriptTotalMs(), sound: currentSound() });
   narrator = createRunNarrator(currentSound());
   // The right and wrong answer sounds follow the same Sound button as the narration.

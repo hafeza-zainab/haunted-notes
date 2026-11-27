@@ -366,6 +366,7 @@ const QuizView: React.FC = () => {
 
         {feedback && (
           <p
+            data-demo="quiz-feedback"
             className={`quiz-feedback ${answerState}`}
             role={answerState === 'wrong' ? 'alert' : 'status'}
             aria-live={answerState === 'wrong' ? 'assertive' : 'polite'}

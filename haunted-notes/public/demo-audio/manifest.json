@@ -1,20 +1,36 @@
 {
   "version": 1,
-  "measuredWith": "Chromium audio.duration (Playwright MCP, dev server)",
+  "measuredWith": "Chromium audio.duration (Playwright MCP, dev server), all nine clips re-measured after chapters 1, 5 and 9 were replaced",
   "clips": [
     {
       "chapterId": "intro",
       "chapter": 1,
       "file": "chapter-1.wav",
-      "durationMs": 5040,
+      "durationMs": 13840,
       "cues": [
         {
           "startMs": 0,
-          "text": "Haunted Notes turns your unfinished notes into ghosts"
+          "text": "Taking notes is easy."
         },
         {
-          "startMs": 3200,
-          "text": "that haunt you until you master them."
+          "startMs": 1850,
+          "text": "Knowing what to revise,"
+        },
+        {
+          "startMs": 3450,
+          "text": "and when, across many subjects, is the hard part."
+        },
+        {
+          "startMs": 7250,
+          "text": "Haunted Notes turns your notes into ghosts"
+        },
+        {
+          "startMs": 9500,
+          "text": "and remembers the revision schedule for you."
+        },
+        {
+          "startMs": 12150,
+          "text": "You only have to remember the answers."
         }
       ]
     },
@@ -119,27 +135,27 @@
       "chapterId": "srs",
       "chapter": 5,
       "file": "chapter-5.wav",
-      "durationMs": 14880,
+      "durationMs": 14400,
       "cues": [
         {
           "startMs": 0,
           "text": "Banished ghosts do not stay gone."
         },
         {
-          "startMs": 2550,
-          "text": "A review ladder brings each one back after two days,"
+          "startMs": 2400,
+          "text": "A fixed ladder brings each one back after"
         },
         {
-          "startMs": 5650,
-          "text": "then three, five, and seven."
+          "startMs": 4900,
+          "text": "two, three, five, then seven days,"
         },
         {
-          "startMs": 8500,
-          "text": "Jump ahead, and the ghosts that are due return, glowing orange."
+          "startMs": 8650,
+          "text": "so you never track dates yourself."
         },
         {
-          "startMs": 12350,
-          "text": "Ignore them longer, and they look stronger."
+          "startMs": 10700,
+          "text": "Skip ahead, and the ghosts that are due return, glowing orange."
         }
       ]
     },
@@ -208,18 +224,26 @@
       "chapterId": "end",
       "chapter": 9,
       "file": "chapter-9.wav",
-      "durationMs": 7040,
+      "durationMs": 8000,
       "cues": [
         {
           "startMs": 0,
-          "text": "Try it yourself. The live link and the source code are below."
+          "text": "You remember the answers."
         },
         {
-          "startMs": 3500,
-          "text": "Built for Kiroween 2026, in the Frankenstein category."
+          "startMs": 1600,
+          "text": "Haunted Notes remembers when."
+        },
+        {
+          "startMs": 3350,
+          "text": "The link and source code are below."
+        },
+        {
+          "startMs": 5400,
+          "text": "Kiroween 2026, Frankenstein."
         }
       ]
     }
   ],
-  "cuesMeasuredWith": "startMs = end of the quiet gap before the phrase in the WAV (50 ms windows, rms < 350); the first cue of a clip is 0. estimated = split inside a phrase with no gap, placed by word count."
+  "cuesMeasuredWith": "startMs = end of the quiet gap before the phrase in the WAV (50 ms windows, rms < 350); the first cue of a clip is 0. Chapters 1, 5 and 9: the words in each stretch of speech were also recognised per stretch with the offline Windows recogniser, to place the splits inside sentences. estimated = split inside a phrase with no gap, placed by word count."
 }

@@ -38,6 +38,7 @@ const STATE_DEPENDENT: Record<string, string> = {
   'quiz-results': 'QuizView.tsx',
   'review-missed': 'QuizView.tsx',
   'back-dashboard': 'QuizView.tsx',
+  'quiz-feedback': 'QuizView.tsx', // the answer message, shown only after an answer
 };
 
 describe('every data-demo target in the script exists in the views', () => {

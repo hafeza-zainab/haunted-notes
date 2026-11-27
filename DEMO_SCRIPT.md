@@ -17,6 +17,19 @@ The app has a self-playing **Run demo** (replaces the old 60-second tour). It ta
 4. Add an end card (live URL and GitHub repo, readable for at least 3 seconds) in Clipchamp. Keep the total under 3:00.
 5. The run uses sample data only and restores your own notes afterwards. It does not show the offline mode or the phone-width view; cut those in separately if you want them (table below).
 
+## The first 15 seconds: the project works from the start
+Run demo has no title card. From the first frame the real app is on screen: the dashboard, already loaded with the built-in demo data and its ghosts, with the caption bar at the bottom. The judges see the project working while the problem is being said, and the pitch is the first thing they hear:
+
+| Time | On screen | Narration and caption |
+|---|---|---|
+| 0:00 | The dashboard with the demo rooms and ghosts | "Taking notes is easy." |
+| 0:02 | Same, rooms outlined | "Knowing what to revise," / "and when, across many subjects, is the hard part." |
+| 0:07 | A ghost outlined | "Haunted Notes turns your notes into ghosts" |
+| 0:10 | "Review ladder: 2, 3, 5, 7 days" outlined | "and remembers the revision schedule for you." |
+| 0:12 | Start Quiz outlined | "You only have to remember the answers." |
+
+Do not add a title card or a logo before it. If you cut an intro in the editor, start the recording at the click. The review method is the fixed 2-3-5-7 day ladder (reviews on days 2, 5, 10 and 17): say that, never another set of numbers, and never claim that other apps have no scheduling.
+
 ## Record the narrated run (with sound)
 1. Turn on Windows Focus Assist so no notification sound or pop-up lands in the recording. Close other apps that make sound (music, chat, mail).
 2. Leave the app's own sound button in the top bar as it is. During Run demo the right and wrong answer sounds play anyway, quietly under the narration, and follow the **Sound on / Sound off** button in the demo bar.
@@ -43,8 +56,8 @@ The app has a self-playing **Run demo** (replaces the old 60-second tour). It ta
 
 | Time | Screen | Caption |
 |---|---|---|
-| 0:00-0:08 | Title card on the dark purple background | "Haunted Notes: your unfinished notes come back to haunt you" |
-| 0:08-0:20 | Empty state with "Four inputs, one ghost pipeline" strip | "Students re-read notes, but rarely test themselves" |
+| 0:00-0:15 | The real dashboard with the demo ghosts (no title card) | "Taking notes is easy. Knowing what to revise, and when, is the hard part." |
+| 0:15-0:20 | Add Note with the "Four inputs, one ghost pipeline" strip | "Students re-read notes, but rarely test themselves" |
 | 0:20-0:45 | Add Note: show typing, the Audio tab (upload a short clip, speed up the transcription 2x), the Photo tab | "Type, speak, snap a photo, or upload audio" then "All processed in your browser" |
 | 0:45-1:00 | Click Try demo: dashboard with rooms and the five ghost types | "Every unmastered fact becomes a ghost" |
 | 1:00-1:35 | Quiz: use a Hint, answer wrong (shake), answer right (banish with particles), use Reveal, finish, press Review missed | "Answer right to banish it" then "Miss one, and it haunts you again" |

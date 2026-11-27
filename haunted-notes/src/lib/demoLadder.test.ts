@@ -47,7 +47,7 @@ describe('Run demo on the 2-3-5-7 ladder', () => {
     expect(one.filter((c) => isDue(c, t0))).toHaveLength(0);
     const step = jumpStep(2);
     expect(step, 'a step jumps the clock two days').toBeDefined();
-    expect(step?.caption).toBe('Jump ahead, and the ghosts that are due return, glowing orange.');
+    expect(step?.caption).toBe('Skip ahead, and the ghosts that are due return, glowing orange.');
     expect(step?.sample?.toLowerCase()).toContain('sample');
   });
 
@@ -75,7 +75,11 @@ describe('Run demo on the 2-3-5-7 ladder', () => {
     }
     const step = jumpStep(5);
     expect(step, 'a step jumps the clock five more days').toBeDefined();
-    expect(step?.caption).toBe('Ignore them longer, and they look stronger.');
+    // The new narration no longer says "ignore them longer, and they look stronger", so the five-day
+    // jump is a silent visual at the end of the "Skip ahead" step, after the two-day jump.
+    expect(step?.caption).toBe('Skip ahead, and the ghosts that are due return, glowing orange.');
     expect(step?.sample?.toLowerCase()).toContain('sample');
+    const days = (step?.actions ?? []).flatMap((a) => (a.op === 'store' && a.name === 'timeTravelDay' ? [a.times] : []));
+    expect(days).toEqual([2, 5]);
   });
 });
