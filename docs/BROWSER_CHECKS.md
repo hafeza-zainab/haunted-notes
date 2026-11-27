@@ -238,3 +238,25 @@ Screenshots: `demo-sync-quiz-wrong-answer-390.png` (subtitle "back to the start 
 
 ### Not covered (UNVERIFIED)
 Hearing the audio; whether the speech really matches the words (the cues come from silence gaps, the words from the script, and two splits are estimated); other browsers; a real audio device (the first-sound start-up differs per device); the production preview, offline mode and the service worker on this branch; 768px.
+## 11. demo-pitch (problem pitch, chapters 1, 5, 9)
+I could not HEAR any audio: headless Chromium has no speaker. Everything below about sound is measured from audio clocks, events and `currentTime`, not heard.
+
+| Check | Result | Note |
+|---|---|---|
+| 1280 px: dashboard with ghosts in the first second | PASS | 3 rooms, 9 ghosts at 161 ms, no card, no empty state |
+| 1280 px: all 9 chapters complete, every clip reaches its end | PASS | |
+| 1280 px: total <= 170 s | PASS | 132.1 s |
+| 390 px: all chapters complete, total <= 170 s | PASS | 132.0 s |
+| 390 px: no horizontal scroll, buttons 44 px, bar 205 px (225 px with sample label) | PASS | |
+| 390 px: highlights visible at the end of their life | PASS with one oddity | 31 of 32 at 100 %; the first `returned-ghost` highlight read 0 % at its end (reached full visibility 249 ms in). Cause not confirmed; the second `returned-ghost` highlight reads 100 % |
+| Clip starts within 300 ms of its chapter start | PASS for chapters 2 to 9 | 111 to 250 ms |
+| Chapter 1 first sound | Exception | about 0.7 s after the click (first-sound latency) |
+| Pause freezes audio and bar clock; Resume continues the same clip | PASS | |
+| Stop and Escape restore data, release audio | PASS | including during the first-sound wait |
+| Console errors | PASS | none at 1280 or 390 px |
+| Data restored after a run | PASS | snapshot key gone |
+| Caption offset after the chapter 1 lead fix | UNVERIFIED | not re-measured |
+| Answer sounds (13 tones) | UNVERIFIED | measured, not heard |
+| Run length 140 to 170 s from the prompt | NOT MET | 132 s; padding with silence was not allowed |
+| ghost-ui-reviewer on the bar | UNVERIFIED | not run this round; no bar markup changed |
+| Other browsers, real audio devices, production preview and offline, 768 px | UNVERIFIED | |

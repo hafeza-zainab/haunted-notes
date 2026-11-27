@@ -54,7 +54,7 @@ npm install
 npm run dev
 ```
 
-Click **Run demo** for a narrated, self-playing walkthrough of about 2 minutes 5 seconds (125.1 s of script plus a fraction of a second while the first sound starts, measured). It uses the real app: it clicks the navigation, types into the Add Note box, presses Hint, Skip and Reveal, and calls the store's actions, while a caption bar at the bottom explains each step. Pause, Stop and Escape end it early.
+Click **Run demo** for a narrated, self-playing walkthrough of about 2 minutes 12 seconds (131.3 s of script plus a fraction of a second while the first sound starts, measured 132 s). It uses the real app: it clicks the navigation, types into the Add Note box, presses Hint, Skip and Reveal, and calls the store's actions, while a caption bar at the bottom explains each step. Pause, Stop and Escape end it early.
 
 **Narration.** One spoken clip per chapter plays in sync with the run, and the caption bar shows the same words as subtitles, timed to when they are spoken (a test checks them against `NARRATION_SCRIPT.md`). The right and wrong answer sounds of the quiz also play during the run, quieter than the narration. The **Sound on / Sound off** button in the bar mutes the narration and those answer sounds (captions always stay visible); `?sound=0` starts muted. Browsers only allow sound after a click, so `/?demo=1` shows one **Start with sound** button (Escape cancels). For a silent run that starts by itself, open `/?demo=1&sound=0`. If a clip cannot load or play, the run goes on with captions and the bar says "Narration unavailable". Timing of every clip is in [docs/DEMO_TIMING.md](docs/DEMO_TIMING.md).
 
