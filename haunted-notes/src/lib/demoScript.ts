@@ -141,7 +141,8 @@ function ghostWalk(totalMs: number): DemoAction[] {
  * need longer (the quiz and the spaced repetition chapters). Cues: public/demo-audio/manifest.json.
  */
 const T = {
-  intro: { starts: [0, 1950, 3550, 7350, 9600, 12250], end: 15300 },
+  // Chapter 1 starts on the audio's own clock (the run waits for the first sound), so its captions use the cue times themselves, with no lead.
+  intro: { starts: [0, 1850, 3450, 7250, 9500, 12150], end: 15300 },
   inputs: { starts: [0, 2000, 4300, 8200, 11350, 14600, 17500], end: 21700 },
   rooms: { starts: [0, 2400, 5350, 8550], end: 12500 },
   quiz: { starts: [0, 2850, 6200, 8800, 11300, 15700, 18900], end: 25400 },
