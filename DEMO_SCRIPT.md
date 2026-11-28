@@ -13,7 +13,7 @@ Format: screen recording + short on-screen captions. The narrated Run demo carri
 The app has a self-playing **Run demo** (replaces the old 60-second tour). It takes about 2:12 at normal speed (131.3 s of script plus the first sound start-up, measured), narrated, so it fits well under 3:00 with an end card on top.
 1. Open the app at `/?demo=1` and click **Start with sound** (browsers only play sound after a click), or press **Run demo**. For a silent run that starts by itself use `/?demo=1&sound=0`. Use a clean browser window, zoom 110 to 125%.
 2. Record the window with OBS or Game Bar (see below). After the click do not touch the mouse or keyboard: a transparent shield ignores clicks, and Escape stops the run.
-3. The caption bar at the bottom is part of the recording. Chapters: intro, four inputs, ghost rooms, the quiz, spaced repetition, study insights, your data stays yours, built with Kiro, end card.
+3. The caption bar at the bottom is part of the recording. Chapters: the problem, four inputs, ghost rooms, the quiz, spaced repetition, study insights, your data stays yours, built with Kiro, end card.
 4. Add an end card (live URL and GitHub repo, readable for at least 3 seconds) in Clipchamp. Keep the total under 3:00.
 5. The run uses sample data only and restores your own notes afterwards. It does not show the offline mode or the phone-width view; cut those in separately if you want them (table below).
 

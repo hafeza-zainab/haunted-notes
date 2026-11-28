@@ -1,4 +1,4 @@
-﻿# Demo timing: subtitles and narration clips
+# Demo timing: subtitles and narration clips
 Branch `demo-pitch`. Numbers come from the script data (`src/lib/demoScript.ts`), the manifest (`public/demo-audio/manifest.json`: all nine clips re-measured with `audio.duration` in Chromium, cue times placed from quiet gaps in the WAV files), and full runs in Chromium through the Playwright MCP (dev server). **Nothing here was heard**: headless Chromium has no speaker. Times are in seconds at normal speed.
 
 ## What changed in this round
@@ -7,7 +7,7 @@ Chapter 1 is now "the problem": it plays over the real dashboard loaded with dem
 ## Chapters and clips
 | Ch | Chapter | Start | Chapter length | Clip | Headroom | Subtitles |
 |---|---|---|---|---|---|---|
-| 1 | Intro | 0.00 s | 15.30 s | 13.84 s | 1.46 s | 6 |
+| 1 | The problem | 0.00 s | 15.30 s | 13.84 s | 1.46 s | 6 |
 | 2 | Four inputs | 15.30 s | 21.70 s | 20.24 s | 1.46 s | 7 |
 | 3 | Ghost rooms | 37.00 s | 12.50 s | 11.04 s | 1.46 s | 4 |
 | 4 | The quiz | 49.50 s | 25.40 s | 21.68 s | 3.72 s | 7 |

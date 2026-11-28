@@ -56,7 +56,7 @@ export interface DemoStep {
 }
 
 export const CHAPTER_TITLES = [
-  'Intro',
+  'The problem',
   'Four inputs',
   'Ghost rooms',
   'The quiz',

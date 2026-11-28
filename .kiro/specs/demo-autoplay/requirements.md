@@ -13,7 +13,7 @@ Glossary: **run** = one play of the script. **script** = the ordered chapters an
 3. A second start while a run is active does nothing.
 
 ### R2 Script content
-1. Nine chapters in this order: Intro, Four inputs, Ghost rooms, The quiz, Spaced repetition, Study insights, Your data stays yours, Built with Kiro, End card.
+1. Nine chapters in this order: The problem (first called Intro), Four inputs, Ghost rooms, The quiz, Spaced repetition, Study insights, Your data stays yours, Built with Kiro, End card.
 2. Every caption is 12 words or fewer. Where a step shows sample data, the caption says "sample".
 3. Total length at 1x is between 140 and 170 seconds (target about 160). The measured wall-clock total must stay under 170 seconds.
 4. Captions describe only what is on screen at that moment. The Built with Kiro captions use only facts from `docs/KIRO_EVIDENCE.md`.

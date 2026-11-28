@@ -569,3 +569,8 @@ Spec: `.kiro/specs/demo-sync/`. Timing: `docs/DEMO_TIMING.md`. Browser results: 
 - **My slips.** Clicked Run demo before installing the recorder several times; raced parallel tool calls; two screenshots show 0:09 and 0:15, not second 0.
 - **Not verified:** nothing was heard; chapter 1 offset after the lead fix was not re-measured.
 - **Flag:** the Devpost line "property tests on the scheduler, flashcard generator and backup import found real bugs" is not what `docs/KIRO_EVIDENCE.md` says: scheduler and backup property tests found none; real bugs were in cloze, reviewLog, insights, persistedState and the store. Not edited.
+
+## demo-pitch follow-up: narration length, chapter 1 label, length floor
+- **NARRATION_SCRIPT.md.** The two "about 2:40 / 2:42 (162.6 s)" statements now say about 2:12 (131.3 s of script, measured 132 s, from `docs/DEMO_TIMING.md`), and the note says the table's start times are old and `docs/DEMO_TIMING.md` is the source. A third mention in the Kiro prompt text ("the 2:40 video cut") became "the video cut".
+- **Chapter 1 label.** "Intro" is now "The problem" in `CHAPTER_TITLES` (`demoScript.ts`), `docs/DEMO_TIMING.md`, `DEMO_SCRIPT.md` and the chapter list in `.kiro/specs/demo-autoplay/requirements.md`. No test mentioned the label. The chapter id `intro` and the manifest ids are unchanged. Older log and browser-check entries keep "Intro" because they record what was shown then.
+- **Length floor.** Not changed: the script total test already requires 115 s, not 140 s (lowered earlier, see above). The 170 s upper limit is kept. Your rule said to lower it only if it still required 140 s.
