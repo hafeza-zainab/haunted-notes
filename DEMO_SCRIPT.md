@@ -10,7 +10,7 @@ Format: screen recording + short on-screen captions. The narrated Run demo carri
 - Scored under "Presentation": clear end-to-end demo, what problem it solves, who it is for, why it matters, easy to follow, memorable.
 
 ## Fastest route: let the app play itself
-The app has a self-playing **Run demo** (replaces the old 60-second tour). It takes about 2:12 at normal speed (131.3 s of script plus the first sound start-up, measured), narrated, so it fits well under 3:00 with an end card on top.
+The app has a self-playing **Run demo** (replaces the old 60-second tour). It takes about 2:10 at normal speed (exact times in `docs/DEMO_TIMING.md`), narrated, so it fits well under 3:00 with an end card on top.
 1. Open the app at `/?demo=1` and click **Start with sound** (browsers only play sound after a click), or press **Run demo**. For a silent run that starts by itself use `/?demo=1&sound=0`. Use a clean browser window, zoom 110 to 125%.
 2. Record the window with OBS or Game Bar (see below). After the click do not touch the mouse or keyboard: a transparent shield ignores clicks, and Escape stops the run.
 3. The caption bar at the bottom is part of the recording. Chapters: the problem, four inputs, ghost rooms, the quiz, spaced repetition, study insights, your data stays yours, built with Kiro, end card.
@@ -36,7 +36,7 @@ Do not add a title card or a logo before it. If you cut an intro in the editor, 
 3. OBS Studio: add a **Window Capture** (or Display Capture) for the browser and an **Audio Output Capture** (Desktop Audio). Turn the **microphone off** (Mic/Auxiliary muted), so only the narration is recorded. Windows Game Bar: press Win+G, open the capture options and tick **Record system audio** (not the microphone).
 4. Set the system volume to a normal level and check the OBS meter moves when you play a clip.
 5. **Start the recording first**, then open `/?demo=1` and click **Start with sound** (or click **Run demo**). The click is needed once; after that leave the mouse alone.
-6. Let the run finish on the end card, then stop the recording about 3 seconds later. The run is about 2:12, so the recording is about 2:16 with the click and the stop; trim the ends in Clipchamp and add the end card (live URL and repo). You have room for about 45 seconds more under 3:00.
+6. Let the run finish on the end card, then stop the recording about 3 seconds later. The run is about 2:10 (exact times in `docs/DEMO_TIMING.md`), so the recording is a few seconds longer with the click and the stop; trim the ends in Clipchamp and add the end card (live URL and repo). You have room for about 45 seconds more under 3:00.
 7. Play the file back with headphones: each clip should land on its chapter and nothing should be cut off. If a clip is too long for its chapter, see `docs/DEMO_TIMING.md`.
 8. Say where the narration comes from: the README has the line `Narration: <ADD: tool used and its licence terms>`. Fill it in before you submit.
 
@@ -66,14 +66,14 @@ Do not add a title card or a logo before it. If you cut an intro in the editor, 
 | 2:00-2:10 | Turn on offline in DevTools, reload, Try demo works; show Export backup | "Works offline. Your notes stay in your browser" |
 | 2:10-2:20 | Phone-width view (390px), then the Run demo button | "Built for phones, keyboards and reduced motion" |
 | 2:20-2:38 | Quick cuts: the .kiro folder (specs, steering, hooks, agent), test run showing all tests passing, a Playwright screenshot | "Built with Kiro: specs, steering, hooks, a custom agent, MCP and property-based tests" |
-| 2:38-2:45 | End card with the live URL and the GitHub repo | "Frankenstein category, Kiroween 2026" |
+| 2:38-2:45 | End card with the live URL and the GitHub repo | "Built for Kiroween 2026" |
 
 Keep the cuts quick. Speed up (2x) anything slow, such as the transcription and the model download.
 
 ## Export and upload
 1. Export as 1080p MP4.
 2. Upload to YouTube as **Public** (not unlisted or private). Set "not made for kids" if asked.
-3. Title: "Haunted Notes: Kiroween 2026 demo (Frankenstein)".
+3. Title: "Haunted Notes: Kiroween 2026 demo".
 4. Description: one sentence on what it does, the live URL, the GitHub link, and "Built with Kiro for the Kiroween 2026 hackathon".
 5. Open the video in a private window to confirm it plays, and check the length is under 3:00.
 

@@ -2,7 +2,7 @@
 
 > Your unfinished study notes come back to haunt you, until you banish them.
 
-Built for **Kiroween 2026** (category: Frankenstein). Haunted Notes stitches together voice transcription, handwriting/photo OCR, rule-based flashcard generation and spaced repetition into one spooky study app. Everything runs in the browser: no backend, no accounts, no paid services, and your notes stay in your browser. Uploaded audio is transcribed on-device and photos are processed on-device; the only network calls are listed under "Run locally" below.
+Built for **Kiroween 2026** (category: <ADD: chosen category>). Haunted Notes stitches together voice transcription, handwriting/photo OCR, rule-based flashcard generation and spaced repetition into one spooky study app. Everything runs in the browser: no backend, no accounts, no paid services, and your notes stay in your browser. Uploaded audio is transcribed on-device and photos are processed on-device; the only network calls are listed under "Run locally" below.
 
 - **Live app:** <ADD NETLIFY URL>
 - **Demo video:** <ADD YOUTUBE URL>
@@ -15,7 +15,7 @@ Built for **Kiroween 2026** (category: Frankenstein). Haunted Notes stitches tog
 3. **Quiz to banish.** Answer correctly and the ghost is banished. Answer wrong and it gets louder.
 4. **Ghosts come back.** Spaced repetition on the 2-3-5-7 ladder schedules each banished ghost: it returns after 2 days, then 3, then 5, then 7.
 
-## The Frankenstein stitch
+## Four inputs, one pipeline
 
 | Piece | Tech (all free, runs in the browser) |
 |---|---|

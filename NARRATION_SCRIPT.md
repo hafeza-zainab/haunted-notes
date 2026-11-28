@@ -1,6 +1,6 @@
 # Narration script for the Haunted Notes demo (text-to-speech, no human voice)
 
-Use this with the self-playing "Run demo" recording (video cut, about 2:12).
+Use this with the self-playing "Run demo" recording (video cut, about 2:10; exact times in `docs/DEMO_TIMING.md`).
 Narration speaks about 70 percent of each chapter, so there is room for the on-screen actions. Keep the on-screen captions too: they help judges who watch with sound off.
 
 ## How to turn it into audio (free)
@@ -24,7 +24,7 @@ Narration speaks about 70 percent of each chapter, so there is room for the on-s
 | 8 Built with Kiro | 2:11 | 28 | Haunted Notes was built with Kiro, using specs, steering files, hooks, a custom UI reviewer agent, a Playwright MCP server, and property-based tests that caught real bugs. |
 | 9 End | 2:23 | 17 | You remember the answers. Haunted Notes remembers when. The link and source code are below. Built for Kiroween 2026. |
 
-Total about 340 words, roughly 2 minutes 15 seconds of speech at a normal pace. The demo now runs about 2:12 (131.3 s of script, measured 132 s in `docs/DEMO_TIMING.md`). The start times in the table above are old; `docs/DEMO_TIMING.md` is the source for the real start of every chapter.
+Total about 340 words, roughly 2 minutes 15 seconds of speech at a normal pace. The demo now runs about 2:10; exact times are in `docs/DEMO_TIMING.md`. The start times in the table above are old; `docs/DEMO_TIMING.md` is the source for the real start of every chapter.
 Note: "quiz streak" (chapter 4) is the counter in the quiz header. "Day streak" (chapter 6) counts days with at least one review. They are different, so keep both words as written.
 
 ## Pitch update (Nov 27): what changed and what to regenerate
