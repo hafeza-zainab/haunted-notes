@@ -22,7 +22,7 @@ Narration speaks about 70 percent of each chapter, so there is room for the on-s
 | 6 Insights | 1:51 | 21 | Your study insights show your day streak, what you reviewed today, your accuracy this week, and your weakest rooms. |
 | 7 Your data | 2:01 | 24 | Your notes live in your browser. Export a backup any time, and import it back with a safety check before anything is merged. |
 | 8 Built with Kiro | 2:11 | 28 | Haunted Notes was built with Kiro, using specs, steering files, hooks, a custom UI reviewer agent, a Playwright MCP server, and property-based tests that caught real bugs. |
-| 9 End | 2:23 | 17 | You remember the answers. Haunted Notes remembers when. The link and source code are below. Kiroween 2026, Frankenstein. |
+| 9 End | 2:23 | 17 | You remember the answers. Haunted Notes remembers when. The link and source code are below. Built for Kiroween 2026. |
 
 Total about 340 words, roughly 2 minutes 15 seconds of speech at a normal pace. The demo now runs about 2:12 (131.3 s of script, measured 132 s in `docs/DEMO_TIMING.md`). The start times in the table above are old; `docs/DEMO_TIMING.md` is the source for the real start of every chapter.
 Note: "quiz streak" (chapter 4) is the counter in the quiz header. "Day streak" (chapter 6) counts days with at least one review. They are different, so keep both words as written.

@@ -150,7 +150,7 @@ const T = {
   insights: { starts: [0, 2600, 5750], end: 8200 },
   data: { starts: [0, 2150, 4500], end: 8600 },
   kiro: { starts: [0, 4950, 8750], end: 12600 },
-  end: { starts: [0, 1700, 3450, 5500], end: 9400 },
+  end: { starts: [0, 1640, 3320, 5040], end: 8360 },
 } as const;
 
 const L = {
@@ -533,7 +533,7 @@ export const DEMO_STEPS: readonly DemoStep[] = [
   {
     id: 'end-4',
     chapter: 8,
-    caption: 'Kiroween 2026, Frankenstein.',
+    caption: 'Built for Kiroween 2026.',
     actions: fit(L.end[3], [{ op: 'highlight', target: 'try-demo', ms: L.end[3] }]),
   },
 ];

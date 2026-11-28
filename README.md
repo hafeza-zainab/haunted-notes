@@ -21,7 +21,7 @@ Taking notes is easy. Knowing what to revise, and when, across many subjects, is
 - **Offline app shell** in production builds: a hand-written service worker and web app manifest cache the app shell only. The Audio tab shows whether the Whisper model is already cached in the browser.
 - **Haunting atmosphere** and accessibility: dark palette with one accent glow, keyboard access, WCAG AA contrast targets, 44px tap targets and `prefers-reduced-motion` support.
 
-## The Frankenstein stitch
+## Four inputs, one pipeline
 
 | Piece | Tech (all free, runs in the browser) |
 |---|---|

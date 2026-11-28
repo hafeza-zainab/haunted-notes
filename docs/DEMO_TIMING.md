@@ -15,11 +15,11 @@ Chapter 1 is now "the problem": it plays over the real dashboard loaded with dem
 | 6 | Study insights | 92.50 s | 8.20 s | 6.80 s | 1.40 s | 3 |
 | 7 | Your data stays yours | 100.70 s | 8.60 s | 7.12 s | 1.48 s | 3 |
 | 8 | Built with Kiro | 109.30 s | 12.60 s | 11.12 s | 1.48 s | 3 |
-| 9 | Try it yourself | 121.90 s | 9.40 s | 8.00 s | 1.40 s | 4 |
+| 9 | Try it yourself | 121.90 s | 8.36 s | 6.96 s | 1.40 s | 4 |
 
-Script total: **131.3 s (2:11)**, 42 steps. Measured: 132.0 to 132.1 s from the click to the bar closing (the extra 0.7 to 0.8 s is the wait for the first sound). The clips total 114.24 s. A test requires the run to be at most 170 s and at least as long as all clips together, and every chapter to be at least its clip plus 0.4 s margin plus 1 s start-up allowance.
+Script total: **130.26 s (2:10)**, 42 steps. Measured: 132.0 to 132.1 s from the click to the bar closing (the extra 0.7 to 0.8 s is the wait for the first sound). The clips total 113.20 s. A test requires the run to be at most 170 s and at least as long as all clips together, and every chapter to be at least its clip plus 0.4 s margin plus 1 s start-up allowance.
 
-The prompt asked for 140 to 170 s. The run is 131.3 s. Reaching 140 s would need about 9 s of silent padding, which the same prompt forbids, so the floor in the test stays at 115 s.
+The prompt asked for 140 to 170 s. The run is 130.3 s. Reaching 140 s would need about 10 s of silent padding, which the same prompt forbids, so the floor in the test stays at 115 s.
 
 ## Every subtitle, with its start
 `Cue` is where the phrase starts inside the clip. `Shown` is when the caption appears, counted from the chapter start. Chapter 1 captions appear exactly at the cue (the clock starts when the audio clock moves); other chapters add 0.1 s. Cues marked (est.) are splits inside one phrase with no quiet gap, placed by word count. The captions are the narration words, not the shorter captions in the prompt (for example, chapter 1 has 6 captions, not 4), because the user had reported captions that did not match the audio.
@@ -64,9 +64,9 @@ The prompt asked for 140 to 170 s. The run is 131.3 s. Reaching 140 s would need
 | 8 | 4.85 | 4.95 | a custom UI reviewer agent, a Playwright MCP server, |
 | 8 | 8.65 | 8.75 | and property-based tests that caught real bugs. |
 | 9 | 0.00 | 0.00 | You remember the answers. |
-| 9 | 1.60 | 1.70 | Haunted Notes remembers when. |
-| 9 | 3.35 | 3.45 | The link and source code are below. |
-| 9 | 5.40 | 5.50 | Kiroween 2026, Frankenstein. |
+| 9 | 1.64 | 1.74 | Haunted Notes remembers when. |
+| 9 | 3.32 | 3.42 | The link and source code are below. |
+| 9 | 5.04 | 5.14 | Built for Kiroween 2026. |
 
 ## Chapter 1 cues: how they were found
 Quiet gaps in the WAV placed the phrase starts. For each stretch the offline Windows recogniser (System.Speech, en-US) was run only to confirm the order of stretches; its text was often wrong and was not used.
@@ -80,3 +80,6 @@ The new narration no longer says "Ignore them longer, and they look stronger." T
 - Caption offset against the audible speech start (measured from audio clocks, not heard): worst 230 ms early, mean 78 ms; chapter 1 captions were about 170 to 200 ms late. The lead was then removed from chapter 1 (commit after `a7539d1`). **UNVERIFIED**: the offset after that fix was not re-measured in a browser.
 - Audible start minus scheduled start per clip: about 111 to 250 ms for chapters 2 to 9.
 - Chapter 1 sound starts about 0.7 s after the click. This is the first-sound latency (browser audio start) and is a known exception to the 300 ms rule.
+
+## Chapter 9 clip replaced (category name removed)
+`chapter-9.wav` was replaced by a new recording: 6.96 s (was 8.00 s), re-measured in Chromium with `audio.duration` (the other eight clips were measured again and are unchanged). The last phrase is now "Built for Kiroween 2026." Cues from the quiet gaps in the WAV (end of each gap): 0, 1.64, 3.32 and 5.04 s. Chapter 9 was cut from 9.40 s to 8.36 s (clip + 0.4 s margin + 1 s start-up allowance), because the no-idle test would fail with 1.04 s of silent tail. The fit report passes for all nine chapters (the `every clip fits its chapter` tests). The 1280 and 390 px runs in the sections above were made with the old chapter 9 clip and were **not repeated**: UNVERIFIED for the new clip. Nothing was heard.

@@ -224,23 +224,23 @@
       "chapterId": "end",
       "chapter": 9,
       "file": "chapter-9.wav",
-      "durationMs": 8000,
+      "durationMs": 6960,
       "cues": [
         {
           "startMs": 0,
           "text": "You remember the answers."
         },
         {
-          "startMs": 1600,
+          "startMs": 1640,
           "text": "Haunted Notes remembers when."
         },
         {
-          "startMs": 3350,
+          "startMs": 3320,
           "text": "The link and source code are below."
         },
         {
-          "startMs": 5400,
-          "text": "Kiroween 2026, Frankenstein."
+          "startMs": 5040,
+          "text": "Built for Kiroween 2026."
         }
       ]
     }
